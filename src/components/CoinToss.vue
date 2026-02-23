@@ -57,8 +57,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'value.
-
+import { ref } from 'vue'
 const emit = defineEmits(['complete'])
 const lines = ref([])
 const isTossing = ref(false)
@@ -67,11 +66,11 @@ const isTossing = ref(false)
 const coins = ref([{ value: 1 }, { value: 1 }, { value: 1 }])
 
 const tossCoins = () => {
-  if (isTossing.value || lines.length >= 6) return
+  if (isTossing.value || lines.value.length >= 6) return
   isTossing.value = true
 
   // 播放抛硬币音效 (如果有的话)
-  const audio = new Audio('/coin-sound.mp3')
+  const audio = new Audio('/coin-clink.mp3')
   audio.play().catch((e) => console.log('Audio blocked by browser'))
 
   setTimeout(() => {
