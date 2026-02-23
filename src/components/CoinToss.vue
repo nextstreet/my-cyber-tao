@@ -71,7 +71,7 @@ const tossCoins = () => {
   isTossing.value = true
 
   // 播放抛硬币音效 (如果有的话)
-  const audio = new Audio('/coin-clink.mp3')
+  const audio = new Audio('/coin-sound.mp3')
   audio.play().catch((e) => console.log('Audio blocked by browser'))
 
   setTimeout(() => {
