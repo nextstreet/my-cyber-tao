@@ -7,73 +7,86 @@
         <source src="/bg-smoke.mp4" type="video/mp4" />
       </video>
     </div>
-    <div class="scanline z-0"></div>
+
+    <div class="absolute top-4 right-4 z-50">
+      <SpiritBottle :lastReadingTime="lastReadingTime" @share-refill="handleShareRefill" />
+    </div>
 
     <main
-      class="z-10 w-full max-w-md bg-black/60 backdrop-blur-md p-8 border border-tao-gold/30 rounded-lg shadow-2xl flex flex-col items-center"
+      class="z-10 w-full max-w-md bg-black/40 backdrop-blur-xl p-8 border border-tao-gold/20 shadow-2xl flex flex-col items-center relative mt-12"
     >
-      <header class="text-center mb-8 w-full">
-        <h1 class="text-4xl font-serif text-tao-gold-light mb-2 tracking-widest">CYBER TAO</h1>
-        <div class="w-16 h-1 bg-tao-red mx-auto mb-4"></div>
-
-        <SpiritBottle :lastReadingTime="lastReadingTime" @share-refill="handleShareRefill" />
+      <header class="text-center mb-10 w-full">
+        <h1 class="text-3xl font-serif text-tao-gold-light tracking-[0.2em] mb-3">CYBER TAO</h1>
+        <div class="w-8 h-px bg-tao-red mx-auto"></div>
       </header>
 
-      <section v-if="step === 'intro'" class="w-full space-y-6 animate-fade-in">
-        <div>
-          <label class="block text-xs uppercase tracking-widest mb-2 text-gray-500 text-center"
-            >Focus your intent</label
+      <section v-if="step === 'intro'" class="w-full space-y-8 animate-fade-in">
+        <div class="relative">
+          <label
+            class="block text-[10px] uppercase tracking-[0.3em] mb-4 text-tao-gold/60 text-center"
+            >Imprint your thought into the void</label
           >
           <textarea
             v-model="question"
-            placeholder="What troubles your mind?"
-            class="w-full bg-transparent border border-tao-gold/30 rounded text-center text-lg p-4 focus:outline-none focus:border-tao-gold transition-colors h-24 resize-none placeholder-gray-700"
+            placeholder="e.g., Will my current project succeed?"
+            class="w-full bg-transparent border-b border-tao-gold/30 text-center text-lg py-4 focus:outline-none focus:border-tao-gold transition-colors resize-none placeholder-tao-gold/20"
+            rows="2"
           ></textarea>
         </div>
 
         <button
           @click="startRitual"
           :disabled="!question || !hasSpirit"
-          class="w-full py-4 border border-tao-gold hover:bg-tao-gold hover:text-black transition-all duration-500 uppercase tracking-widest text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+          class="w-full py-3 border border-tao-gold hover:bg-tao-gold hover:text-black transition-all tracking-[0.2em] text-xs uppercase disabled:opacity-30"
         >
-          {{ hasSpirit ? 'Cast the Oracle' : 'Spirit Depleted - Tap Bottle to Refill' }}
+          {{ hasSpirit ? 'Enter the Matrix' : 'Spirit Depleted' }}
         </button>
       </section>
 
       <section v-else-if="step === 'ritual'" class="w-full animate-fade-in">
-        <CoinToss :userEntropy="question" @complete="onRitualComplete" />
+        <CoinToss @complete="onRitualComplete" />
       </section>
 
       <section
         v-else-if="step === 'result'"
-        class="w-full text-center animate-fade-in flex flex-col items-center"
+        class="w-full animate-fade-in flex flex-col items-center"
       >
-        <div class="mb-6">
-          <p class="text-tao-red text-xs tracking-widest uppercase mb-2">The Spirits Answer</p>
-          <h2 class="text-3xl font-serif text-white">{{ hexagramName }}</h2>
+        <div class="mb-8 text-center space-y-2">
+          <h2 class="text-4xl font-serif text-white tracking-widest">{{ hexagramData.nameZh }}</h2>
+          <p class="text-tao-gold/70 text-sm tracking-[0.2em] uppercase">
+            {{ hexagramData.nameEn }}
+          </p>
         </div>
 
-        <div
-          class="text-left text-sm leading-relaxed text-gray-300 space-y-4 mb-8 border-l-2 border-tao-gold pl-4 w-full"
-        >
-          <p v-if="loading" class="animate-pulse text-tao-gold">Communing with the Dao...</p>
-          <p v-else>{{ aiResult }}</p>
+        <div class="w-full space-y-6">
+          <p v-if="loading" class="animate-pulse text-tao-gold text-center text-sm">
+            Translating the binary signals of the Dao...
+          </p>
+          <template v-else>
+            <div class="border-l-2 border-tao-red pl-4 py-1">
+              <p class="text-white/80 font-serif text-lg tracking-wide">
+                {{ hexagramData.poemZh }}
+              </p>
+            </div>
+            <div class="text-sm leading-loose text-gray-400 font-mono">
+              <p>{{ aiResult }}</p>
+            </div>
+          </template>
         </div>
 
-        <div class="mt-4 w-full space-y-4">
+        <div class="mt-10 w-full space-y-4">
           <button
             v-if="!loading"
             @click="generateAndShare"
-            class="w-full py-3 bg-tao-gold text-black font-bold uppercase tracking-widest text-sm hover:bg-white transition-colors flex justify-center items-center gap-2"
+            class="w-full py-3 bg-tao-gold text-black font-bold uppercase tracking-widest text-xs hover:bg-white transition-colors"
           >
-            <span>📜</span> Manifest Talisman
+            Extract Talisman
           </button>
-
           <button
             @click="reset"
-            class="w-full py-2 text-xs text-gray-500 underline hover:text-tao-gold"
+            class="w-full py-2 text-xs text-tao-gold/40 hover:text-tao-gold transition-colors"
           >
-            Ask Another Question
+            Return to the Void
           </button>
         </div>
       </section>
@@ -81,13 +94,15 @@
 
     <TalismanCard
       ref="talismanRef"
-      :hexagramData="{ name: hexagramName, lines: hexagramResult }"
+      :hexagramData="{ name: hexagramData.nameEn, lines: hexagramResult }"
       :aiPredictionText="aiResult"
     />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { supabase } from './supabase' // 确保路径指向你创建的文件
 import { ref, computed, onMounted } from 'vue'
 import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
@@ -102,6 +117,12 @@ const hexagramName = ref('')
 const aiResult = ref('')
 const loading = ref(false)
 const talismanRef = ref(null)
+// 在 script 顶部定义
+const hexagramData = ref({
+  nameZh: '',
+  nameEn: '',
+  poemZh: '',
+})
 
 // --- 灵力水瓶与免费逻辑 ---
 const lastReadingTime = ref(null)
@@ -127,32 +148,32 @@ const startRitual = () => {
   step.value = 'ritual'
 }
 
-// 新的真实调用逻辑
+// 在你的 onRitualComplete 方法中接收 AI 返回的新格式
 const onRitualComplete = async (lines) => {
   hexagramResult.value = lines
   step.value = 'result'
-  loading.value = true // 显示 loading 状态，比如 "Communing with the DAO..."
+  loading.value = true
+
+  // 灵力消耗逻辑保持不变...
 
   try {
-    // 关键调用：使用 supabase.functions.invoke 调用刚才部署的 'cyber-sage'
     const { data, error } = await supabase.functions.invoke('cyber-sage', {
-      body: {
-        lines: lines,
-        question: question.value,
-      },
+      body: { lines: lines, question: question.value },
     })
 
     if (error) throw error
 
-    // 将 AI 返回的数据赋给响应式变量，更新 UI
-    hexagramName.value = data.hexagramName
+    // 匹配新的 JSON 结构
+    hexagramData.value = {
+      nameZh: data.hexagramNameZh,
+      nameEn: data.hexagramNameEn,
+      poemZh: data.poemZh,
+    }
     aiResult.value = data.interpretation
-
-    // 可选：在这里调用之前写的生成符咒长图的方法
-    // setTimeout(() => talismanRef.value.generate(), 500)
+    // selectedGuardian.value = data.guardian; // 如果你在 TalismanCard 做了这个改造的话
   } catch (err) {
-    console.error('The spirits are silent:', err)
-    aiResult.value = 'The connection to the Dao is disturbed. Please try again later.'
+    console.error('API Error details:', err)
+    aiResult.value = 'The signal was lost in the quantum realm. Check F12 for details.'
   } finally {
     loading.value = false
   }

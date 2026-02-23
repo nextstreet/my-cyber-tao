@@ -47,9 +47,24 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'deepseek-chat', // 建议用 3.5 够用且便宜，土豪可以用 gpt-4o
-        messages: [
-          { role: 'system', content: systemPrompt }
-        ],
+        // 在 index.ts 的 fetch 里面修改 messages：
+        // 在 index.ts 的 fetch 里面修改 messages：
+messages: [
+  {
+    role: 'system',
+    content: `You are a cryptic cyberpunk Taoist sage. A user has cast hexagram: ${lines.join('')} (bottom to top, 1=Yang, 0=Yin). Their question: "${question}".
+
+    Respond STRICTLY in JSON format with these exact keys:
+    {
+      "hexagramNameZh": "中文卦名 (例如：乾为天)",
+      "hexagramNameEn": "English Hexagram Name",
+      "poemZh": "一句易经原典中的中文爻辞或卦辞 (例如：飞龙在天，利见大人。)",
+      "interpretation": "Your poetic English interpretation (2 sentences).",
+      "guardian": "dragon" // Choose from: dragon, tiger, phoenix, turtle, qilin
+    }`
+  }
+],
+
         temperature: 0.7,
       }),
     });
