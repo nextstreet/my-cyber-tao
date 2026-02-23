@@ -1,88 +1,37 @@
-import "https://deno.land/x/xhr@0.3.0/mod.ts";
-import { CreateChatCompletionRequest } from "https://esm.sh/openai@3.2.1";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-// 1. 设置跨域头 (CORS) - 极其重要，否则你的 Vue 前端会被拦截
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-Deno.serve(async (req) => {
-  // 处理浏览器的预检请求 (OPTIONS)
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    // 2. 解析前端传来的数据
-    const { lines, question } = await req.json()
-    // lines 是一个数组，比如 [1, 0, 1, 1, 0, 0]，0代表阴，1代表阳 (从下往上)
-    const hexagramBinary = lines.join('');
+    const payload = await req.json()
+    console.log("Received Payload:", payload) // 这行会在 Supabase Logs 出现
 
-    // 3. 构建给 AI 的 Prompt (系统人设)
-    const systemPrompt = `
-      You are a wise, cryptic Taoist sage from ancient China, existing in a cyberpunk future.
-      The user has cast an I Ching hexagram represented by the binary lines from bottom to top: ${hexagramBinary} (1=Yang solid, 0=Yin broken).
-      Their question is: "${question}".
+    const { lines, question } = payload
 
-      Your task:
-      1. Identify the name of the Hexagram (e.g., "The Receptive", "Thunder").
-      2. Provide a 2-3 sentence philosophical interpretation using nature metaphors (water, mountain, wind). Do NOT be fatalistic.
-      3. Give one practical, secular piece of advice based on the hexagram.
+    if (!lines || lines.length !== 6) throw new Error("Missing lines")
 
-      Respond STRICTLY in JSON format:
-      {
-        "hexagramName": "Name of the Hexagram (English)",
-        "interpretation": "Your poetic and philosophical response here."
-      }
-    `;
-
-    // 4. 调用 OpenAI API (你可以换成 Claude 或其他)
-    const openAiKey = Deno.env.get('DEEPSEEK_API_KEY');
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat', // 建议用 3.5 够用且便宜，土豪可以用 gpt-4o
-        // 在 index.ts 的 fetch 里面修改 messages：
-        // 在 index.ts 的 fetch 里面修改 messages：
-messages: [
-  {
-    role: 'system',
-    content: `You are a cryptic cyberpunk Taoist sage. A user has cast hexagram: ${lines.join('')} (bottom to top, 1=Yang, 0=Yin). Their question: "${question}".
-
-    Respond STRICTLY in JSON format with these exact keys:
-    {
-      "hexagramNameZh": "中文卦名 (例如：乾为天)",
-      "hexagramNameEn": "English Hexagram Name",
-      "poemZh": "一句易经原典中的中文爻辞或卦辞 (例如：飞龙在天，利见大人。)",
-      "interpretation": "Your poetic English interpretation (2 sentences).",
-      "guardian": "dragon" // Choose from: dragon, tiger, phoenix, turtle, qilin
-    }`
-  }
-],
-
-        temperature: 0.7,
+    // 模拟测试返回，先不调 AI，看看能否成功返回
+    return new Response(
+      JSON.stringify({
+        hexagramNameZh: "乾为天",
+        hexagramNameEn: "THE CREATIVE",
+        poemZh: "天行健，君子以自强不息。",
+        interpretation: "Test successful.",
+        guardian: "dragon"
       }),
-    });
-
-    const aiData = await response.json();
-    const resultText = aiData.choices[0].message.content;
-    const resultJson = JSON.parse(resultText); // 解析 AI 返回的 JSON
-
-    // 5. 将结果返回给前端
-    return new Response(JSON.stringify(resultJson), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
-
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    })
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    )
+  } catch (e) {
+    console.error("Internal Error:", e.message)
+    return new Response(
+      JSON.stringify({ error: e.message }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    )
   }
 })
