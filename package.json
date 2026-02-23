@@ -17,7 +17,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.95.3",
+    "@supabase/supabase-js": "^2.97.0",
     "date-fns": "^4.1.0",
     "html-to-image": "^1.11.13",
     "pinia": "^3.0.4",

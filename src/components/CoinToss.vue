@@ -1,55 +1,47 @@
 <template>
-  <div class="flex flex-col items-center justify-center w-full min-h-[250px]">
-    <div class="flex gap-6 mb-8 perspective-1000">
+  <div class="flex flex-col items-center">
+    <div class="flex gap-6 mb-10 h-20 items-center">
       <div
         v-for="(coin, index) in coins"
         :key="index"
-        class="relative w-16 h-16 transition-transform duration-700 transform-style-3d"
-        :class="{ 'animate-flip': isTossing }"
-        :style="{ animationDelay: `${index * 0.15}s` }"
+        class="coin-wrapper w-16 h-16"
+        :class="{ 'is-flipping': isTossing }"
       >
-        <img
-          src="/coin-head.png"
-          class="absolute inset-0 w-full h-full object-contain backface-hidden"
-          :class="coin.value === 1 ? 'opacity-100' : 'opacity-0'"
-          alt="Yang"
-        />
-        <img
-          src="/coin-tail.png"
-          class="absolute inset-0 w-full h-full object-contain backface-hidden"
-          :class="coin.value === 0 ? 'opacity-100' : 'opacity-0'"
-          style="transform: rotateY(180deg)"
-          alt="Yin"
-        />
+        <div class="coin-inner">
+          <div class="coin-face face-front">
+            <img src="/coin-head.png" class="w-full h-full object-contain" />
+          </div>
+          <div class="coin-face face-back">
+            <img src="/coin-tail.png" class="w-full h-full object-contain" />
+          </div>
+        </div>
       </div>
     </div>
 
     <button
-      @click="tossCoins"
+      @click="toss"
       :disabled="isTossing || lines.length >= 6"
-      class="px-8 py-3 border border-tao-gold text-tao-gold uppercase tracking-widest text-sm hover:bg-tao-gold hover:text-black transition-all active:scale-95 disabled:opacity-50"
+      class="px-8 py-3 border border-tao-gold text-tao-gold hover:bg-tao-gold hover:text-black transition-all disabled:opacity-30"
     >
-      {{
-        isTossing
-          ? 'Communing...'
-          : lines.length === 0
-            ? 'Initiate Toss (1/6)'
-            : `Toss Again (${lines.length + 1}/6)`
-      }}
+      <span class="text-[10px] tracking-[0.4em] uppercase font-bold">
+        {{
+          isTossing
+            ? 'Synchronizing...'
+            : lines.length >= 6
+              ? 'Hexagram Formed'
+              : `Initiate Toss ( ${lines.length + 1} / 6 )`
+        }}
+      </span>
     </button>
 
     <div class="mt-8 flex flex-col-reverse gap-2">
-      <div
-        v-for="(line, i) in lines"
-        :key="i"
-        class="w-24 h-2 flex justify-between transition-all duration-500"
-      >
+      <div v-for="(line, i) in lines" :key="i" class="w-32 h-1.5 flex justify-between animate-in">
         <template v-if="line === 1">
-          <div class="w-full h-full bg-tao-gold shadow-[0_0_10px_rgba(200,170,110,0.5)]"></div>
+          <div class="w-full h-full bg-tao-gold shadow-[0_0_8px_rgba(200,170,110,0.6)]"></div>
         </template>
         <template v-else>
-          <div class="w-[45%] h-full bg-tao-gold shadow-[0_0_10px_rgba(200,170,110,0.5)]"></div>
-          <div class="w-[45%] h-full bg-tao-gold shadow-[0_0_10px_rgba(200,170,110,0.5)]"></div>
+          <div class="w-[45%] h-full bg-tao-gold shadow-[0_0_8px_rgba(200,170,110,0.6)]"></div>
+          <div class="w-[45%] h-full bg-tao-gold shadow-[0_0_8px_rgba(200,170,110,0.6)]"></div>
         </template>
       </div>
     </div>
@@ -61,66 +53,61 @@ import { ref } from 'vue'
 const emit = defineEmits(['complete'])
 const lines = ref([])
 const isTossing = ref(false)
+const coins = ref([{ v: 1 }, { v: 1 }, { v: 1 }])
 
-// 初始状态显示正面
-const coins = ref([{ value: 1 }, { value: 1 }, { value: 1 }])
-
-const tossCoins = () => {
+const toss = () => {
   if (isTossing.value || lines.value.length >= 6) return
   isTossing.value = true
 
-  // 播放抛硬币音效 (如果有的话)
-  const audio = new Audio('/coin-clink.mp3')
-  audio.play().catch((e) => console.log('Audio blocked by browser'))
-
   setTimeout(() => {
-    // 随机生成 3 枚硬币的正反 (1=正面, 0=反面)
-    let headsCount = 0
+    let heads = 0
     coins.value = coins.value.map(() => {
-      const val = Math.random() > 0.5 ? 1 : 0
-      if (val === 1) headsCount++
-      return { value: val }
+      const res = Math.random() > 0.5 ? 1 : 0
+      if (res === 1) heads++
+      return { v: res }
     })
 
-    // 易经逻辑：2个或3个正面为阳(1)，反之为阴(0) - 这里简化处理
-    const lineValue = headsCount >= 2 ? 1 : 0
-    lines.value.push(lineValue)
-
+    lines.value.push(heads >= 2 ? 1 : 0)
     isTossing.value = false
-
-    if (lines.value.length === 6) {
-      setTimeout(() => {
-        emit('complete', lines.value)
-      }, 800)
-    }
-  }, 1000) // 动画持续 1 秒
+    if (lines.value.length === 6) setTimeout(() => emit('complete', lines.value), 800)
+  }, 1000)
 }
 </script>
 
 <style scoped>
-.perspective-1000 {
+.coin-wrapper {
   perspective: 1000px;
 }
-.transform-style-3d {
+.coin-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
 }
-.backface-hidden {
+.is-flipping .coin-inner {
+  transform: rotateY(1440deg) rotateX(720deg) scale(1.2);
+}
+.coin-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
   backface-visibility: hidden;
 }
-
-/* 简单的翻转动画 */
-@keyframes flipCoin {
-  0% {
-    transform: translateY(0) rotateX(0) rotateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-50px) rotateX(720deg) rotateY(360deg) scale(1.2);
-  }
-  100% {
-    transform: translateY(0) rotateX(1440deg) rotateY(720deg) scale(1);
-  }
+.face-back {
+  transform: rotateY(180deg);
 }
-.animate-flip {
-  animation: flipCoin 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+.animate-in {
+  animation: slideIn 0.4s ease-out;
+}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
 }
 </style>
