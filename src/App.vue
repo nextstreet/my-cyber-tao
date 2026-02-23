@@ -158,7 +158,7 @@ const onRitualComplete = async (lines) => {
 
   try {
     const { data, error } = await supabase.functions.invoke('cyber-sage', {
-      body: { lines: lines, question: question.value },
+      body: { lines: hexagramResult.value, question: question.value },
     })
 
     if (error) throw error
