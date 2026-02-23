@@ -102,7 +102,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { supabase } from './supabase' // 确保路径指向你创建的文件
+import { supabase } from './lib/supabase' // 确保路径指向你创建的文件
 
 import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
