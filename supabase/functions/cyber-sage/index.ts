@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     `;
 
     // 4. 调用 OpenAI API (你可以换成 Claude 或其他)
-    const openAiKey = Deno.env.get('DEEPSEEK_API_KEY');
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
