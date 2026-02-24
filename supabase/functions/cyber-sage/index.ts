@@ -9,16 +9,19 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    // 1. 关键修改：在这里接收前端传过来的 language 参数
     const { lines, question, language } = await req.json()
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 
     if (!DEEPSEEK_API_KEY) throw new Error("API Key missing on server")
 
-    // 2. 根据前端传入的语言，动态锁定目标语言
-    const targetLanguage = language === 'en' ? 'ENGLISH' : 'CHINESE';
+    // 确定目标语言，如果前端没有传，默认 fallback 为英文或中文均可
+    const targetLanguage = language === 'en' ? 'English' : 'Chinese'
+    const hexagramStr = lines.join(', ')
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    // ==========================================
+    // STEP 1: 获取客观数据（卦名、中文诗词）
+    // ==========================================
+    const metaResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,38 +32,71 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a Cyber Sage analyzing I Ching hexagrams.
-You must return ONLY a JSON object with these exact keys: { "hexagramNameZh", "hexagramNameEn", "poemZh", "interpretation" }.
-
-CRITICAL LANGUAGE RULES:
-1. "hexagramNameZh" and "poemZh" MUST always be in Chinese.
-2. "hexagramNameEn" MUST always be in English.
-3. The "interpretation" field MUST STRICTLY BE WRITTEN IN: ${targetLanguage}. Do not use any other language for this field.`
+            content: `You are an I Ching database. You must return ONLY a JSON object with exact keys: { "hexagramNameZh", "hexagramNameEn", "poemZh" }. 
+The "poemZh" must be a classic Chinese poem/phrase representing the hexagram.`
           },
           {
             role: 'user',
-            content: `Hexagram lines (bottom to top, 0=Yin, 1=Yang): ${lines.join(', ')}.
-User Question: "${question}"`
+            content: `Identify the hexagram for these lines (bottom to top, 0=Yin, 1=Yang): ${hexagramStr}`
           }
         ],
         response_format: { type: "json_object" }
       })
     })
 
-    const aiData = await response.json()
+    const metaData = await metaResponse.json()
+    if (metaData.error) throw new Error(`Step 1 Error: ${metaData.error.message}`)
+    const metaResult = JSON.parse(metaData.choices[0].message.content)
 
-    if (aiData.error) throw new Error(aiData.error.message)
+    // ==========================================
+    // STEP 2: 获取主观解释（严格锁定语言）
+    // ==========================================
+    const interpretationResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a Cyber Sage predicting the future. You must return ONLY a JSON object with the exact key: { "interpretation" }. 
+CRITICAL RULE: The entire "interpretation" MUST be written strictly in ${targetLanguage}. Maintain a cyber-punk and mystical tone.`
+          },
+          {
+            role: 'user',
+            content: `The user asked: "${question}". 
+The divination result is the hexagram: ${metaResult.hexagramNameEn} (${metaResult.hexagramNameZh}). 
+Provide your interpretation in ${targetLanguage}.`
+          }
+        ],
+        response_format: { type: "json_object" }
+      })
+    })
 
-    const result = JSON.parse(aiData.choices[0].message.content)
+    const interpretationData = await interpretationResponse.json()
+    if (interpretationData.error) throw new Error(`Step 2 Error: ${interpretationData.error.message}`)
+    const interpretationResult = JSON.parse(interpretationData.choices[0].message.content)
 
-    return new Response(JSON.stringify(result), {
+    // ==========================================
+    // 组合结果并返回给前端
+    // ==========================================
+    const finalResult = {
+      hexagramNameZh: metaResult.hexagramNameZh,
+      hexagramNameEn: metaResult.hexagramNameEn,
+      poemZh: metaResult.poemZh,
+      interpretation: interpretationResult.interpretation
+    }
+
+    return new Response(JSON.stringify(finalResult), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200
     })
 
   } catch (e) {
-    // 修正：在 catch 块中 e 是 unknown 或 any，建议使用 e.message 时加个回退
-    const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+    const errorMessage = e instanceof Error ? e.message : 'Unknown error'
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
