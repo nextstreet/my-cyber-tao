@@ -72,7 +72,7 @@
         </div>
 
         <div v-if="!loading" class="grid grid-cols-2 gap-6 w-full mt-10 z-20">
-          <button @click="talismanRef.generate()" class="py-4 bg-tao-gold text-black text-[11px] font-black tracking-[0.4em] hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all uppercase">EXTRACT</button>
+          <button @click="talismanRef.generate()" class="py-4 bg-tao-gold text-gold text-[11px] border border-tao-gold/30 font-black tracking-[0.4em] hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all uppercase">EXTRACT</button>
           <button @click="reset" class="py-4 border border-tao-gold/30 text-[11px] text-tao-gold tracking-[0.4em] hover:border-tao-gold transition-all uppercase">RETURN</button>
         </div>
       </section>
