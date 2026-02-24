@@ -15,7 +15,7 @@
 
         <textarea v-model="question" placeholder="ASK THE VOID..." class="w-full bg-transparent border-b border-tao-gold/30 text-center py-4 focus:outline-none focus:border-tao-gold transition-all text-white text-lg placeholder:opacity-20"></textarea>
         
-        // App.vue 中的调用确保传递 shareCount
+       
 <SpiritBottle 
   :lastReadingTime="lastReadingTime" 
   :isUnlimited="isAdmin" 
@@ -209,5 +209,5 @@ const handleRefillShare = async () => {
   }
 };
 
-const reset = () => { step.value = 'intro'; question.value = '' };
+const reset = () => { step.value = 'intro'; question.value = '' }
 </script>
