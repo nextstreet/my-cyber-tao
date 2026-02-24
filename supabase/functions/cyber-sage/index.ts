@@ -38,4 +38,66 @@ serve(async (req) => {
           },
           {
             role: 'user',
-            content: `Identify the hexagram for these lines (bottom to top, 0=Y
+            content: `Identify the hexagram for these lines (bottom to top, 0=Yin, 1=Yang): ${hexagramStr}`
+          }
+        ],
+        response_format: { type: "json_object" }
+      })
+    })
+
+    const metaData = await metaResponse.json()
+    if (metaData.error) throw new Error(`Step 1 Error: ${metaData.error.message}`)
+    const metaResult = JSON.parse(metaData.choices[0].message.content)
+
+    // ==========================================
+    // STEP 2: 获取主观解释（严格锁定语言）
+    // ==========================================
+    const interpretationResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a Cyber Sage predicting the future. You must return ONLY a JSON object with the exact key: { "interpretation": "string" }. CRITICAL RULE: The entire "interpretation" MUST be written strictly in ${targetLanguage}. Maintain a cyber-punk and mystical tone.`
+          },
+          {
+            role: 'user',
+            content: `The user asked: "${question}". The divination result is the hexagram: ${metaResult.hexagramNameEn} (${metaResult.hexagramNameZh}). Provide your interpretation in ${targetLanguage}.`
+          }
+        ],
+        response_format: { type: "json_object" }
+      })
+    })
+
+    const interpretationData = await interpretationResponse.json()
+    if (interpretationData.error) throw new Error(`Step 2 Error: ${interpretationData.error.message}`)
+    const interpretationResult = JSON.parse(interpretationData.choices[0].message.content)
+
+    // ==========================================
+    // 组合结果并返回给前端
+    // ==========================================
+    const finalResult = {
+      hexagramNameZh: metaResult.hexagramNameZh,
+      hexagramNameEn: metaResult.hexagramNameEn,
+      poemZh: metaResult.poemZh,
+      interpretation: interpretationResult.interpretation
+    }
+
+    return new Response(JSON.stringify(finalResult), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200
+    })
+
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Unknown error'
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    })
+  }
+})
