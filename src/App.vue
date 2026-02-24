@@ -170,61 +170,43 @@ const hasSpirit = computed(() => {
   return (new Date().getTime() - new Date(lastReadingTime.value).getTime()) / (1000*60*60) >= 12;
 });
 
-// --- 修改 onRitualComplete 方法 ---
+// 修改 onRitualComplete 方法
 const onRitualComplete = async (lines) => {
   hexagramResult.value = lines;
   step.value = 'result';
   loading.value = true;
 
-  // 1. 立即从本地获取静态数据 (无需等待 API)
+  // 1. 静态数据立即上屏
   const code = lines.join('');
-  const localMatch = HEXAGRAM_MAP[code] || { 
-    nameZh: "未知卦象", 
-    nameEn: "Unknown", 
-    poemZh: "乾坤演变，因缘未至。" 
-  };
-  
-  // 立即渲染卦名和卦辞，提升反馈速度
+  const localMatch = HEXAGRAM_MAP[code] || HEXAGRAM_MAP["111111"];
   hexagramData.value = localMatch;
 
-  // 2. 语言判定
-  const isEnglish = /^[a-zA-Z0-9\s.,?!\'\"-]+$/.test(question.value.trim());
-
   try {
-    // 3. 仅请求后端获取 Interpretation
-    const { data: aiData } = await supabase.functions.invoke('cyber-sage', {
-      body: { 
-        lines, 
-        question: question.value,
-        language: isEnglish ? 'en' : 'zh',
-        // 可以把本地匹配好的卦名也传过去，省去 AI 检索卦象的步骤，提高准确率
-        hexagramName: `${localMatch.nameEn} (${localMatch.nameZh})` 
-      }
+    // 2. 调用后端（不再传 language，让 AI 自己算）
+    const { data: aiData, error } = await supabase.functions.invoke('cyber-sage', {
+      body: { lines, question: question.value }
     });
 
-    const now = new Date().toISOString();
-    
-    // 更新数据库记录（保持原有逻辑）
-    await supabase.from('device_profiles')
-      .update({ last_reading_at: now })
-      .eq('device_id', deviceId.value);
+    if (error) throw error;
 
+    // 3. 记录与展示
+    const now = new Date().toISOString();
     await supabase.from('divination_logs').insert([{
       device_id: deviceId.value,
       question: question.value,
       hexagram_code: code,
       name_zh: localMatch.nameZh,
       name_en: localMatch.nameEn,
-      interpretation: aiData.interpretation // 此时后端只传回解释
+      interpretation: aiData.interpretation
     }]);
 
-    // 4. 更新 AI 解释
     aiResult.value = aiData.interpretation;
     lastReadingTime.value = now;
     localStorage.setItem('cyber_tao_last_reading', now);
     
   } catch (err) {
-    aiResult.value = isEnglish ? "CONNECTION INTERRUPTED" : "神经连接中断";
+    // 容错处理：根据大致语境显示错误提示
+    aiResult.value = "SIGNAL LOST IN THE VOID / 信号湮灭";
   } finally {
     loading.value = false;
   }
