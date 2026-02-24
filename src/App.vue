@@ -94,12 +94,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { supabase } from './lib/supabase'
-import { HEXAGRAM_MAP } from './data.ts' // 确保该路径正确指向你的 64 卦数据
+import { HEXAGRAM_MAP } from './data.ts' 
 import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
 import TalismanCard from './components/TalismanCard.vue'
 
-// 核心状态
 const step = ref('intro')
 const question = ref('')
 const hexagramResult = ref([])
@@ -113,10 +112,118 @@ const isAdmin = ref(false)
 const shareCount = ref(0)
 const MAX_SHARES_PER_DAY = 3
 
-// 身份初始化
 const initIdentity = async () => {
   let id = localStorage.getItem('cyber_tao_device_id')
   if (!id) {
     id = crypto.randomUUID()
     localStorage.setItem('cyber_tao_device_id', id)
-    await supabase
+    await supabase.from('device_profiles').insert([{ device_id: id }])
+  }
+  deviceId.value = id;
+
+  const { data } = await supabase
+    .from('device_profiles')
+    .select('is_unlimited, last_reading_at, share_count, last_share_date')
+    .eq('device_id', id)
+    .single()
+
+  if (data) {
+    isAdmin.value = data.is_unlimited
+    const today = new Date().toISOString().split('T')[0]
+    shareCount.value = data.last_share_date === today ? (data.share_count || 0) : 0
+  }
+}
+
+onMounted(() => {
+  initIdentity()
+  lastReadingTime.value = localStorage.getItem('cyber_tao_last_reading')
+})
+
+const hasSpirit = computed(() => {
+  if (!lastReadingTime.value) return true
+  const hoursPassed = (new Date().getTime() - new Date(lastReadingTime.value).getTime()) / (1000 * 60 * 60)
+  return hoursPassed >= 12
+})
+
+const onRitualComplete = async (lines) => {
+  hexagramResult.value = lines
+  step.value = 'result'
+  loading.value = true
+
+  const code = lines.join('')
+  const localMatch = HEXAGRAM_MAP[code] || HEXAGRAM_MAP["111111"]
+  hexagramData.value = localMatch
+
+  try {
+    const { data: aiData, error } = await supabase.functions.invoke('cyber-sage', {
+      body: { 
+        question: question.value, 
+        hexName: `${localMatch.nameZh} (${localMatch.nameEn})`,
+        poem: localMatch.poemZh
+      }
+    })
+
+    if (error) throw error
+
+    aiResult.value = aiData.interpretation
+    const now = new Date().toISOString()
+    
+    supabase.from('device_profiles').update({ last_reading_at: now }).eq('device_id', deviceId.value).then()
+    supabase.from('divination_logs').insert([{
+      device_id: deviceId.value,
+      question: question.value,
+      hexagram_code: code,
+      name_zh: localMatch.nameZh,
+      name_en: localMatch.nameEn,
+      interpretation: aiData.interpretation
+    }]).then()
+
+    lastReadingTime.value = now
+    localStorage.setItem('cyber_tao_last_reading', now)
+  } catch (err) {
+    console.error("AI Error:", err)
+    aiResult.value = "SIGNAL INTERRUPTED / 神经同步失败。"
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleRefillShare = async () => {
+  if (hasSpirit.value || isAdmin.value) return
+  if (shareCount.value >= MAX_SHARES_PER_DAY) {
+    alert(`DAILY SYNC LIMIT REACHED.`)
+    return
+  }
+
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'Cyber Tao', url: window.location.href })
+      const today = new Date().toISOString().split('T')[0]
+      const newCount = shareCount.value + 1
+      await supabase.from('device_profiles').update({ share_count: newCount, last_share_date: today }).eq('device_id', deviceId.value)
+      shareCount.value = newCount
+      lastReadingTime.value = null
+      localStorage.removeItem('cyber_tao_last_reading')
+    }
+  } catch (err) {
+    console.log('Share failed')
+  }
+}
+
+const reset = () => {
+  step.value = 'intro'
+  question.value = ''
+  hexagramResult.value = []
+  aiResult.value = ''
+}
+</script>
+
+<style scoped>
+.animate-fade-in {
+  animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
