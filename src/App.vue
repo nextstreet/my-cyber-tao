@@ -209,5 +209,5 @@ const handleRefillShare = async () => {
   }
 };
 
-const reset = () => { step.value = 'intro'; question.value = '' }
+const reset = () => { step.value = 'intro'; question.value = '' };
 </script>
