@@ -31,13 +31,13 @@
           :isUnlimited="isAdmin" 
           :shareCount="shareCount" 
           @refill="handleRefillShare" 
-          class="my-4"
+          class="my-8"
         />
 
         <button 
           @click="step = 'ritual'" 
           :disabled="!question || (!hasSpirit && !isAdmin)" 
-          class="group relative w-full py-5 md:py-6 overflow-hidden border border-tao-gold/40 bg-black/40 transition-all hover:border-tao-gold disabled:opacity-10 mt-2"
+          class="group relative w-full py-5 md:py-6 overflow-hidden border border-tao-gold/40 bg-black/40 transition-all hover:border-tao-gold disabled:opacity-10"
         >
           <span class="relative z-10 text-[11px] md:text-xs font-black tracking-[0.8em] uppercase transition-colors">
             {{ (hasSpirit || isAdmin) ? 'INITIATE PROTOCOL' : 'ENERGY DEPLETED' }}
@@ -49,21 +49,21 @@
         <CoinToss @complete="onRitualComplete" />
       </section>
 
-      <section v-else-if="step === 'result'" class="relative flex flex-col items-center justify-center text-center w-full h-full flex-1">
+      <section v-else-if="step === 'result'" class="relative flex flex-col items-center justify-center text-center w-full flex-1">
         <div class="z-10 w-full max-w-2xl mx-auto flex flex-col items-center flex-1 justify-center">
-          <h2 class="text-5xl md:text-6xl font-serif text-white tracking-[0.4em] mb-4">{{ hexagramData.nameZh }}</h2>
+          <h2 class="text-5xl md:text-6xl font-serif text-white tracking-[0.4em] mb-4 animate-fade-in">{{ hexagramData.nameZh }}</h2>
           <p class="text-[10px] md:text-xs tracking-[0.6em] text-tao-gold/40 uppercase mb-12">{{ hexagramData.nameEn }}</p>
 
           <div v-if="loading" class="py-24 animate-pulse flex flex-col items-center">
             <div class="w-10 h-10 border-t-2 border-tao-gold rounded-full animate-spin mb-6"></div>
-            <span class="text-[10px] tracking-[0.8em] opacity-50 uppercase">DECODING REALITY</span>
+            <span class="text-[10px] tracking-[0.8em] opacity-50 uppercase">Decoding Neural Echoes...</span>
           </div>
           
           <div v-else class="space-y-8 text-left animate-fade-in w-full">
-            <p class="text-white font-serif text-xl md:text-2xl border-l-3 border-tao-gold/80 pl-6 leading-relaxed">
+            <p class="text-white font-serif text-xl md:text-2xl border-l-2 border-tao-gold/50 pl-6 leading-relaxed">
               {{ hexagramData.poemZh }}
             </p>
-            <div class="bg-white/5 border border-white/10 p-6 md:p-8 rounded-sm backdrop-blur-md shadow-inner">
+            <div class="bg-white/5 border border-white/10 p-6 md:p-8 rounded-sm backdrop-blur-md">
               <p class="text-gray-300 font-mono text-sm md:text-base leading-relaxed italic whitespace-pre-wrap">
                 {{ aiResult }}
               </p>
@@ -71,9 +71,9 @@
           </div>
         </div>
 
-        <div v-if="!loading" class="grid grid-cols-2 gap-4 md:gap-8 w-full max-w-md mt-12 z-20 mx-auto">
-          <button @click="talismanRef.generate()" class="py-4 md:py-5 bg-tao-gold text-black text-[11px] md:text-xs font-black tracking-[0.4em] hover:bg-white transition-all uppercase rounded-sm">EXTRACT</button>
-          <button @click="reset" class="py-4 md:py-5 border border-tao-gold/30 text-[11px] md:text-xs text-tao-gold tracking-[0.4em] hover:bg-white/5 transition-all uppercase rounded-sm">RETURN</button>
+        <div v-if="!loading" class="grid grid-cols-2 gap-4 md:gap-8 w-full max-w-md mt-12 z-20">
+          <button @click="talismanRef.generate()" class="py-4 bg-tao-gold text-black text-[11px] font-black tracking-[0.4em] hover:bg-white transition-all rounded-sm uppercase">Extract</button>
+          <button @click="reset" class="py-4 border border-tao-gold/30 text-[11px] text-tao-gold tracking-[0.4em] hover:bg-white/5 transition-all rounded-sm uppercase">Return</button>
         </div>
       </section>
     </main>
@@ -98,6 +98,7 @@ import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
 import TalismanCard from './components/TalismanCard.vue'
 
+// 核心状态
 const step = ref('intro')
 const question = ref('')
 const hexagramResult = ref([])
@@ -111,57 +112,50 @@ const isAdmin = ref(false)
 const shareCount = ref(0)
 const MAX_SHARES_PER_DAY = 3
 
-const logAnalytics = async (id) => {
-  try {
-    const res = await fetch('https://api.ipify.org?format=json');
-    const { ip } = await res.json();
-    await supabase.from('user_analytics').insert([{ device_id: id, ip_address: ip, user_agent: navigator.userAgent }]);
-  } catch (e) {
-    console.error("Analytics failed", e);
-  }
-};
-
+// 初始化身份与灵力状态
 const initIdentity = async () => {
-  let id = localStorage.getItem('cyber_tao_device_id');
+  let id = localStorage.getItem('cyber_tao_device_id')
   if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem('cyber_tao_device_id', id);
-    await supabase.from('device_profiles').insert([{ device_id: id }]);
+    id = crypto.randomUUID()
+    localStorage.setItem('cyber_tao_device_id', id)
+    await supabase.from('device_profiles').insert([{ device_id: id }])
   }
   deviceId.value = id;
-  logAnalytics(id);
 
   const { data } = await supabase
     .from('device_profiles')
     .select('is_unlimited, last_reading_at, share_count, last_share_date')
     .eq('device_id', id)
-    .single();
+    .single()
 
   if (data) {
-    isAdmin.value = data.is_unlimited;
-    const today = new Date().toISOString().split('T')[0];
+    isAdmin.value = data.is_unlimited
+    const today = new Date().toISOString().split('T')[0]
+    // 如果日期变了，重置分享次数
     if (data.last_share_date !== today) {
-      shareCount.value = 0;
+      shareCount.value = 0
     } else {
-      shareCount.value = data.share_count || 0;
+      shareCount.value = data.share_count || 0
     }
   }
-};
+}
 
 onMounted(() => {
-  initIdentity();
-  lastReadingTime.value = localStorage.getItem('cyber_tao_last_reading');
-});
+  initIdentity()
+  lastReadingTime.value = localStorage.getItem('cyber_tao_last_reading')
+})
 
 const hasSpirit = computed(() => {
-  if (!lastReadingTime.value) return true;
-  return (new Date().getTime() - new Date(lastReadingTime.value).getTime()) / (1000*60*60) >= 12;
-});
+  if (!lastReadingTime.value) return true
+  const hoursPassed = (new Date().getTime() - new Date(lastReadingTime.value).getTime()) / (1000 * 60 * 60)
+  return hoursPassed >= 12
+})
 
+// 处理仪式完成：调用 Edge Function
 const onRitualComplete = async (lines) => {
-  hexagramResult.value = lines;
-  step.value = 'result';
-  loading.value = true;
+  hexagramResult.value = lines
+  step.value = 'result'
+  loading.value = true
 
   const isEnglish = /^[a-zA-Z0-9\s.,?!\'\"-]+$/.test(question.value.trim());
 
@@ -172,85 +166,78 @@ const onRitualComplete = async (lines) => {
         question: question.value,
         language: isEnglish ? 'en' : 'zh' 
       }
-    });
+    })
 
-    if (error) throw error;
+    if (error) throw error
 
+    // 更新卦象基本数据与 AI 解读
     hexagramData.value = {
       nameZh: aiData.hexagramNameZh,
       nameEn: aiData.hexagramNameEn,
       poemZh: aiData.poemZh
-    };
-    aiResult.value = aiData.interpretation;
+    }
+    aiResult.value = aiData.interpretation
 
-    const now = new Date().toISOString();
-    await supabase.from('device_profiles')
-      .update({ last_reading_at: now })
-      .eq('device_id', deviceId.value);
-
-    await supabase.from('divination_logs').insert([{
+    // 更新本地与远程状态
+    const now = new Date().toISOString()
+    await supabase.from('device_profiles').update({ last_reading_at: now }).eq('device_id', deviceId.value)
+    
+    // 异步插入日志
+    supabase.from('divination_logs').insert([{
       device_id: deviceId.value,
       question: question.value,
       hexagram_code: lines.join(''),
       name_zh: aiData.hexagramNameZh,
       name_en: aiData.hexagramNameEn,
       interpretation: aiData.interpretation
-    }]);
+    }]).then()
 
-    lastReadingTime.value = now;
-    localStorage.setItem('cyber_tao_last_reading', now);
+    lastReadingTime.value = now
+    localStorage.setItem('cyber_tao_last_reading', now)
   } catch (err) {
-    console.error(err);
-    aiResult.value = "CONNECTION INTERRUPTED / 神经连接中断";
+    console.error("AI Error:", err)
+    aiResult.value = "SIGNAL INTERRUPTED: The digital void remains silent."
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
+// 分享续命逻辑
 const handleRefillShare = async () => {
-  if (hasSpirit.value || isAdmin.value) return;
+  if (hasSpirit.value || isAdmin.value) return
   if (shareCount.value >= MAX_SHARES_PER_DAY) {
-    alert(`DAILY SYNC LIMIT REACHED. PLEASE WAIT FOR THE NEXT NEURAL CYCLE.`);
-    return;
+    alert(`DAILY SYNC LIMIT REACHED.`)
+    return
   }
 
   try {
     if (navigator.share) {
-      await navigator.share({
-        title: 'Cyber Tao',
-        text: 'Decoding the digital void.',
-        url: window.location.href
-      });
-
-      const today = new Date().toISOString().split('T')[0];
-      const newCount = shareCount.value + 1;
-      await supabase.from('device_profiles')
-        .update({ share_count: newCount, last_share_date: today, last_reading_at: null })
-        .eq('device_id', deviceId.value);
-
-      shareCount.value = newCount;
-      lastReadingTime.value = null;
-      localStorage.removeItem('cyber_tao_last_reading');
+      await navigator.share({ title: 'Cyber Tao', url: window.location.href })
+      const today = new Date().toISOString().split('T')[0]
+      const newCount = shareCount.value + 1
+      await supabase.from('device_profiles').update({ share_count: newCount, last_share_date: today }).eq('device_id', deviceId.value)
+      shareCount.value = newCount
+      // 临时清除限制
+      lastReadingTime.value = null
+      localStorage.removeItem('cyber_tao_last_reading')
     }
   } catch (err) {
-    console.log('Share failed');
+    console.log('Share canceled or failed')
   }
-};
+}
 
-const reset = () => { 
-  step.value = 'intro'; 
-  question.value = ''; 
-  hexagramResult.value = [];
-  hexagramData.value = { nameZh: '', nameEn: '', poemZh: '' };
+const reset = () => {
+  step.value = 'intro'; question.value = ''; hexagramResult.value = [];
+  aiResult.value = ''; hexagramData.value = { nameZh: '', nameEn: '', poemZh: '' };
 }
 </script>
 
 <style scoped>
 .animate-fade-in {
-  animation: fadeIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
