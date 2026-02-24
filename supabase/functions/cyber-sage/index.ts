@@ -6,6 +6,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // 1. 立即处理预检请求，确保不会报 CORS 错误
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders, status: 200 })
   }
@@ -14,88 +15,61 @@ serve(async (req) => {
     const { lines, question, language } = await req.json()
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 
-    if (!DEEPSEEK_API_KEY) throw new Error("API Key missing on server")
-
-    // 确定目标语言
-    const targetLanguage = language === 'en' ? 'English' : 'Chinese'
-    const hexagramStr = lines.join(', ')
-
-    // ==========================================
-    // STEP 1: 获取客观数据（卦名、中文诗词）
-    // ==========================================
-    const metaResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an I Ching database. You must return ONLY a JSON object with exact keys: { "hexagramNameZh": "string", "hexagramNameEn": "string", "poemZh": "string" }. The "poemZh" must be a classic Chinese poem/phrase representing the hexagram.`
-          },
-          {
-            role: 'user',
-            content: `Identify the hexagram for these lines (bottom to top, 0=Yin, 1=Yang): ${hexagramStr}`
-          }
-        ],
-        response_format: { type: "json_object" }
-      })
-    })
-
-    const metaData = await metaResponse.json()
-    if (metaData.error) throw new Error(`Step 1 Error: ${metaData.error.message}`)
-    const metaResult = JSON.parse(metaData.choices[0].message.content)
-
-    // ==========================================
-    // STEP 2: 获取主观解释（严格锁定语言）
-    // ==========================================
-    const interpretationResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a Cyber Sage predicting the future. You must return ONLY a JSON object with the exact key: { "interpretation": "string" }. CRITICAL RULE: The entire "interpretation" MUST be written strictly in ${targetLanguage}. Maintain a cyber-punk and mystical tone.`
-          },
-          {
-            role: 'user',
-            content: `The user asked: "${question}". The divination result is the hexagram: ${metaResult.hexagramNameEn} (${metaResult.hexagramNameZh}). Provide your interpretation in ${targetLanguage}.`
-          }
-        ],
-        response_format: { type: "json_object" }
-      })
-    })
-
-    const interpretationData = await interpretationResponse.json()
-    if (interpretationData.error) throw new Error(`Step 2 Error: ${interpretationData.error.message}`)
-    const interpretationResult = JSON.parse(interpretationData.choices[0].message.content)
-
-    // ==========================================
-    // 组合结果并返回给前端
-    // ==========================================
-    const finalResult = {
-      hexagramNameZh: metaResult.hexagramNameZh,
-      hexagramNameEn: metaResult.hexagramNameEn,
-      poemZh: metaResult.poemZh,
-      interpretation: interpretationResult.interpretation
+    if (!DEEPSEEK_API_KEY) {
+      throw new Error("Missing DEEPSEEK_API_KEY. Please set it in Supabase Secrets.")
     }
 
-    return new Response(JSON.stringify(finalResult), {
+    const targetLang = language === 'en' ? 'English' : 'Chinese'
+    const hexagramStr = lines.join('') // 得到 010101 这种字符串
+
+    // 2. 为了避免超时限制，我们将两个请求合并为一个，让 AI 一次性返回所有数据
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a Cyber Sage. The user provides a hexagram code (6 lines, 0=Yin, 1=Yang, from bottom to top). 
+            Identify the hexagram and provide a cyberpunk interpretation.
+            Return ONLY a JSON object: 
+            {
+              "hexName": "卦名(中文)",
+              "hexEn": "Hexagram Name(English)",
+              "poem": "卦辞或爻辞(中文)",
+              "interpretation": "Your detailed prophecy in ${targetLang}"
+            }`
+          },
+          {
+            role: 'user',
+            content: `Hexagram Code: ${hexagramStr}. User Question: ${question}`
+          }
+        ],
+        response_format: { type: "json_object" }
+      })
+    })
+
+    const data = await response.json()
+    if (data.error) throw new Error(data.error.message)
+    
+    const result = JSON.parse(data.choices[0].message.content)
+
+    return new Response(JSON.stringify({
+      hexagramNameZh: result.hexName,
+      hexagramNameEn: result.hexEn,
+      poemZh: result.poem,
+      interpretation: result.interpretation
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200
     })
 
   } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : 'Unknown error'
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: e.message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     })
