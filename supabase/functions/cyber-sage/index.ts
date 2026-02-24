@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { HEXAGRAM_DATA } from "./data.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,20 +6,24 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // 必须处理 OPTIONS 请求
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders, status: 200 })
   }
 
   try {
-    const { lines, question } = await req.json()
-    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
-    
-    // 获取卦象数据
-    const code = lines.join('')
-    const baseData = HEXAGRAM_DATA[code] || HEXAGRAM_DATA["111111"]
+    const { lines, question, language } = await req.json()
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    if (!DEEPSEEK_API_KEY) throw new Error("API Key missing on server")
+
+    // 确定目标语言
+    const targetLanguage = language === 'en' ? 'English' : 'Chinese'
+    const hexagramStr = lines.join(', ')
+
+    // ==========================================
+    // STEP 1: 获取客观数据（卦名、中文诗词）
+    // ==========================================
+    const metaResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -31,34 +34,8 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are the Cyber Sage. Give a mystical, cyberpunk interpretation of the I-Ching based on the user question. Return ONLY JSON: {"interpretation": "..."}'
+            content: `You are an I Ching database. You must return ONLY a JSON object with exact keys: { "hexagramNameZh": "string", "hexagramNameEn": "string", "poemZh": "string" }. The "poemZh" must be a classic Chinese poem/phrase representing the hexagram.`
           },
           {
             role: 'user',
-            content: `Question: ${question}, Hexagram: ${baseData.nameZh}, Poem: ${baseData.poemZh}`
-          }
-        ],
-        response_format: { type: "json_object" }
-      })
-    })
-
-    const data = await response.json()
-    const result = JSON.parse(data.choices[0].message.content)
-
-    return new Response(JSON.stringify({
-      interpretation: result.interpretation,
-      hexName: baseData.nameZh,
-      hexEn: baseData.nameEn,
-      poem: baseData.poemZh
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200
-    })
-
-  } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400
-    })
-  }
-})
+            content: `Identify the hexagram for these lines (bottom to top, 0=Y
