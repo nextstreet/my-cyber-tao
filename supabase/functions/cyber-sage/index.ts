@@ -13,7 +13,18 @@ serve(async (req) => {
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')?.trim();
 
     if (!DEEPSEEK_API_KEY) throw new Error("API Key missing on server")
+// supabase/functions/cyber-sage/index.ts
+// 修改 system prompt
+const systemPrompt = `You are a Cyber Sage. Return a JSON object: 
+{ "hexagramNameZh", "hexagramNameEn", "poemZh", "interpretation" }.
 
+LANGUAGE PROTOCOL:
+- "hexagramNameZh" & "poemZh" are ALWAYS Chinese.
+- "hexagramNameEn" is ALWAYS English.
+- "interpretation" MUST BE THE SAME LANGUAGE AS THE USER'S QUESTION. 
+- If the question is English, reply in English. If Chinese, reply in Chinese. NO EXCEPTIONS.`
+
+// 部署命令: supabase functions deploy cyber-sage
     // 1. 调用 DeepSeek
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
