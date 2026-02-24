@@ -80,16 +80,33 @@ const deviceId = ref('')
 const isAdmin = ref(false)
 
 const initIdentity = async () => {
-  let id = localStorage.getItem('cyber_tao_device_id')
+  let id = localStorage.getItem('cyber_tao_device_id');
+  
   if (!id) {
-    id = crypto.randomUUID()
-    localStorage.setItem('cyber_tao_device_id', id)
-    await supabase.from('device_profiles').insert([{ device_id: id }])
+    id = crypto.randomUUID();
+    localStorage.setItem('cyber_tao_device_id', id);
+    // 在数据库创建新设备记录
+    await supabase.from('device_profiles').insert([{ device_id: id }]);
   }
-  deviceId.value = id
-  const { data } = await supabase.from('device_profiles').select('is_unlimited').eq('device_id', id).single()
-  if (data) isAdmin.value = data.is_unlimited
-}
+  
+  deviceId.value = id;
+
+  // 从数据库同步权限和上次占卜时间
+  const { data } = await supabase
+    .from('device_profiles')
+    .select('is_unlimited, last_reading_at')
+    .eq('device_id', id)
+    .single();
+
+  if (data) {
+    isAdmin.value = data.is_unlimited;
+    lastReadingTime.value = data.last_reading_at;
+    // 同步到本地缓存防止断网失效
+    if (data.last_reading_at) {
+        localStorage.setItem('cyber_tao_last_reading', data.last_reading_at);
+    }
+  }
+};
 
 onMounted(() => {
   initIdentity()
@@ -102,17 +119,43 @@ const hasSpirit = computed(() => {
 })
 
 const onRitualComplete = async (lines) => {
-  hexagramResult.value = lines
-  step.value = 'result'
-  loading.value = true
-  const { data } = await supabase.functions.invoke('cyber-sage', { body: { lines, question: question.value } })
-  hexagramData.value = data
-  aiResult.value = data.interpretation
-  lastReadingTime.value = new Date().toISOString()
-  localStorage.setItem('cyber_tao_last_reading', lastReadingTime.value)
-  loading.value = false
-}
+  hexagramResult.value = lines;
+  step.value = 'result';
+  loading.value = true;
 
+  try {
+    const { data: aiData } = await supabase.functions.invoke('cyber-sage', {
+      body: { lines, question: question.value }
+    });
+
+    // 1. 更新设备表的上次占卜时间
+    const now = new Date().toISOString();
+    await supabase.from('device_profiles')
+      .update({ last_reading_at: now })
+      .eq('device_id', deviceId.value);
+
+    // 2. 将结果存入历史记录表
+    await supabase.from('divination_logs').insert([{
+      device_id: deviceId.value,
+      question: question.value,
+      hexagram_code: lines.join(''),
+      name_zh: aiData.hexagramNameZh,
+      name_en: aiData.hexagramNameEn,
+      interpretation: aiData.interpretation
+    }]);
+
+    // 更新前端状态
+    hexagramData.value = aiData;
+    aiResult.value = aiData.interpretation;
+    lastReadingTime.value = now;
+    localStorage.setItem('cyber_tao_last_reading', now);
+    
+  } catch (err) {
+    aiResult.value = "CONNECTION INTERRUPTED";
+  } finally {
+    loading.value = false;
+  }
+};
 const handleRefillShare = async () => {
   if (navigator.share) {
     await navigator.share({ title: 'Cyber Tao', url: window.location.href })
