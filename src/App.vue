@@ -97,7 +97,7 @@ import { supabase } from './lib/supabase'
 import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
 import TalismanCard from './components/TalismanCard.vue'
-
+import { HEXAGRAM_MAP } from './utils/hexagramData'
 // --- 核心状态 ---
 const step = ref('intro')
 const question = ref('')
@@ -170,17 +170,41 @@ const hasSpirit = computed(() => {
   return (new Date().getTime() - new Date(lastReadingTime.value).getTime()) / (1000*60*60) >= 12;
 });
 
+// --- 修改 onRitualComplete 方法 ---
 const onRitualComplete = async (lines) => {
   hexagramResult.value = lines;
   step.value = 'result';
   loading.value = true;
 
+  // 1. 立即从本地获取静态数据 (无需等待 API)
+  const code = lines.join('');
+  const localMatch = HEXAGRAM_MAP[code] || { 
+    nameZh: "未知卦象", 
+    nameEn: "Unknown", 
+    poemZh: "乾坤演变，因缘未至。" 
+  };
+  
+  // 立即渲染卦名和卦辞，提升反馈速度
+  hexagramData.value = localMatch;
+
+  // 2. 语言判定
+  const isEnglish = /^[a-zA-Z0-9\s.,?!\'\"-]+$/.test(question.value.trim());
+
   try {
+    // 3. 仅请求后端获取 Interpretation
     const { data: aiData } = await supabase.functions.invoke('cyber-sage', {
-      body: { lines, question: question.value }
+      body: { 
+        lines, 
+        question: question.value,
+        language: isEnglish ? 'en' : 'zh',
+        // 可以把本地匹配好的卦名也传过去，省去 AI 检索卦象的步骤，提高准确率
+        hexagramName: `${localMatch.nameEn} (${localMatch.nameZh})` 
+      }
     });
 
     const now = new Date().toISOString();
+    
+    // 更新数据库记录（保持原有逻辑）
     await supabase.from('device_profiles')
       .update({ last_reading_at: now })
       .eq('device_id', deviceId.value);
@@ -188,18 +212,19 @@ const onRitualComplete = async (lines) => {
     await supabase.from('divination_logs').insert([{
       device_id: deviceId.value,
       question: question.value,
-      hexagram_code: lines.join(''),
-      name_zh: aiData.hexagramNameZh,
-      name_en: aiData.hexagramNameEn,
-      interpretation: aiData.interpretation
+      hexagram_code: code,
+      name_zh: localMatch.nameZh,
+      name_en: localMatch.nameEn,
+      interpretation: aiData.interpretation // 此时后端只传回解释
     }]);
 
-    hexagramData.value = aiData;
+    // 4. 更新 AI 解释
     aiResult.value = aiData.interpretation;
     lastReadingTime.value = now;
     localStorage.setItem('cyber_tao_last_reading', now);
+    
   } catch (err) {
-    aiResult.value = "CONNECTION INTERRUPTED";
+    aiResult.value = isEnglish ? "CONNECTION INTERRUPTED" : "神经连接中断";
   } finally {
     loading.value = false;
   }
