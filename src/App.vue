@@ -76,6 +76,27 @@ const talismanRef = ref(null)
 const lastReadingTime = ref(null)
 const hexagramData = ref({ nameZh: '', nameEn: '', poemZh: '' })
 
+const isAdmin = ref(false)
+const deviceId = ref('')
+
+// 获取或生成设备唯一 ID
+const initDeviceIdentity = async () => {
+  let id = localStorage.getItem('cyber_tao_device_id')
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem('cyber_tao_device_id', id)
+    // 在数据库中注册新设备
+    await supabase.from('device_profiles').insert([{ device_id: id }])
+  }
+  deviceId.value = id
+
+  // 检查该设备的权限
+  const { data } = await supabase.from('device_profiles').select('is_unlimited').eq('device_id', id).single()
+  if (data) {
+    isAdmin.value = data.is_unlimited
+  }
+}
+  
 // 权限校验
 onMounted(async () => {
   const { data: { user } } = await supabase.auth.getUser()
