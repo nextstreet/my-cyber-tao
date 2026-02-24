@@ -1,59 +1,60 @@
 <template>
   <div class="fixed inset-0 bg-tao-black text-tao-gold flex items-center justify-center p-4 overflow-hidden font-sans">
     <div class="absolute inset-0 z-0 opacity-20">
-      <video autoplay loop muted playsinline class="w-full h-full object-cover"><source src="/bg-smoke.mp4" type="video/mp4" /></video>
+      <video autoplay loop muted playsinline class="w-full h-full object-cover">
+        <source src="/bg-smoke.mp4" type="video/mp4" />
+      </video>
     </div>
 
-    <main class="z-10 w-full max-w-[400px] bg-black/80 backdrop-blur-3xl p-8 border border-tao-gold/20 relative shadow-2xl">
-      <section v-if="step === 'intro'" class="flex flex-col items-center space-y-8 animate-fade-in">
+    <main class="z-10 w-full max-w-[420px] bg-black/80 backdrop-blur-3xl p-8 border border-tao-gold/20 relative shadow-2xl animate-fade-in">
+      <section v-if="step === 'intro'" class="flex flex-col items-center space-y-8">
         <header class="text-center">
-          <h1 class="text-4xl font-serif tracking-[0.4em] text-white">CYBER TAO</h1>
-          <p class="text-[9px] tracking-[0.4em] text-tao-gold/40 mt-2">Neural Oracle V2.0</p>
+          <h1 class="text-3xl font-serif tracking-[0.4em] text-white">CYBER TAO</h1>
+          <p class="text-[9px] tracking-[0.4em] text-tao-gold/40 mt-1 italic">ID: {{ deviceId.slice(0,8) }} {{ isAdmin ? '(ADMIN)' : '' }}</p>
         </header>
 
-        <textarea v-model="question" placeholder="天人合一，道法自然..." class="w-full bg-transparent border-b border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all resize-none text-white text-lg placeholder:opacity-20"></textarea>
+        <textarea v-model="question" placeholder="ASK THE VOID..." class="w-full bg-transparent border-b border-tao-gold/30 text-center py-4 focus:outline-none focus:border-tao-gold transition-all text-white text-lg placeholder:opacity-20"></textarea>
         
         <SpiritBottle :lastReadingTime="lastReadingTime" :isUnlimited="isAdmin" @refill="handleRefillShare" />
 
-        <button @click="startRitual" :disabled="!question || (!hasSpirit && !isAdmin)" class="w-full py-5 border-2 border-tao-gold text-xs font-black tracking-[0.5em] hover:bg-tao-gold hover:text-black transition-all disabled:opacity-20">
-          {{ (hasSpirit || isAdmin) ? 'BEGIN SYNC' : 'RECHARGE REQUIRED' }}
+        <button @click="step = 'ritual'" :disabled="!question || (!hasSpirit && !isAdmin)" class="w-full py-5 border-2 border-tao-gold text-xs font-black tracking-[0.5em] hover:bg-tao-gold hover:text-black transition-all disabled:opacity-20">
+          {{ (hasSpirit || isAdmin) ? 'INITIATE PROTOCOL' : 'ENERGY DEPLETED' }}
         </button>
       </section>
 
-      <section v-else-if="step === 'ritual'" class="w-full">
+      <section v-else-if="step === 'ritual'">
         <CoinToss @complete="onRitualComplete" />
       </section>
 
-      <section v-else-if="step === 'result'" class="relative flex flex-col items-center min-h-[460px] justify-between">
-        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-[0.08] select-none">
-          <span class="text-[16rem] font-serif leading-none">{{ hexagramData.nameZh }}</span>
+      <section v-else-if="step === 'result'" class="relative flex flex-col items-center min-h-[480px] justify-between text-center">
+        <div class="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none">
+          <span class="text-[14rem] font-serif">{{ hexagramData.nameZh }}</span>
         </div>
 
-        <div class="z-10 w-full pt-2 text-center">
-          <h2 class="text-4xl font-serif text-white tracking-[0.4em] mb-2">{{ hexagramData.nameZh }}</h2>
-          <p class="text-[10px] tracking-[0.4em] text-tao-gold/60 uppercase mb-8">{{ hexagramData.nameEn }}</p>
+        <div class="z-10 w-full">
+          <h2 class="text-4xl font-serif text-white tracking-[0.3em] mb-2">{{ hexagramData.nameZh }}</h2>
+          <p class="text-[10px] tracking-[0.5em] text-tao-gold/50 uppercase mb-10">{{ hexagramData.nameEn }}</p>
 
-          <div v-if="loading" class="py-20 animate-pulse text-[11px] tracking-[0.8em]">SYNCHRONIZING...</div>
-          <div v-else class="space-y-6 animate-fade-in">
-            <p class="text-white font-serif text-xl border-l-2 border-tao-red pl-4 text-left">{{ hexagramData.poemZh }}</p>
-            <div class="bg-black/40 p-5 border border-tao-gold/10 text-sm leading-relaxed text-gray-400 font-mono text-left italic">
+          <div v-if="loading" class="py-20 animate-pulse text-[10px] tracking-[0.6em]">DECODING REALITY...</div>
+          <div v-else class="space-y-6 text-left animate-fade-in">
+            <p class="text-white font-serif text-xl border-l-2 border-tao-red pl-4">{{ hexagramData.poemZh }}</p>
+            <p class="text-gray-400 font-mono text-sm leading-relaxed italic bg-white/5 p-4 border border-white/5">
               {{ aiResult }}
-            </div>
+            </p>
           </div>
         </div>
 
         <div v-if="!loading" class="grid grid-cols-2 gap-4 w-full mt-8 z-20">
-          <button @click="talismanRef.show()" class="py-4 bg-tao-gold text-black text-[11px] font-black tracking-widest uppercase hover:bg-white transition-all">EXTRACT</button>
-          <button @click="reset" class="py-4 border-2 border-tao-gold/30 text-[11px] text-tao-gold uppercase hover:border-tao-gold transition-all">RETURN</button>
+          <button @click="talismanRef.generate()" class="py-4 bg-tao-gold text-black text-[11px] font-black tracking-widest uppercase hover:bg-white transition-all">EXTRACT</button>
+          <button @click="reset" class="py-4 border border-tao-gold/40 text-[11px] text-tao-gold uppercase hover:border-tao-gold">RETURN</button>
         </div>
       </section>
     </main>
 
     <TalismanCard 
       ref="talismanRef" 
-      :hexagramData="{ name: hexagramData.nameZh, lines: hexagramResult }" 
+      :hexagramData="{ name: hexagramData.nameEn, lines: hexagramResult, nameZh: hexagramData.nameZh }" 
       :aiPredictionText="aiResult"
-      :guardian="currentGuardian"
     />
   </div>
 </template>
@@ -65,85 +66,54 @@ import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
 import TalismanCard from './components/TalismanCard.vue'
 
-// 核心状态
 const step = ref('intro')
 const question = ref('')
 const hexagramResult = ref([])
 const aiResult = ref('')
 const loading = ref(false)
-const isAdmin = ref(false)
 const talismanRef = ref(null)
 const lastReadingTime = ref(null)
 const hexagramData = ref({ nameZh: '', nameEn: '', poemZh: '' })
 
-const isAdmin = ref(false)
+// 身份锁定逻辑
 const deviceId = ref('')
+const isAdmin = ref(false)
 
-// 获取或生成设备唯一 ID
-const initDeviceIdentity = async () => {
+const initIdentity = async () => {
   let id = localStorage.getItem('cyber_tao_device_id')
   if (!id) {
     id = crypto.randomUUID()
     localStorage.setItem('cyber_tao_device_id', id)
-    // 在数据库中注册新设备
     await supabase.from('device_profiles').insert([{ device_id: id }])
   }
   deviceId.value = id
-
-  // 检查该设备的权限
   const { data } = await supabase.from('device_profiles').select('is_unlimited').eq('device_id', id).single()
-  if (data) {
-    isAdmin.value = data.is_unlimited
-  }
+  if (data) isAdmin.value = data.is_unlimited
 }
-  
-// 权限校验
-onMounted(async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    const { data } = await supabase.from('profiles').select('is_unlimited').eq('id', user.id).single()
-    if (data) isAdmin.value = data.is_unlimited
-  }
-  const saved = localStorage.getItem('cyber_tao_last_reading')
-  if (saved) lastReadingTime.value = saved
+
+onMounted(() => {
+  initIdentity()
+  lastReadingTime.value = localStorage.getItem('cyber_tao_last_reading')
 })
 
 const hasSpirit = computed(() => {
   if (!lastReadingTime.value) return true
-  const hours = (new Date().getTime() - new Date(lastReadingTime.value).getTime()) / (1000 * 60 * 60)
-  return hours >= 12
+  return (new Date().getTime() - new Date(lastReadingTime.value).getTime()) / (1000*60*60) >= 12
 })
-
-// 动态神兽映射
-const currentGuardian = computed(() => {
-  const guardians = ['dragon', 'tiger', 'phoenix', 'turtle', 'qilin']
-  if (hexagramResult.value.length < 6) return 'dragon'
-  const val = parseInt(hexagramResult.value.join(''), 2)
-  return guardians[val % guardians.length]
-})
-
-// 交互逻辑
-const startRitual = () => { step.value = 'ritual' }
 
 const onRitualComplete = async (lines) => {
   hexagramResult.value = lines
   step.value = 'result'
   loading.value = true
-  try {
-    const { data, error } = await supabase.functions.invoke('cyber-sage', {
-      body: { lines: hexagramResult.value, question: question.value },
-    })
-    if (error) throw error
-    hexagramData.value = { nameZh: data.hexagramNameZh, nameEn: data.hexagramNameEn, poemZh: data.poemZh }
-    aiResult.value = data.interpretation
-    lastReadingTime.value = new Date().toISOString()
-    localStorage.setItem('cyber_tao_last_reading', lastReadingTime.value)
-  } catch (err) { aiResult.value = 'SIGNAL LOST: ' + err.message } 
-  finally { loading.value = false }
+  const { data } = await supabase.functions.invoke('cyber-sage', { body: { lines, question: question.value } })
+  hexagramData.value = data
+  aiResult.value = data.interpretation
+  lastReadingTime.value = new Date().toISOString()
+  localStorage.setItem('cyber_tao_last_reading', lastReadingTime.value)
+  loading.value = false
 }
 
 const handleRefillShare = async () => {
-  if (hasSpirit.value || isAdmin.value) return
   if (navigator.share) {
     await navigator.share({ title: 'Cyber Tao', url: window.location.href })
     localStorage.removeItem('cyber_tao_last_reading')
@@ -151,5 +121,5 @@ const handleRefillShare = async () => {
   }
 }
 
-const reset = () => { step.value = 'intro'; question.value = ''; hexagramResult.value = [] }
+const reset = () => { step.value = 'intro'; question.value = '' }
 </script>
