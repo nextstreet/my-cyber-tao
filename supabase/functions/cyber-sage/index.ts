@@ -22,19 +22,29 @@ serve(async (req) => {
         'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
-// 修改 supabase/functions/cyber-sage/index.ts 中的 system prompt
-messages: [
-  { 
-    role: "system", 
-    content: "You are a Cyber Sage. Analyze the hexagram (0:Yin, 1:Yang) and user question. " +
-             "Return JSON: {hexagramNameZh, hexagramNameEn, poemZh, interpretation}. " +
-             "CRITICAL: Always write the 'interpretation' in the SAME LANGUAGE as the user's question. " +
-             "The 'poemZh' must remain in Classical Chinese."
-  }
-],
-        response_format: { type: 'json_object' }
-      })
+    model: 'deepseek-chat', // 或你当前使用的模型
+    messages: [
+      {
+        role: 'system',
+        content: `You are a Cyber Sage analyzing I Ching hexagrams.
+You must return ONLY a JSON object with these exact keys: { "hexagramNameZh", "hexagramNameEn", "poemZh", "interpretation" }.
+
+CRITICAL LANGUAGE RULES:
+1. "hexagramNameZh" and "poemZh" MUST always be in Chinese.
+2. "hexagramNameEn" MUST always be in English.
+3. "interpretation" MUST STRICTLY MATCH THE LANGUAGE OF THE USER'S QUESTION. 
+- If the user's question is in English, the "interpretation" MUST be entirely in English.
+- If the user's question is in Chinese, the "interpretation" MUST be entirely in Chinese.
+Do not mix languages in the interpretation field.`
+      },
+      {
+        role: 'user',
+        content: `Hexagram lines (bottom to top, 0=Yin, 1=Yang): ${lines.join(', ')}. 
+User Question: "${question}"`
+      }
+    ],
+    response_format: { type: "json_object" }
+  })
     })
 
     const aiData = await response.json()
