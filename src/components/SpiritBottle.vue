@@ -1,22 +1,15 @@
 <template>
-  <div class="flex flex-col items-center py-6 group cursor-pointer" @click="$emit('refill')">
-    <div class="relative">
-      <div class="w-5 h-4 border-x-2 border-t-2 border-tao-gold/40 bg-black/40 mx-auto"></div>
-      <div class="w-12 h-16 border-2 border-tao-gold/40 rounded-b-2xl relative overflow-hidden bg-black/20 shadow-[0_0_20px_rgba(200,170,110,0.1)]">
-        <div 
-          class="absolute bottom-0 w-full transition-all duration-1000 ease-in-out"
-          :class="[hasSpirit ? 'bg-gradient-to-t from-tao-red via-tao-gold to-tao-gold-light' : 'bg-gray-800']"
-          :style="{ height: hasSpirit ? '100%' : '15%' }"
-        >
-          <div v-if="hasSpirit" class="absolute inset-0 animate-pulse-glow bg-white/10"></div>
-          <div class="absolute top-0 w-full h-1 bg-white/40 shadow-[0_0_10px_white] animate-scan"></div>
-        </div>
-      </div>
-    </div>
-    <span class="text-[9px] mt-3 tracking-[0.4em] text-tao-gold/50 uppercase font-mono">
+<div class="flex flex-col items-center py-6 group cursor-pointer" @click="$emit('refill')">
+  <div class="flex flex-col items-center mt-3 space-y-1">
+    <span class="text-[9px] tracking-[0.4em] text-tao-gold/50 uppercase font-mono">
       {{ isUnlimited ? 'ADMIN: UNLIMITED' : (hasSpirit ? 'SPIRIT SYNCED' : 'DEPLETED') }}
     </span>
+    
+    <span v-if="!hasSpirit && !isUnlimited" class="text-[7px] tracking-widest text-tao-red/60 uppercase">
+      Daily Sync: {{ shareCount }}/3
+    </span>
   </div>
+</div>
 </template>
 
 <script setup>
