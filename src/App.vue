@@ -59,7 +59,12 @@
 
 <TalismanCard 
   ref="talismanRef" 
-  :hexagramData="{ name: hexagramData.nameEn, lines: hexagramResult, nameZh: hexagramData.nameZh }" 
+  :hexagramData="{ 
+    name: hexagramData.nameEn, 
+    nameZh: hexagramData.nameZh, 
+    poemZh: hexagramData.poemZh, 
+    lines: hexagramResult 
+  }" 
   :aiPredictionText="aiResult"
 />
   </div>
