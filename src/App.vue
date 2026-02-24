@@ -18,8 +18,8 @@
 
         <textarea 
           v-model="question" 
-          placeholder="ENTER THE VOID..." 
-          class="w-full bg-transparent border-b border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-xl placeholder:opacity-10 placeholder:tracking-widest italic"
+          placeholder="吉凶悔吝-Question" 
+          class="w-full bg-transparent border-b border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-xl placeholder:opacity-1 placeholder:tracking-widest italic"
         ></textarea>
         
         <SpiritBottle 
@@ -244,9 +244,6 @@ const reset = () => { step.value = 'intro'; question.value = ''; hexagramResult.
 
 <style scoped>
  
-textarea::placeholder {
-  color: #fffff; 
-}
 .animate-fade-in {
   animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
