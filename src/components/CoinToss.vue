@@ -1,38 +1,27 @@
 <template>
-  <div class="flex flex-col items-center w-full min-h-[500px] justify-between py-4">
-    <div class="flex flex-col-reverse gap-3 h-40 justify-end">
+  <div class="flex flex-col items-center w-full min-h-[520px] justify-between py-6">
+    <div class="flex flex-col-reverse gap-4 h-48 justify-end">
       <div v-for="(line, i) in lines" :key="i" class="animate-in">
-        <div v-if="line === 1" class="w-32 h-2 bg-tao-gold shadow-[0_0_15px_rgba(200,170,110,0.4)]"></div>
-        <div v-else class="w-32 h-2 flex justify-between">
-          <div class="w-[44%] h-full bg-tao-gold shadow-[0_0_15px_rgba(200,170,110,0.4)]"></div>
-          <div class="w-[44%] h-full bg-tao-gold shadow-[0_0_15px_rgba(200,170,110,0.4)]"></div>
+        <div v-if="line === 1" class="w-40 h-2.5 bg-tao-gold shadow-[0_0_20px_rgba(200,170,110,0.8)] border border-white/20"></div>
+        <div v-else class="w-40 h-2.5 flex justify-between">
+          <div class="w-[44%] h-full bg-tao-gold shadow-[0_0_20px_rgba(200,170,110,0.8)] border border-white/20"></div>
+          <div class="w-[44%] h-full bg-tao-gold shadow-[0_0_20px_rgba(200,170,110,0.8)] border border-white/20"></div>
         </div>
+      </div>
+      <div v-if="lines.length === 0" class="text-center opacity-40 italic text-[10px] tracking-[0.2em] px-10 leading-relaxed">
+        THROUGH THE DIGITAL VOID, NANO-COINS WILL ALIGN WITH YOUR KARMA.<br>SIX TOSSES TO REVEAL THE CODE.
       </div>
     </div>
 
-    <div class="flex gap-6 my-8">
-      <div v-for="(coin, index) in coins" :key="index" class="relative w-16 h-16 [perspective:1000px]">
-        <div 
-          class="relative w-full h-full transition-transform duration-800 [transform-style:preserve-3d]"
-          :class="{ 'animate-flicker': isTossing }"
-          :style="!isTossing ? (coin.v === 0 ? 'transform: rotateY(180deg)' : 'transform: rotateY(0deg)') : ''"
-        >
-          <div class="absolute inset-0 w-full h-full [backface-visibility:hidden]">
-            <img src="/coin-head.png" class="w-full h-full object-contain" />
-          </div>
-          <div class="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)]">
-            <img src="/coin-tail.png" class="w-full h-full object-contain" />
-          </div>
-        </div>
+    <div class="flex gap-8 my-10">
       </div>
-    </div>
 
     <button 
       @click="toss" 
       :disabled="isTossing || lines.length >= 6"
-      class="px-10 py-4 border border-tao-gold text-tao-gold bg-black/40 transition-all z-20 hover:bg-tao-gold hover:text-black hover:shadow-[0_0_20px_rgba(200,170,110,0.5)] disabled:opacity-20 uppercase tracking-[0.3em]"
+      class="w-64 py-4 border-2 border-tao-gold text-tao-gold bg-black/60 font-bold tracking-[0.4em] transition-all hover:bg-tao-gold hover:text-black active:scale-95 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-tao-gold"
     >
-      {{ isTossing ? 'COMMUNING...' : (lines.length >= 6 ? 'COMPLETED' : `CAST ${lines.length + 1} / 6`) }}
+      {{ isTossing ? 'CALCULATING...' : (lines.length >= 6 ? 'ALIGNMENT READY' : `INITIATE CAST ${lines.length + 1}`) }}
     </button>
   </div>
 </template>
