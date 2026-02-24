@@ -124,3 +124,88 @@
 }
 .animate-fade-up { animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 </style>
+
+
+<script setup>
+
+import { ref, computed } from 'vue'
+
+import { toPng } from 'html-to-image'
+
+const props = defineProps(['hexagramData', 'aiPredictionText'])
+
+const showModal = ref(false)
+
+const isFlipped = ref(false)
+
+const talismanRef = ref(null)
+
+
+const beastImageUrl = computed(() => {
+
+  const name = (props.hexagramData?.name || '').toLowerCase()
+
+  if (name.match(/heaven|sky|thunder|wind|wood/)) return '/guardian-dragon.png'
+
+  if (name.match(/fire|sun|bright|south/)) return '/guardian-phoenix.png'
+
+  if (name.match(/lake|mountain|metal|gold/)) return '/guardian-tiger.png'
+
+  if (name.match(/water|rain|moon|north/)) return '/guardian-turtle.png'
+
+  return '/guardian-qilin.png'
+
+})
+
+
+const generate = () => {
+
+  isFlipped.value = false
+
+  showModal.value = true
+
+}
+
+
+const downloadImage = async () => {
+
+  if (!talismanRef.value) return
+
+  try {
+
+    const dataUrl = await toPng(talismanRef.value, { 
+
+      quality: 0.95, 
+
+      pixelRatio: 3, // 提高导出清晰度
+
+      backgroundColor: '#050505'
+
+    })
+
+    const link = document.createElement('a')
+
+    link.download = `CyberTao-${props.hexagramData.nameZh}.png`
+
+    link.href = dataUrl
+
+    link.click()
+
+  } catch (err) {
+
+    console.error('Save failed:', err)
+
+  }
+
+}
+
+const close = () => {
+
+  showModal.value = false
+
+}
+
+defineExpose({ generate })
+</script>
+
+
