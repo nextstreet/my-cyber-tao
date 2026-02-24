@@ -94,7 +94,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { supabase } from './lib/supabase'
-import { HEXAGRAM_MAP } from './data.ts' 
+import { HEXAGRAM_MAP } from './utils/hexagramData.ts' 
 import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
 import TalismanCard from './components/TalismanCard.vue'
