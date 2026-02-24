@@ -8,11 +8,11 @@
       </video>
     </div>
 
-    <main class="relative z-10 w-full max-w-4xl h-[85vh] bg-[#0a0a0a]/90 backdrop-blur-2xl border border-tao-gold/30 shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2xl flex flex-col p-8 md:p-16 overflow-hidden">
+    <main class="relative z-10 w-full max-w-3xl h-[85vh] bg-[#0a0a0a]/90 backdrop-blur-2xl border border-tao-gold/30 shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2xl flex flex-col p-8 md:p-16 overflow-hidden">
       
-      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-xl mx-auto space-y-12">
+      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-xl mx-auto space-y-12" style="margin: auto;"> 
         <header class="text-center w-full animate-fade-in">
-          <h1 class="text-5xl md:text-6xl font-serif tracking-[0.6em] text-white drop-shadow-[0_0_20px_rgba(200,170,110,0.4)]">CYBER TAO</h1>
+          <h1 class="text-3xl md:text-6xl font-serif tracking-[0.6em] text-white drop-shadow-[0_0_20px_rgba(200,170,110,0.4)]">CYBER TAO</h1>
           <div class="h-[1px] w-24 bg-tao-gold/60 mx-auto mt-8 mb-8"></div>
           <p class="text-tao-gold/60 text-xs md:text-sm tracking-[0.3em] font-mono leading-relaxed uppercase">
             Submit your intent to the neural matrix.<br/>Six tosses will align your destiny.
