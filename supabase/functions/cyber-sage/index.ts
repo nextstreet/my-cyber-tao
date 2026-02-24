@@ -3,23 +3,29 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
-  // 1. 预检请求直接通过
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders, status: 200 })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { question, hexName, poem } = await req.json()
-    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
+    const { lines, question } = await req.json()
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 
-    if (!DEEPSEEK_API_KEY) throw new Error("API_KEY_NOT_CONFIGURED")
+    if (!DEEPSEEK_API_KEY) throw new Error("API Key missing on server")
+// supabase/functions/cyber-sage/index.ts
+// 修改 system prompt
+const systemPrompt = `You are a Cyber Sage. Return a JSON object: 
+{ "hexagramNameZh", "hexagramNameEn", "poemZh", "interpretation" }.
 
-    console.log(`[LOG] Protocol Initiated for: ${question}`)
+LANGUAGE PROTOCOL:
+- "hexagramNameZh" & "poemZh" are ALWAYS Chinese.
+- "hexagramNameEn" is ALWAYS English.
+- "interpretation" MUST BE THE SAME LANGUAGE AS THE USER'S QUESTION. 
+- If the question is English, reply in English. If Chinese, reply in Chinese. NO EXCEPTIONS.`
 
+// 部署命令: supabase functions deploy cyber-sage
+    // 1. 调用 DeepSeek
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -27,51 +33,47 @@ serve(async (req) => {
         'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: `You are the "Cyber Sage" within the Taoist Neural Matrix. 
-            CORE LOGIC:
-            1. Detect the user's input language.
-            2. Internally translate the user's intent to Chinese for precise I-Ching logic processing.
-            3. Synthesize the interpretation based on the Hexagram context provided.
-            4. Translate the final insight back to the user's original language.
+    model: 'deepseek-chat', // 或你当前使用的模型
+    messages: [
+      {
+        role: 'system',
+        content: `You are a Cyber Sage analyzing I Ching hexagrams.
+You must return ONLY a JSON object with these exact keys: { "hexagramNameZh", "hexagramNameEn", "poemZh", "interpretation" }.
 
-            STRICT REQUIREMENTS:
-            - Tone: Mystical, Cyberpunk, and Philosophical.
-            - Format: Return ONLY a JSON object: {"interpretation": "..."}.
-            - Ensure the response directly addresses the user's concern through the lens of the I-Ching.`
-          },
-          {
-            role: 'user',
-            content: `[INPUT_SIGNAL]
-            Question: "${question}"
-            Hexagram: ${hexName}
-            Classic Text: "${poem}"`
-          }
-        ],
-        response_format: { type: "json_object" }
-      })
+CRITICAL LANGUAGE RULES:
+1. "hexagramNameZh" and  "poemZh" MUST always be in Chinese.
+2. "hexagramNameEn" MUST always be in English.
+3. "interpretation" MUST STRICTLY MATCH THE LANGUAGE OF THE USER'S QUESTION. 
+- If the user's question is in English, the "interpretation" MUST be entirely in English.
+- If the user's question is in Chinese, the "interpretation" MUST be entirely in Chinese.
+Do not mix languages in the interpretation field.`
+      },
+      {
+        role: 'user',
+        content: `Hexagram lines (bottom to top, 0=Yin, 1=Yang): ${lines.join(', ')}. 
+User Question: "${question}"`
+      }
+    ],
+    response_format: { type: "json_object" }
+  })
     })
 
     const aiData = await response.json()
-    if (!aiData.choices) throw new Error("NEURAL_VOID_RESPONSE")
 
-    // 返回 AI 生成的结果
-    return new Response(aiData.choices[0].message.content, {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // 检查 AI 是否返回错误
+    if (aiData.error) throw new Error(aiData.error.message)
+
+    const result = JSON.parse(aiData.choices[0].message.content)
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200
     })
 
   } catch (e) {
-    console.error(`[ERROR] ${e.message}`)
-    return new Response(JSON.stringify({ 
-      error: e.message,
-      interpretation: "SIGNAL INTERRUPTED: The void is too deep for transmission. / 神经连接中断，因缘未至。"
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200 // 保持 200 防止被浏览器 CORS 拦截真实错误
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     })
   }
 })
