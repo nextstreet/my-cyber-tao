@@ -3,25 +3,24 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  // 1. 预检请求直接通过
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders, status: 200 })
+  }
 
   try {
-    const { lines, question, language } = await req.json()
-    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+    const { question, hexName, poem } = await req.json()
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
 
-    if (!DEEPSEEK_API_KEY) throw new Error("API Key missing on server")
+    if (!DEEPSEEK_API_KEY) throw new Error("API_KEY_NOT_CONFIGURED")
 
-    // 确定目标语言，如果前端没有传，默认 fallback 为英文或中文均可
-    const targetLanguage = language === 'en' ? 'English' : 'Chinese'
-    const hexagramStr = lines.join(', ')
+    console.log(`[LOG] Protocol Initiated for: ${question}`)
 
-    // ==========================================
-    // STEP 1: 获取客观数据（卦名、中文诗词）
-    // ==========================================
-    const metaResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -32,74 +31,47 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an I Ching database. You must return ONLY a JSON object with exact keys: { "hexagramNameZh", "hexagramNameEn", "poemZh" }. 
-The "poemZh" must be a classic Chinese poem/phrase representing the hexagram.`
+            content: `You are the "Cyber Sage" within the Taoist Neural Matrix. 
+            CORE LOGIC:
+            1. Detect the user's input language.
+            2. Internally translate the user's intent to Chinese for precise I-Ching logic processing.
+            3. Synthesize the interpretation based on the Hexagram context provided.
+            4. Translate the final insight back to the user's original language.
+
+            STRICT REQUIREMENTS:
+            - Tone: Mystical, Cyberpunk, and Philosophical.
+            - Format: Return ONLY a JSON object: {"interpretation": "..."}.
+            - Ensure the response directly addresses the user's concern through the lens of the I-Ching.`
           },
           {
             role: 'user',
-            content: `Identify the hexagram for these lines (bottom to top, 0=Yin, 1=Yang): ${hexagramStr}`
+            content: `[INPUT_SIGNAL]
+            Question: "${question}"
+            Hexagram: ${hexName}
+            Classic Text: "${poem}"`
           }
         ],
         response_format: { type: "json_object" }
       })
     })
 
-    const metaData = await metaResponse.json()
-    if (metaData.error) throw new Error(`Step 1 Error: ${metaData.error.message}`)
-    const metaResult = JSON.parse(metaData.choices[0].message.content)
+    const aiData = await response.json()
+    if (!aiData.choices) throw new Error("NEURAL_VOID_RESPONSE")
 
-    // ==========================================
-    // STEP 2: 获取主观解释（严格锁定语言）
-    // ==========================================
-    const interpretationResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a Cyber Sage predicting the future. You must return ONLY a JSON object with the exact key: { "interpretation" }. 
-CRITICAL RULE: The entire "interpretation" MUST be written strictly in ${targetLanguage}. Maintain a cyber-punk and mystical tone.`
-          },
-          {
-            role: 'user',
-            content: `The user asked: "${question}". 
-The divination result is the hexagram: ${metaResult.hexagramNameEn} (${metaResult.hexagramNameZh}). 
-Provide your interpretation in ${targetLanguage}.`
-          }
-        ],
-        response_format: { type: "json_object" }
-      })
-    })
-
-    const interpretationData = await interpretationResponse.json()
-    if (interpretationData.error) throw new Error(`Step 2 Error: ${interpretationData.error.message}`)
-    const interpretationResult = JSON.parse(interpretationData.choices[0].message.content)
-
-    // ==========================================
-    // 组合结果并返回给前端
-    // ==========================================
-    const finalResult = {
-      hexagramNameZh: metaResult.hexagramNameZh,
-      hexagramNameEn: metaResult.hexagramNameEn,
-      poemZh: metaResult.poemZh,
-      interpretation: interpretationResult.interpretation
-    }
-
-    return new Response(JSON.stringify(finalResult), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // 返回 AI 生成的结果
+    return new Response(aiData.choices[0].message.content, {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200
     })
 
   } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : 'Unknown error'
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    console.error(`[ERROR] ${e.message}`)
+    return new Response(JSON.stringify({ 
+      error: e.message,
+      interpretation: "SIGNAL INTERRUPTED: The void is too deep for transmission. / 神经连接中断，因缘未至。"
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200 // 保持 200 防止被浏览器 CORS 拦截真实错误
     })
   }
 })
