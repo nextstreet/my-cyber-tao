@@ -23,10 +23,16 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "deepseek-chat",
-        messages: [
-          { role: "system", content: "你是一位赛博算命师。根据提供的六爻卦象（0为阴，1为阳）和用户问题，返回JSON：{hexagramNameZh, hexagramNameEn, poemZh, interpretation}。要求：语气神秘且现代，解释精炼。" },
-          { role: "user", content: `卦象: ${lines.join('')}, 问题: ${question}` }
-        ],
+// 修改 supabase/functions/cyber-sage/index.ts 中的 system prompt
+messages: [
+  { 
+    role: "system", 
+    content: "You are a Cyber Sage. Analyze the hexagram (0:Yin, 1:Yang) and user question. " +
+             "Return JSON: {hexagramNameZh, hexagramNameEn, poemZh, interpretation}. " +
+             "CRITICAL: Always write the 'interpretation' in the SAME LANGUAGE as the user's question. " +
+             "The 'poemZh' must remain in Classical Chinese."
+  }
+],
         response_format: { type: 'json_object' }
       })
     })
