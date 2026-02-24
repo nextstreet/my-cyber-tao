@@ -19,7 +19,7 @@
         <textarea 
           v-model="question" 
           placeholder="吉凶悔吝-Question" 
-          class="w-full bg-transparent border-b border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-xl placeholder:opacity-1 placeholder:tracking-widest italic"
+          class="w-full bg-transparent border-b border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-xl placeholder:tracking-widest italic"
         ></textarea>
         
         <SpiritBottle 
