@@ -15,7 +15,13 @@
 
         <textarea v-model="question" placeholder="ASK THE VOID..." class="w-full bg-transparent border-b border-tao-gold/30 text-center py-4 focus:outline-none focus:border-tao-gold transition-all text-white text-lg placeholder:opacity-20"></textarea>
         
-        <SpiritBottle :lastReadingTime="lastReadingTime" :isUnlimited="isAdmin" @refill="handleRefillShare" />
+        // App.vue 中的调用确保传递 shareCount
+<SpiritBottle 
+  :lastReadingTime="lastReadingTime" 
+  :isUnlimited="isAdmin" 
+  :shareCount="shareCount" 
+  @refill="handleRefillShare" 
+/>
 
         <button @click="step = 'ritual'" :disabled="!question || (!hasSpirit && !isAdmin)" class="w-full py-5 border-2 border-tao-gold text-xs font-black tracking-[0.5em] hover:bg-tao-gold hover:text-black transition-all disabled:opacity-20">
           {{ (hasSpirit || isAdmin) ? 'INITIATE PROTOCOL' : 'ENERGY DEPLETED' }}
@@ -51,11 +57,11 @@
       </section>
     </main>
 
-    <TalismanCard 
-      ref="talismanRef" 
-      :hexagramData="{ name: hexagramData.nameEn, lines: hexagramResult, nameZh: hexagramData.nameZh }" 
-      :aiPredictionText="aiResult"
-    />
+<TalismanCard 
+  ref="talismanRef" 
+  :hexagramData="{ name: hexagramData.nameEn, lines: hexagramResult, nameZh: hexagramData.nameZh }" 
+  :aiPredictionText="aiResult"
+/>
   </div>
 </template>
 
