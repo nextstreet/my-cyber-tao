@@ -1,29 +1,25 @@
 <template>
-  <div class="fixed inset-0 bg-[#050505] text-tao-gold flex items-center justify-center p-4 md:p-8 overflow-hidden font-sans">
+  <div class="fixed inset-0 bg-[#050505] text-tao-gold flex items-center justify-center p-4 overflow-hidden font-sans">
+    
     <div class="absolute inset-0 z-0">
-      <div class="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black z-10 opacity-70"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black z-10 opacity-60"></div>
       <video autoplay loop muted playsinline class="w-full h-full object-cover opacity-20 scale-105">
         <source src="/bg-smoke.mp4" type="video/mp4" />
       </video>
     </div>
 
-    <main class="relative z-10 w-full max-w-4xl h-[90vh] md:h-[80vh] bg-[#0a0a0a]/80 backdrop-blur-xl border border-tao-gold/30 shadow-[0_0_30px_rgba(200,170,110,0.1)] rounded-2xl flex flex-col p-6 md:p-12 overflow-y-auto">
+    <main class="z-10 w-full max-w-[420px] bg-black/60 backdrop-blur-2xl p-8 border border-tao-gold/10 relative shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-fade-in">
       
-      <section v-if="step === 'intro'" class="flex flex-col items-center w-full max-w-md mx-auto my-auto">
-        <header class="text-center w-full mb-10">
-          <h1 class="text-4xl md:text-5xl font-serif tracking-[0.5em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">CYBER TAO</h1>
-          <div class="h-[1px] w-16 bg-tao-gold/40 mx-auto mt-6 mb-6"></div>
-          <p class="text-white/50 text-[10px] md:text-xs tracking-widest font-mono leading-relaxed">
-            SUBMIT YOUR INTENT TO THE NEURAL MATRIX.<br/>
-            SIX TOSSES WILL ALIGN YOUR HEXAGRAM.
-          </p>
+      <section v-if="step === 'intro'" class="flex flex-col items-center space-y-10">
+        <header class="text-center">
+          <h1 class="text-3xl font-serif tracking-[0.6em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">CYBER TAO</h1>
+          <div class="h-[1px] w-12 bg-tao-gold/30 mx-auto mt-4"></div>
         </header>
 
         <textarea 
           v-model="question" 
-          placeholder="ENTER THE VOID..." 
-          class="w-full bg-transparent border-b border-tao-gold/20 text-center py-6 md:py-8 focus:outline-none focus:border-tao-gold transition-all text-white text-xl md:text-2xl placeholder:opacity-10 italic resize-none"
-          rows="2"
+          placeholder="吉凶悔吝-Question" 
+          class="w-full bg-transparent border-b border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-xl placeholder:tracking-widest italic"
         ></textarea>
         
         <SpiritBottle 
@@ -31,49 +27,53 @@
           :isUnlimited="isAdmin" 
           :shareCount="shareCount" 
           @refill="handleRefillShare" 
-          class="my-8"
         />
 
         <button 
           @click="step = 'ritual'" 
           :disabled="!question || (!hasSpirit && !isAdmin)" 
-          class="group relative w-full py-5 md:py-6 overflow-hidden border border-tao-gold/40 bg-black/40 transition-all hover:border-tao-gold disabled:opacity-10"
+          class="group relative w-full py-5 overflow-hidden border border-tao-gold/40 transition-all hover:border-tao-gold disabled:opacity-10"
         >
-          <span class="relative z-10 text-[11px] md:text-xs font-black tracking-[0.8em] uppercase">
+          <div class="absolute inset-0 bg-tao-gold opacity-0 group-hover:opacity-10 transition-opacity"></div>
+          <span class="relative z-10 text-[11px] font-black tracking-[0.8em] uppercase">
             {{ (hasSpirit || isAdmin) ? 'INITIATE PROTOCOL' : 'ENERGY DEPLETED' }}
           </span>
         </button>
       </section>
 
-      <section v-else-if="step === 'ritual'" class="w-full max-w-md mx-auto my-auto">
+      <section v-else-if="step === 'ritual'">
         <CoinToss @complete="onRitualComplete" />
       </section>
 
-      <section v-else-if="step === 'result'" class="relative flex flex-col items-center justify-center text-center w-full flex-1">
-        <div class="z-10 w-full max-w-2xl mx-auto flex flex-col items-center">
-          <h2 class="text-5xl md:text-6xl font-serif text-white tracking-[0.4em] mb-4 animate-fade-in">{{ hexagramData.nameZh }}</h2>
-          <p class="text-[10px] md:text-xs tracking-[0.6em] text-tao-gold/40 uppercase mb-12">{{ hexagramData.nameEn }}</p>
+      <section v-else-if="step === 'result'" class="relative flex flex-col items-center min-h-[520px] justify-between text-center">
+        <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+          <span class="text-[16rem] font-serif transition-all duration-1000">{{ hexagramData.nameEn }}</span>
+        </div>
 
-          <div v-if="loading" class="py-12 animate-pulse flex flex-col items-center">
-            <div class="w-10 h-10 border-t-2 border-tao-gold rounded-full animate-spin mb-6"></div>
-            <span class="text-[10px] tracking-[0.8em] opacity-50 uppercase">Decoding Neural Echoes...</span>
+        <div class="z-10 w-full">
+          <h2 class="text-5xl font-serif text-white tracking-[0.4em] mb-4">{{ hexagramData.nameZh }}</h2>
+          <p class="text-[10px] tracking-[0.6em] text-tao-gold/40 uppercase mb-12">{{ hexagramData.nameEn }}</p>
+
+          <div v-if="loading" class="py-24 animate-pulse flex flex-col items-center">
+            <div class="w-8 h-8 border-t border-tao-gold rounded-full animate-spin mb-4"></div>
+            <span class="text-[9px] tracking-[0.8em] opacity-50">DECODING REALITY</span>
           </div>
           
-          <div v-else class="space-y-8 text-left animate-fade-in w-full">
-            <p class="text-white font-serif text-xl md:text-2xl border-l-2 border-tao-gold/50 pl-6 leading-relaxed">
+          <div v-else class="space-y-8 text-left animate-fade-in">
+            <p class="text-white font-serif text-2xl border-l-3 border-tao-red/80 pl-6 leading-relaxed">
               {{ hexagramData.poemZh }}
             </p>
-            <div class="bg-white/5 border border-white/10 p-6 md:p-8 rounded-sm backdrop-blur-md">
-              <p class="text-gray-300 font-mono text-sm md:text-base leading-relaxed italic whitespace-pre-wrap">
+            <div class="bg-white/2 border border-white/5 p-6 backdrop-blur-md">
+              <p class="text-gray-400 font-mono text-sm leading-relaxed italic">
                 {{ aiResult }}
               </p>
             </div>
           </div>
         </div>
 
-        <div v-if="!loading" class="grid grid-cols-2 gap-4 md:gap-8 w-full max-w-md mt-12 z-20">
-          <button @click="talismanRef.generate()" class="py-4 bg-tao-gold text-black text-[11px] font-black tracking-[0.4em] hover:bg-white transition-all rounded-sm uppercase">Extract</button>
-          <button @click="reset" class="py-4 border border-tao-gold/30 text-[11px] text-tao-gold tracking-[0.4em] hover:bg-white/5 transition-all rounded-sm uppercase">Return</button>
+        <div v-if="!loading" class="grid grid-cols-2 gap-6 w-full mt-10 z-20">
+          <button @click="talismanRef.generate()" class="py-4 bg-tao-gold text-gold text-[11px] border border-tao-gold/30 font-black tracking-[0.4em] hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all uppercase">EXTRACT</button>
+          <button @click="reset" class="py-4 border border-tao-gold/30 text-[11px] text-tao-gold tracking-[0.4em] hover:border-tao-gold transition-all uppercase">RETURN</button>
         </div>
       </section>
     </main>
@@ -94,11 +94,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { supabase } from './lib/supabase'
-import { HEXAGRAM_MAP } from './utils/hexagramData.ts' 
 import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
 import TalismanCard from './components/TalismanCard.vue'
 
+// --- 核心状态 ---
 const step = ref('intro')
 const question = ref('')
 const hexagramResult = ref([])
@@ -112,115 +112,140 @@ const isAdmin = ref(false)
 const shareCount = ref(0)
 const MAX_SHARES_PER_DAY = 3
 
+// --- 逻辑重构 ---
+
+// 1. 记录 IP 和分析数据
+const logAnalytics = async (id) => {
+  try {
+    // 使用外部 API 获取 IP (Supabase 客户端本身不直接暴露 IP)
+    const res = await fetch('https://api.ipify.org?format=json');
+    const { ip } = await res.json();
+    
+    await supabase.from('user_analytics').insert([{
+      device_id: id,
+      ip_address: ip,
+      user_agent: navigator.userAgent
+    }]);
+  } catch (e) {
+    console.error("Analytics failed", e);
+  }
+};
+
 const initIdentity = async () => {
-  let id = localStorage.getItem('cyber_tao_device_id')
+  let id = localStorage.getItem('cyber_tao_device_id');
   if (!id) {
-    id = crypto.randomUUID()
-    localStorage.setItem('cyber_tao_device_id', id)
-    await supabase.from('device_profiles').insert([{ device_id: id }])
+    id = crypto.randomUUID();
+    localStorage.setItem('cyber_tao_device_id', id);
+    await supabase.from('device_profiles').insert([{ device_id: id }]);
   }
   deviceId.value = id;
+  
+  // 记录访问日志
+  logAnalytics(id);
 
   const { data } = await supabase
     .from('device_profiles')
     .select('is_unlimited, last_reading_at, share_count, last_share_date')
     .eq('device_id', id)
-    .single()
+    .single();
 
   if (data) {
-    isAdmin.value = data.is_unlimited
-    const today = new Date().toISOString().split('T')[0]
-    shareCount.value = data.last_share_date === today ? (data.share_count || 0) : 0
+    isAdmin.value = data.is_unlimited;
+    const today = new Date().toISOString().split('T')[0];
+    if (data.last_share_date !== today) {
+      shareCount.value = 0;
+    } else {
+      shareCount.value = data.share_count || 0;
+    }
   }
-}
+};
 
 onMounted(() => {
-  initIdentity()
-  lastReadingTime.value = localStorage.getItem('cyber_tao_last_reading')
-})
+  initIdentity();
+  lastReadingTime.value = localStorage.getItem('cyber_tao_last_reading');
+});
 
 const hasSpirit = computed(() => {
-  if (!lastReadingTime.value) return true
-  const hoursPassed = (new Date().getTime() - new Date(lastReadingTime.value).getTime()) / (1000 * 60 * 60)
-  return hoursPassed >= 12
-})
+  if (!lastReadingTime.value) return true;
+  return (new Date().getTime() - new Date(lastReadingTime.value).getTime()) / (1000*60*60) >= 12;
+});
 
 const onRitualComplete = async (lines) => {
-  hexagramResult.value = lines
-  step.value = 'result'
-  loading.value = true
-
-  const code = lines.join('')
-  const localMatch = HEXAGRAM_MAP[code] || HEXAGRAM_MAP["111111"]
-  hexagramData.value = localMatch
+  hexagramResult.value = lines;
+  step.value = 'result';
+  loading.value = true;
 
   try {
-    const { data: aiData, error } = await supabase.functions.invoke('cyber-sage', {
-      body: { 
-        question: question.value, 
-        hexName: `${localMatch.nameZh} (${localMatch.nameEn})`,
-        poem: localMatch.poemZh
-      }
-    })
+    const { data: aiData } = await supabase.functions.invoke('cyber-sage', {
+      body: { lines, question: question.value }
+    });
 
-    if (error) throw error
+    const now = new Date().toISOString();
+    await supabase.from('device_profiles')
+      .update({ last_reading_at: now })
+      .eq('device_id', deviceId.value);
 
-    aiResult.value = aiData.interpretation
-    const now = new Date().toISOString()
-    
-    supabase.from('device_profiles').update({ last_reading_at: now }).eq('device_id', deviceId.value).then()
-    supabase.from('divination_logs').insert([{
+    await supabase.from('divination_logs').insert([{
       device_id: deviceId.value,
       question: question.value,
-      hexagram_code: code,
-      name_zh: localMatch.nameZh,
-      name_en: localMatch.nameEn,
+      hexagram_code: lines.join(''),
+      name_zh: aiData.hexagramNameZh,
+      name_en: aiData.hexagramNameEn,
       interpretation: aiData.interpretation
-    }]).then()
+    }]);
 
-    lastReadingTime.value = now
-    localStorage.setItem('cyber_tao_last_reading', now)
+    hexagramData.value = aiData;
+    aiResult.value = aiData.interpretation;
+    lastReadingTime.value = now;
+    localStorage.setItem('cyber_tao_last_reading', now);
   } catch (err) {
-    console.error("AI Error:", err)
-    aiResult.value = "SIGNAL INTERRUPTED / 神经同步失败。"
+    aiResult.value = "CONNECTION INTERRUPTED";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const handleRefillShare = async () => {
-  if (hasSpirit.value || isAdmin.value) return
+  if (hasSpirit.value || isAdmin.value) return;
   if (shareCount.value >= MAX_SHARES_PER_DAY) {
-    alert(`DAILY SYNC LIMIT REACHED.`)
-    return
+    alert(`DAILY SYNC LIMIT REACHED. PLEASE WAIT FOR THE NEXT NEURAL CYCLE.`);
+    return;
   }
 
   try {
     if (navigator.share) {
-      await navigator.share({ title: 'Cyber Tao', url: window.location.href })
-      const today = new Date().toISOString().split('T')[0]
-      const newCount = shareCount.value + 1
-      await supabase.from('device_profiles').update({ share_count: newCount, last_share_date: today }).eq('device_id', deviceId.value)
-      shareCount.value = newCount
-      lastReadingTime.value = null
-      localStorage.removeItem('cyber_tao_last_reading')
+      await navigator.share({
+        title: 'Cyber Tao',
+        text: 'Decoding the digital void.',
+        url: window.location.href
+      });
+
+      const today = new Date().toISOString().split('T')[0];
+      const newCount = shareCount.value + 1;
+      await supabase.from('device_profiles')
+        .update({ 
+          share_count: newCount,
+          last_share_date: today,
+          last_reading_at: null 
+        })
+        .eq('device_id', deviceId.value);
+
+      shareCount.value = newCount;
+      lastReadingTime.value = null;
+      localStorage.removeItem('cyber_tao_last_reading');
     }
   } catch (err) {
-    console.log('Share failed')
+    console.log('Share failed');
   }
-}
+};
 
-const reset = () => {
-  step.value = 'intro'
-  question.value = ''
-  hexagramResult.value = []
-  aiResult.value = ''
-}
+const reset = () => { step.value = 'intro'; question.value = ''; hexagramResult.value = [] }
 </script>
 
 <style scoped>
+ 
 .animate-fade-in {
-  animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
