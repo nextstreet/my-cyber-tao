@@ -170,27 +170,29 @@ const hasSpirit = computed(() => {
   return (new Date().getTime() - new Date(lastReadingTime.value).getTime()) / (1000*60*60) >= 12;
 });
 
-// 修改 onRitualComplete 方法
 const onRitualComplete = async (lines) => {
   hexagramResult.value = lines;
   step.value = 'result';
   loading.value = true;
 
-  // 1. 静态数据立即上屏
+  // 1. 前端依然先展示
   const code = lines.join('');
   const localMatch = HEXAGRAM_MAP[code] || HEXAGRAM_MAP["111111"];
   hexagramData.value = localMatch;
 
   try {
-    // 2. 调用后端（不再传 language，让 AI 自己算）
-    const { data: aiData, error } = await supabase.functions.invoke('cyber-sage', {
-      body: { lines, question: question.value }
+    // 2. 把所有“原材料”一次性打包发给后端
+    const { data: aiData } = await supabase.functions.invoke('cyber-sage', {
+      body: { 
+        question: question.value, 
+        hexName: `${localMatch.nameZh} (${localMatch.nameEn})`,
+        poem: localMatch.poemZh
+      }
     });
 
-    if (error) throw error;
-
-    // 3. 记录与展示
-    const now = new Date().toISOString();
+    // 3. 更新结果
+    aiResult.value = aiData.interpretation;
+    
     await supabase.from('divination_logs').insert([{
       device_id: deviceId.value,
       question: question.value,
@@ -205,8 +207,7 @@ const onRitualComplete = async (lines) => {
     localStorage.setItem('cyber_tao_last_reading', now);
     
   } catch (err) {
-    // 容错处理：根据大致语境显示错误提示
-    aiResult.value = "SIGNAL LOST IN THE VOID / 信号湮灭";
+    aiResult.value = "CONNECTION INTERRUPTED / 逻辑链路断开";
   } finally {
     loading.value = false;
   }
