@@ -10,7 +10,7 @@ serve(async (req) => {
 
   try {
     const { lines, question } = await req.json()
-    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')?.trim();
 
     if (!DEEPSEEK_API_KEY) throw new Error("API Key missing on server")
 
