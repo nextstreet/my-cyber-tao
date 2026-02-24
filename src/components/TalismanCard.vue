@@ -29,14 +29,15 @@
             <h1 class="text-3xl font-serif text-cyan-400 tracking-[0.2em] mb-2 uppercase">{{ hexagramData.name }}</h1>
             <div class="w-8 h-px bg-cyan-500/30 mb-10"></div>
             
-            <p class="text-white/70 font-serif text-sm leading-relaxed italic text-center px-4 mt-auto mb-12">
-              "{{ aiPredictionText }}"
-            </p>
-            
-            <div class="mt-auto w-full flex justify-between items-end border-t border-cyan-500/10 pt-4">
-              <span class="text-[7px] text-cyan-500/30 font-mono tracking-widest uppercase">Encryption: AES-256</span>
-              <span class="text-[7px] text-cyan-500/30 font-mono tracking-widest uppercase">V1.0.4-β</span>
-            </div>
+<div class="absolute inset-0 backface-hidden rounded-sm border border-cyan-500/30 bg-[#050505] p-8 flex flex-col items-center overflow-hidden">
+  <p class="text-white/70 font-serif text-sm leading-relaxed italic text-center px-4 mt-auto mb-12">
+    {{ aiPredictionText }} </p>
+  
+  <div class="mt-auto w-full flex justify-between items-end border-t border-cyan-500/10 pt-4">
+    <span class="text-[7px] text-cyan-500/30 font-mono tracking-widest uppercase">NODE: {{ hexagramData.lines.join('') }}</span>
+    <span class="text-[7px] text-cyan-500/30 font-mono tracking-widest uppercase">VER: 2.0.1-SYNCH</span>
+  </div>
+</div>
           </div>
         </div>
 
