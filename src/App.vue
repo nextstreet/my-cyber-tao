@@ -8,8 +8,9 @@
       </video>
     </div>
 
-    <main class="z-10 w-full max-w-md md:max-w-2xl lg:max-w-3xl bg-gradient-to-b from-[#1c1c1c]/90 to-[#0a0a0a]/95 backdrop-blur-2xl p-8 md:p-14 border border-tao-gold/20 rounded-lg md:rounded-2xl relative shadow-[0_10px_60px_rgba(0,0,0,0.8),0_0_20px_rgba(200,170,110,0.05)] animate-fade-in flex flex-col justify-center min-h-[80vh] md:min-h-[600px]">
-      
+  <main class="... border-tao-gold/30 shadow-[0_0_30px_rgba(200,170,110,0.1)]">
+  <div class="absolute inset-0 bg-[#1a1a1a]/40 pointer-events-none rounded-2xl"></div>
+ 
       <section v-if="step === 'intro'" class="flex flex-col items-center w-full max-w-md mx-auto">
         <header class="text-center w-full mb-10">
           <h1 class="text-4xl md:text-5xl font-serif tracking-[0.5em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">CYBER TAO</h1>
@@ -118,7 +119,19 @@ const deviceId = ref('')
 const isAdmin = ref(false)
 const shareCount = ref(0)
 const MAX_SHARES_PER_DAY = 3
+// 修改状态
+const aiResultZh = ref('')
+const aiResultEn = ref('')
 
+// 在 onRitualComplete 中
+const { data: aiData } = await supabase.functions.invoke('cyber-sage', {
+  body: { lines, question: question.value, language: isEnglish ? 'en' : 'zh' }
+});
+
+// 如果后端返回了两个字段
+aiResultZh.value = aiData.interpretationZh;
+aiResultEn.value = aiData.interpretationEn;
+  
 const logAnalytics = async (id) => {
   try {
     const res = await fetch('https://api.ipify.org?format=json');
