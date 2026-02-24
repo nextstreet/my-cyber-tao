@@ -1,72 +1,44 @@
 <template>
-  <div class="fixed inset-0 bg-tao-black text-tao-gold flex flex-col items-center justify-center p-4 overflow-hidden">
-    <div class="absolute inset-0 z-0 opacity-25">
-      <video autoplay loop muted playsinline class="w-full h-full object-cover">
-        <source src="/bg-smoke.mp4" type="video/mp4" />
-      </video>
-    </div>
+  <main class="z-10 w-full max-w-md bg-black/80 backdrop-blur-3xl p-8 border border-tao-gold/20 relative">
+    <section v-if="step === 'intro'" class="flex flex-col items-center space-y-8 animate-fade-in">
+      <header class="text-center">
+        <h1 class="text-4xl font-serif tracking-[0.4em] text-white">CYBER TAO</h1>
+        <p class="text-[9px] tracking-[0.5em] text-tao-gold/40 mt-2 uppercase">Neural Divination Protocol</p>
+      </header>
 
-    <main class="z-10 w-full max-w-md bg-black/60 backdrop-blur-2xl p-8 border border-tao-gold/10 relative overflow-hidden">
-      <section v-if="step === 'intro'" class="flex flex-col items-center space-y-8">
-        <header class="text-center"><h1 class="text-3xl font-serif tracking-[0.3em] text-tao-gold-light">CYBER TAO</h1></header>
+      <textarea v-model="question" placeholder="INPUT YOUR CONUNDRUM..." class="w-full bg-transparent border-b border-tao-gold/30 text-center py-6 focus:outline-none focus:border-tao-gold transition-all resize-none text-white text-lg"></textarea>
+      
+      <SpiritBottle :lastReadingTime="lastReadingTime" @click="handleRefillShare" />
+
+      <button @click="startRitual" :disabled="!question || !hasSpirit" class="w-full py-5 border-2 border-tao-gold text-xs font-black tracking-[0.5em] uppercase hover:bg-tao-gold hover:text-black transition-all disabled:opacity-20">
+        {{ hasSpirit ? 'BEGIN SYNC' : 'RECHARGE REQUIRED' }}
+      </button>
+    </section>
+
+    <section v-else-if="step === 'result'" class="relative flex flex-col items-center min-h-[450px] text-center">
+      <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-[0.08]">
+        <span class="text-[15rem] font-serif leading-none text-tao-gold">{{ hexagramData.nameZh }}</span>
+      </div>
+
+      <div class="z-10 w-full pt-4">
+        <h2 class="text-4xl font-serif text-white tracking-[0.4em] mb-2">{{ hexagramData.nameZh }}</h2>
+        <p class="text-[10px] tracking-[0.5em] text-tao-gold/60 uppercase mb-10">{{ hexagramData.nameEn }}</p>
         
-        <textarea 
-          v-model="question" 
-          placeholder="天人合一，道法自然..." 
-          class="w-full bg-transparent border-b border-tao-gold/20 text-center py-4 focus:outline-none focus:border-tao-gold transition-all resize-none placeholder:opacity-30"
-        ></textarea>
-        
-        <SpiritBottle :lastReadingTime="lastReadingTime" />
-
-        <button 
-          @click="startRitual" 
-          :disabled="!question || !hasSpirit" 
-          class="w-full py-4 border border-tao-gold text-xs tracking-widest uppercase hover:bg-tao-gold hover:text-black transition-all disabled:opacity-20"
-        >
-          {{ hasSpirit ? 'ENTER RITUAL' : 'SPIRIT DEPLETED' }}
-        </button>
-      </section>
-
-      <section v-else-if="step === 'ritual'" class="w-full">
-        <CoinToss @complete="onRitualComplete" />
-      </section>
-
-      <section v-else-if="step === 'result'" class="relative flex flex-col items-center min-h-[420px] justify-between text-center">
-        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-[0.08] select-none">
-          <span class="text-[14rem] font-serif leading-none">{{ hexagramData.nameZh }}</span>
-          <p class="text-xl font-serif mt-4 text-tao-red">{{ hexagramData.poemZh }}</p>
+        <div v-if="loading" class="py-20 animate-pulse text-[11px] tracking-[0.8em]">READING AKASHIC RECORDS...</div>
+        <div v-else class="space-y-6 animate-fade-in">
+          <p class="text-white/90 font-serif text-xl border-l-2 border-tao-red pl-4 text-left leading-relaxed">{{ hexagramData.poemZh }}</p>
+          <p class="bg-black/40 p-5 border border-tao-gold/10 text-sm leading-relaxed text-gray-300 font-mono text-left">
+            {{ aiResult }}
+          </p>
         </div>
+      </div>
 
-        <div class="z-10 w-full mt-2">
-          <h2 class="text-4xl font-serif text-white tracking-[0.3em] mb-1">{{ hexagramData.nameZh }}</h2>
-          <p class="text-[9px] tracking-[0.4em] text-tao-gold/40 uppercase mb-8">{{ hexagramData.nameEn }}</p>
-
-          <div v-if="loading" class="py-16 animate-pulse text-[10px] tracking-[0.6em] text-tao-gold/60">SYNCHRONIZING...</div>
-          
-          <div v-else class="space-y-6">
-            <div class="border-l border-tao-red pl-4 text-left">
-              <p class="text-white/90 font-serif text-lg leading-relaxed">{{ hexagramData.poemZh }}</p>
-            </div>
-            <div class="bg-black/40 p-5 border border-tao-gold/5 text-sm leading-relaxed text-gray-400 font-mono italic">
-              {{ aiResult }}
-            </div>
-          </div>
-        </div>
-
-        <div v-if="!loading" class="grid grid-cols-2 gap-4 w-full mt-8 z-10">
-          <button @click="showTalisman" class="py-4 bg-tao-gold text-black text-[10px] font-bold tracking-widest uppercase hover:bg-white transition-all">EXTRACT</button>
-          <button @click="reset" class="py-4 border border-tao-gold/20 text-[10px] text-tao-gold/40 uppercase hover:text-tao-gold">RETURN</button>
-        </div>
-      </section>
-    </main>
-
-    <TalismanCard 
-      ref="talismanRef" 
-      :hexagramData="{ name: hexagramData.nameZh, lines: hexagramResult }" 
-      :aiPredictionText="aiResult"
-      :guardian="'dragon'"
-    />
-  </div>
+      <div v-if="!loading" class="grid grid-cols-2 gap-4 w-full mt-12 z-20">
+        <button @click="showTalisman" class="py-4 bg-tao-gold text-black text-[11px] font-black tracking-widest uppercase hover:bg-white">EXTRACT</button>
+        <button @click="reset" class="py-4 border-2 border-tao-gold/30 text-[11px] text-tao-gold uppercase hover:border-tao-gold">RETURN</button>
+      </div>
+    </section>
+  </main>
 </template>
 
 <script setup>
@@ -117,4 +89,25 @@ const onRitualComplete = async (lines) => {
 }
 const showTalisman = () => talismanRef.value?.show()
 const reset = () => { step.value = 'intro'; question.value = ''; hexagramResult.value = [] }
+
+  const handleRefillShare = async () => {
+  if (hasSpirit.value) return;
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: 'Cyber Tao Divination',
+        text: 'Decode your destiny through the matrix.',
+        url: window.location.href
+      });
+      // 分享成功后强制恢复灵力（清除冷却时间）
+      localStorage.removeItem('cyber_tao_last_reading');
+      lastReadingTime.value = null;
+      alert('SPIRIT RECHARGED via Synchronized Link.');
+    } else {
+      // 降级方案：复制链接
+      await navigator.clipboard.writeText(window.location.href);
+      alert('Link Copied. Share to recharge.');
+    }
+  } catch (err) { console.log('Share failed', err) }
+}
 </script>
