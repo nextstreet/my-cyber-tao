@@ -74,7 +74,9 @@ const loading = ref(false)
 const talismanRef = ref(null)
 const lastReadingTime = ref(null)
 const hexagramData = ref({ nameZh: '', nameEn: '', poemZh: '' })
-
+const shareCount = ref(0);
+const MAX_SHARES_PER_DAY = 3;
+  
 // 身份锁定逻辑
 const deviceId = ref('')
 const isAdmin = ref(false)
@@ -92,20 +94,22 @@ const initIdentity = async () => {
   deviceId.value = id;
 
   // 从数据库同步权限和上次占卜时间
-  const { data } = await supabase
+const { data } = await supabase
     .from('device_profiles')
-    .select('is_unlimited, last_reading_at')
+    .select('is_unlimited, last_reading_at, share_count, last_share_date')
     .eq('device_id', id)
     .single();
 
   if (data) {
     isAdmin.value = data.is_unlimited;
-    lastReadingTime.value = data.last_reading_at;
-    // 同步到本地缓存防止断网失效
-    if (data.last_reading_at) {
-        localStorage.setItem('cyber_tao_last_reading', data.last_reading_at);
+    
+    // 逻辑：判断是否是新的一天
+    const today = new Date().toISOString().split('T')[0];
+    if (data.last_share_date !== today) {
+      shareCount.value = 0; // 新的一天，重置次数
+    } else {
+      shareCount.value = data.share_count || 0;
     }
-  }
 };
 
 onMounted(() => {
