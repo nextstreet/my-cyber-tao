@@ -1,69 +1,72 @@
 <template>
-  <div class="fixed inset-0 bg-[#050505] text-tao-gold flex items-center justify-center p-4 md:p-8 overflow-hidden font-sans">
-    <div class="absolute inset-0 z-0">
+  <div class="fixed inset-0 bg-[#050505] text-tao-gold flex items-center justify-center p-4 md:p-8 overflow-hidden font-sans selection:bg-tao-gold/30">
+    
+    <div class="absolute inset-0 z-0 pointer-events-none">
       <div class="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black z-10 opacity-70"></div>
       <video autoplay loop muted playsinline class="w-full h-full object-cover opacity-20 scale-105">
         <source src="/bg-smoke.mp4" type="video/mp4" />
       </video>
     </div>
 
-    <main class="relative z-10 w-full max-w-4xl h-[90vh] md:h-[80vh] bg-[#0a0a0a]/80 backdrop-blur-xl border border-tao-gold/30 shadow-[0_0_30px_rgba(200,170,110,0.1)] rounded-2xl flex flex-col p-6 md:p-12 overflow-y-auto">
+    <main class="relative z-10 w-full max-w-4xl h-[85vh] bg-[#0a0a0a]/90 backdrop-blur-2xl border border-tao-gold/30 shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2xl flex flex-col p-8 md:p-16 overflow-hidden">
       
-      <section v-if="step === 'intro'" class="flex flex-col items-center w-full max-w-md mx-auto my-auto">
-        <header class="text-center w-full mb-10">
-          <h1 class="text-4xl md:text-5xl font-serif tracking-[0.5em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">CYBER TAO</h1>
-          <div class="h-[1px] w-16 bg-tao-gold/40 mx-auto mt-6 mb-6"></div>
-          <p class="text-white/50 text-[10px] md:text-xs tracking-widest font-mono leading-relaxed max-w-sm mx-auto">
-            SUBMIT YOUR INTENT TO THE NEURAL MATRIX.<br/>
-            SIX TOSSES WILL ALIGN YOUR HEXAGRAM.
+      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-xl mx-auto space-y-12">
+        <header class="text-center w-full animate-fade-in">
+          <h1 class="text-5xl md:text-6xl font-serif tracking-[0.6em] text-white drop-shadow-[0_0_20px_rgba(200,170,110,0.4)]">CYBER TAO</h1>
+          <div class="h-[1px] w-24 bg-tao-gold/60 mx-auto mt-8 mb-8"></div>
+          <p class="text-tao-gold/60 text-xs md:text-sm tracking-[0.3em] font-mono leading-relaxed uppercase">
+            Submit your intent to the neural matrix.<br/>Six tosses will align your destiny.
           </p>
         </header>
 
-        <textarea 
-          v-model="question" 
-          placeholder="ENTER THE VOID..." 
-          class="w-full bg-transparent border-b border-tao-gold/20 text-center py-6 md:py-8 focus:outline-none focus:border-tao-gold transition-all text-white text-xl md:text-2xl placeholder:opacity-10 placeholder:tracking-widest italic resize-none"
-          rows="2"
-        ></textarea>
-        
-        <SpiritBottle 
-          :lastReadingTime="lastReadingTime" 
-          :isUnlimited="isAdmin" 
-          :shareCount="shareCount" 
-          @refill="handleRefillShare" 
-          class="my-8"
-        />
+        <div class="w-full space-y-6">
+          <textarea 
+            v-model="question" 
+            placeholder="ENTER THE VOID..." 
+            class="w-full bg-black/40 border-b border-tao-gold/30 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-2xl placeholder:opacity-10 italic resize-none"
+            rows="2"
+          ></textarea>
+          
+          <SpiritBottle 
+            :lastReadingTime="lastReadingTime" 
+            :isUnlimited="isAdmin" 
+            :shareCount="shareCount" 
+            @refill="handleRefillShare" 
+          />
+        </div>
 
         <button 
           @click="step = 'ritual'" 
           :disabled="!question || (!hasSpirit && !isAdmin)" 
-          class="group relative w-full py-5 md:py-6 overflow-hidden border border-tao-gold/40 bg-black/40 transition-all hover:border-tao-gold disabled:opacity-10"
+          class="w-full py-6 bg-transparent border border-tao-gold/50 text-tao-gold hover:bg-tao-gold hover:text-black disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-tao-gold transition-all duration-500 text-sm font-black tracking-[1em] uppercase shadow-[0_0_15px_rgba(200,170,110,0.1)]"
         >
-          <span class="relative z-10 text-[11px] md:text-xs font-black tracking-[0.8em] uppercase transition-colors">
-            {{ (hasSpirit || isAdmin) ? 'INITIATE PROTOCOL' : 'ENERGY DEPLETED' }}
-          </span>
+          INITIATE PROTOCOL
         </button>
       </section>
 
-      <section v-else-if="step === 'ritual'" class="w-full max-w-md mx-auto my-auto">
+      <section v-else-if="step === 'ritual'" class="flex-1 flex items-center justify-center">
         <CoinToss @complete="onRitualComplete" />
       </section>
 
-      <section v-else-if="step === 'result'" class="relative flex flex-col items-center justify-center text-center w-full flex-1">
-        <div class="z-10 w-full max-w-2xl mx-auto flex flex-col items-center flex-1 justify-center">
-          <h2 class="text-5xl md:text-6xl font-serif text-white tracking-[0.4em] mb-4 animate-fade-in">{{ hexagramData.nameZh }}</h2>
-          <p class="text-[10px] md:text-xs tracking-[0.6em] text-tao-gold/40 uppercase mb-12">{{ hexagramData.nameEn }}</p>
+      <section v-else-if="step === 'result'" class="flex-1 flex flex-col items-center justify-between w-full h-full">
+        <div class="w-full flex-1 flex flex-col items-center justify-center space-y-8">
+          <div class="text-center">
+            <h2 class="text-6xl md:text-7xl font-serif text-white tracking-[0.4em] mb-4 drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{{ hexagramData.nameZh }}</h2>
+            <p class="text-sm tracking-[0.8em] text-tao-gold/50 uppercase">{{ hexagramData.nameEn }}</p>
+          </div>
 
-          <div v-if="loading" class="py-24 animate-pulse flex flex-col items-center">
-            <div class="w-10 h-10 border-t-2 border-tao-gold rounded-full animate-spin mb-6"></div>
-            <span class="text-[10px] tracking-[0.8em] opacity-50 uppercase">Decoding Neural Echoes...</span>
+          <div v-if="loading" class="flex flex-col items-center space-y-4">
+            <div class="w-12 h-12 border-2 border-tao-gold/20 border-t-tao-gold rounded-full animate-spin"></div>
+            <span class="text-[10px] tracking-[0.5em] text-tao-gold/40">SYNCHRONIZING...</span>
           </div>
           
-          <div v-else class="space-y-8 text-left animate-fade-in w-full">
-            <p class="text-white font-serif text-xl md:text-2xl border-l-2 border-tao-gold/50 pl-6 leading-relaxed">
-              {{ hexagramData.poemZh }}
-            </p>
-            <div class="bg-white/5 border border-white/10 p-6 md:p-8 rounded-sm backdrop-blur-md">
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-4xl animate-fade-in-up">
+            <div class="space-y-6">
+              <p class="text-white font-serif text-2xl md:text-3xl border-l-4 border-tao-gold pl-8 leading-relaxed">
+                {{ hexagramData.poemZh }}
+              </p>
+            </div>
+            <div class="bg-white/[0.03] border border-white/10 p-8 rounded-lg backdrop-blur-sm shadow-2xl">
               <p class="text-gray-300 font-mono text-sm md:text-base leading-relaxed italic whitespace-pre-wrap">
                 {{ aiResult }}
               </p>
@@ -71,9 +74,9 @@
           </div>
         </div>
 
-        <div v-if="!loading" class="grid grid-cols-2 gap-4 md:gap-8 w-full max-w-md mt-12 z-20">
-          <button @click="talismanRef.generate()" class="py-4 bg-tao-gold text-black text-[11px] font-black tracking-[0.4em] hover:bg-white transition-all rounded-sm uppercase">Extract</button>
-          <button @click="reset" class="py-4 border border-tao-gold/30 text-[11px] text-tao-gold tracking-[0.4em] hover:bg-white/5 transition-all rounded-sm uppercase">Return</button>
+        <div v-if="!loading" class="grid grid-cols-2 gap-8 w-full max-w-lg pt-12">
+          <button @click="talismanRef.generate()" class="py-5 bg-tao-gold text-black text-xs font-black tracking-[0.4em] hover:bg-white transition-all uppercase rounded-sm shadow-lg shadow-tao-gold/20">Extract Talisman</button>
+          <button @click="reset" class="py-5 border border-tao-gold/40 text-xs text-tao-gold tracking-[0.4em] hover:bg-white/5 transition-all uppercase rounded-sm">Return</button>
         </div>
       </section>
     </main>
@@ -90,6 +93,17 @@
     />
   </div>
 </template>
+
+<style scoped>
+.animate-fade-in { animation: fadeIn 1.5s ease-out; }
+.animate-fade-in-up { animation: fadeInUp 1s ease-out forwards; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp { 
+  from { opacity: 0; transform: translateY(20px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+</style>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
