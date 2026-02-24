@@ -1,37 +1,43 @@
 <template>
-  <div v-if="isVisible" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md" @click.self="close">
-    <div ref="talismanEl" class="w-[340px] h-[600px] bg-[#050505] relative p-10 border-[10px] border-double border-tao-gold shadow-[0_0_50px_rgba(200,170,110,0.2)]">
-      
-      <div class="absolute inset-0 flex items-center justify-center opacity-[0.08] pointer-events-none p-12">
-        <img :src="`/guardian-${guardian}.png`" class="w-full object-contain" />
+  <div v-if="isVisible" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl" @click.self="close">
+    <div ref="talismanEl" class="w-[350px] h-[620px] bg-[#050505] relative p-12 flex flex-col items-center justify-between border-[12px] border-double border-[#c8aa6e]">
+      <div class="absolute inset-0 flex items-center justify-center opacity-[0.1] pointer-events-none p-16">
+        <img :src="`/guardian-dragon.png`" class="w-full object-contain" />
       </div>
-      
-      <div class="relative z-10 flex flex-col items-center w-full h-full justify-between text-center">
-        <header>
-          <p class="text-[8px] tracking-[0.6em] text-tao-gold/40 mb-2 uppercase font-mono">Artifact ID: {{ Date.now().toString().slice(-6) }}</p>
-          <div class="h-px w-8 bg-tao-red mx-auto"></div>
-        </header>
 
-        <div class="flex flex-col-reverse gap-3">
-          <div v-for="(line, i) in hexagramData.lines" :key="i" class="w-40 h-2.5 flex justify-between">
-            <div v-if="line === 1" class="w-full h-full bg-tao-gold"></div>
-            <template v-else>
-              <div class="w-[44%] h-full bg-tao-gold"></div>
-              <div class="w-[44%] h-full bg-tao-gold"></div>
-            </template>
-          </div>
-        </div>
+      <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.15]">
+        <span class="text-[18rem] font-serif text-[#c8aa6e] leading-none">{{ hexagramData.name }}</span>
+      </div>
 
-        <div>
-          <h2 class="text-4xl font-serif text-white tracking-[0.4em] mb-3">{{ hexagramData.name }}</h2>
-          <p class="text-[10px] italic text-tao-gold/60 px-4 leading-relaxed font-mono">{{ aiPredictionText.slice(0, 80) }}...</p>
+      <header class="relative z-10 text-center">
+        <div class="text-[9px] tracking-[0.8em] text-[#c8aa6e]/60 mb-1 uppercase font-mono">Neural Artifact</div>
+        <div class="h-[2px] w-12 bg-[#ff3333] mx-auto mb-10"></div>
+      </header>
+
+      <div class="relative z-10 flex flex-col-reverse gap-4">
+        <div v-for="(line, i) in hexagramData.lines" :key="i" class="w-44 h-3 flex justify-between">
+          <div v-if="line === 1" class="w-full h-full bg-[#c8aa6e] shadow-[0_0_10px_rgba(200,170,110,0.5)]"></div>
+          <template v-else>
+            <div class="w-[43%] h-full bg-[#c8aa6e] shadow-[0_0_10px_rgba(200,170,110,0.5)]"></div>
+            <div class="w-[43%] h-full bg-[#c8aa6e] shadow-[0_0_10px_rgba(200,170,110,0.5)]"></div>
+          </template>
         </div>
       </div>
+
+      <div class="relative z-10 text-center mt-6">
+        <h2 class="text-5xl font-serif text-white tracking-[0.5em] mb-4">{{ hexagramData.name }}</h2>
+        <div class="w-full h-[1px] bg-[#c8aa6e]/20 mb-4"></div>
+        <p class="text-[11px] text-[#c8aa6e]/80 italic px-4 leading-relaxed font-serif">{{ aiPredictionText }}</p>
+      </div>
+
+      <footer class="relative z-10 text-[8px] tracking-[0.4em] text-[#c8aa6e]/30 uppercase">
+        Verified by Cyber-Sage Node #{{ Date.now().toString().slice(-4) }}
+      </footer>
     </div>
 
-    <div class="absolute bottom-8 flex gap-6">
-      <button @click="download" class="px-8 py-3 bg-tao-gold text-black font-bold text-xs uppercase tracking-widest hover:bg-white transition-colors">Download</button>
-      <button @click="close" class="px-8 py-3 border border-tao-gold/30 text-tao-gold text-xs uppercase tracking-widest">Close</button>
+    <div class="flex gap-8 mt-10 z-[110]">
+      <button @click="download" class="px-10 py-4 bg-[#c8aa6e] text-black font-black text-xs uppercase tracking-widest">Download Artifact</button>
+      <button @click="close" class="px-10 py-4 border border-[#c8aa6e]/40 text-[#c8aa6e] text-xs uppercase tracking-widest">Close</button>
     </div>
   </div>
 </template>
