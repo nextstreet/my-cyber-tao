@@ -87,4 +87,18 @@ const generate = async () => {
 
 const close = () => { showModal.value = false; generatedImage.value = null }
 defineExpose({ generate })
+
+// App.vue 中的调用确保传递 shareCount
+<SpiritBottle 
+  :lastReadingTime="lastReadingTime" 
+  :isUnlimited="isAdmin" 
+  :shareCount="shareCount" 
+  @refill="handleRefillShare" 
+/>
+
+<TalismanCard 
+  ref="talismanRef" 
+  :hexagramData="{ name: hexagramData.nameEn, lines: hexagramResult, nameZh: hexagramData.nameZh }" 
+  :aiPredictionText="aiResult"
+/>  
 </script>
