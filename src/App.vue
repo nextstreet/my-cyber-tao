@@ -11,7 +11,7 @@
           <p class="text-[9px] tracking-[0.4em] text-tao-gold/40 mt-2">Neural Oracle V2.0</p>
         </header>
 
-        <textarea v-model="question" placeholder="询问虚空..." class="w-full bg-transparent border-b border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all resize-none text-white text-lg placeholder:opacity-20"></textarea>
+        <textarea v-model="question" placeholder="天人合一，道法自然..." class="w-full bg-transparent border-b border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all resize-none text-white text-lg placeholder:opacity-20"></textarea>
         
         <SpiritBottle :lastReadingTime="lastReadingTime" :isUnlimited="isAdmin" @refill="handleRefillShare" />
 
