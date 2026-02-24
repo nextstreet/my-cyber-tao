@@ -12,7 +12,7 @@
       
       <section v-if="step === 'intro'" class="flex flex-col items-center space-y-10">
         <header class="text-center">
-          <h1 class="text-4xl font-serif tracking-[0.6em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">CYBER TAO</h1>
+          <h1 class="text-3xl font-serif tracking-[0.6em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">CYBER TAO</h1>
           <div class="h-[1px] w-12 bg-tao-gold/30 mx-auto mt-4"></div>
         </header>
 
@@ -47,7 +47,7 @@
 
       <section v-else-if="step === 'result'" class="relative flex flex-col items-center min-h-[520px] justify-between text-center">
         <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
-          <span class="text-[16rem] font-serif transition-all duration-1000">{{ hexagramData.nameZh }}</span>
+          <span class="text-[16rem] font-serif transition-all duration-1000">{{ hexagramData.nameEn }}</span>
         </div>
 
         <div class="z-10 w-full">
