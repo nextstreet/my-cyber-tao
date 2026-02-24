@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+// 假设你将 64 卦数据定义为一个 Map 对象
+import { HEXAGRAM_DATA } from "./data.ts" 
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,18 +12,16 @@ serve(async (req) => {
 
   try {
     const { lines, question, language } = await req.json()
-    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
 
-    if (!DEEPSEEK_API_KEY) throw new Error("API Key missing on server")
+    // 1. 直接从本地索引匹配数据 (将 [1,1,1,0,0,0] 转为 "111000")
+    const code = lines.join('')
+    const baseData = HEXAGRAM_DATA[code] || HEXAGRAM_DATA["111111"] // 默认回退
 
-    // 确定目标语言，如果前端没有传，默认 fallback 为英文或中文均可
-    const targetLanguage = language === 'en' ? 'English' : 'Chinese'
-    const hexagramStr = lines.join(', ')
-
-    // ==========================================
-    // STEP 1: 获取客观数据（卦名、中文诗词）
-    // ==========================================
-    const metaResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    // 2. 只针对解释部分调用 AI
+    const targetLang = language === 'en' ? 'English' : 'Chinese'
+    
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -32,74 +32,36 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an I Ching database. You must return ONLY a JSON object with exact keys: { "hexagramNameZh", "hexagramNameEn", "poemZh" }. 
-The "poemZh" must be a classic Chinese poem/phrase representing the hexagram.`
+            content: `You are a Cyber Sage. You interpret I Ching hexagrams for users.
+CRITICAL: You must reply ONLY in ${targetLang}. 
+Tone: Mystical, Cyberpunk, Insightful.`
           },
           {
             role: 'user',
-            content: `Identify the hexagram for these lines (bottom to top, 0=Yin, 1=Yang): ${hexagramStr}`
+            content: `The user asks: "${question}"
+The drawn hexagram is: ${baseData.nameEn} (${baseData.nameZh}).
+Classical Text: "${baseData.poemZh}"
+Please provide a deep interpretation based on the question in ${targetLang}.`
           }
         ],
-        response_format: { type: "json_object" }
+        // 此时不需要 json_object 模式，直接获取文本更灵活
       })
     })
 
-    const metaData = await metaResponse.json()
-    if (metaData.error) throw new Error(`Step 1 Error: ${metaData.error.message}`)
-    const metaResult = JSON.parse(metaData.choices[0].message.content)
+    const aiData = await response.json()
+    const interpretation = aiData.choices[0].message.content
 
-    // ==========================================
-    // STEP 2: 获取主观解释（严格锁定语言）
-    // ==========================================
-    const interpretationResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a Cyber Sage predicting the future. You must return ONLY a JSON object with the exact key: { "interpretation" }. 
-CRITICAL RULE: The entire "interpretation" MUST be written strictly in ${targetLanguage}. Maintain a cyber-punk and mystical tone.`
-          },
-          {
-            role: 'user',
-            content: `The user asked: "${question}". 
-The divination result is the hexagram: ${metaResult.hexagramNameEn} (${metaResult.hexagramNameZh}). 
-Provide your interpretation in ${targetLanguage}.`
-          }
-        ],
-        response_format: { type: "json_object" }
-      })
-    })
-
-    const interpretationData = await interpretationResponse.json()
-    if (interpretationData.error) throw new Error(`Step 2 Error: ${interpretationData.error.message}`)
-    const interpretationResult = JSON.parse(interpretationData.choices[0].message.content)
-
-    // ==========================================
-    // 组合结果并返回给前端
-    // ==========================================
-    const finalResult = {
-      hexagramNameZh: metaResult.hexagramNameZh,
-      hexagramNameEn: metaResult.hexagramNameEn,
-      poemZh: metaResult.poemZh,
-      interpretation: interpretationResult.interpretation
-    }
-
-    return new Response(JSON.stringify(finalResult), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200
+    // 3. 组合静态数据与动态 AI 回答
+    return new Response(JSON.stringify({
+      ...baseData,
+      interpretation: interpretation
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     })
 
   } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : 'Unknown error'
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 400, headers: corsHeaders
     })
   }
 })
