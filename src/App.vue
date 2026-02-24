@@ -81,7 +81,7 @@
     <TalismanCard 
       ref="talismanRef" 
       :hexagramData="{ 
-        name: hexagramData.nameEn, 
+        nameEn: hexagramData.nameEn, 
         nameZh: hexagramData.nameZh, 
         poemZh: hexagramData.poemZh, 
         lines: hexagramResult 
