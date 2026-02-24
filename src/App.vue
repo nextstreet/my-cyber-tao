@@ -117,7 +117,7 @@ const { data } = await supabase
       shareCount.value = data.share_count || 0;
     }
 };
-
+};
 onMounted(() => {
   initIdentity()
   lastReadingTime.value = localStorage.getItem('cyber_tao_last_reading')
@@ -207,7 +207,7 @@ const handleRefillShare = async () => {
   } catch (err) {
     console.log('Share cancelled or failed');
   }
-}
+};
 
 const reset = () => { step.value = 'intro'; question.value = '' }
 </script>
