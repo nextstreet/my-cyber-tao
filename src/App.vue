@@ -160,13 +160,48 @@ const onRitualComplete = async (lines) => {
     loading.value = false;
   }
 };
+// 修改分享恢复逻辑
 const handleRefillShare = async () => {
-  if (navigator.share) {
-    await navigator.share({ title: 'Cyber Tao', url: window.location.href })
-    localStorage.removeItem('cyber_tao_last_reading')
-    lastReadingTime.value = null
+  if (hasSpirit.value || isAdmin.value) return;
+
+  // 1. 检查分享次数限制
+  if (shareCount.value >= MAX_SHARES_PER_DAY) {
+    alert(`DAILY SYNC LIMIT REACHED (${MAX_SHARES_PER_DAY}/${MAX_SHARES_PER_DAY}). PLEASE WAIT FOR THE NEXT NEURAL CYCLE.`);
+    return;
   }
-}
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: 'Cyber Tao',
+        text: 'Decode the digital void.',
+        url: window.location.href
+      });
+
+      // 2. 分享成功后更新数据库
+      const today = new Date().toISOString().split('T')[0];
+      const newCount = shareCount.value + 1;
+      
+      const { error } = await supabase
+        .from('device_profiles')
+        .update({ 
+          share_count: newCount,
+          last_share_date: today,
+          last_reading_at: null // 清除冷却时间
+        })
+        .eq('device_id', deviceId.value);
+
+      if (!error) {
+        shareCount.value = newCount;
+        lastReadingTime.value = null;
+        localStorage.removeItem('cyber_tao_last_reading');
+        alert(`SPIRIT RECHARGED. DAILY SHARES: ${newCount}/${MAX_SHARES_PER_DAY}`);
+      }
+    }
+  } catch (err) {
+    console.log('Share cancelled or failed');
+  }
+};
 
 const reset = () => { step.value = 'intro'; question.value = '' }
 </script>
