@@ -243,6 +243,10 @@ const reset = () => { step.value = 'intro'; question.value = ''; hexagramResult.
 </script>
 
 <style scoped>
+ 
+textarea::placeholder {
+  color: #d6e5b1; 
+}
 .animate-fade-in {
   animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
