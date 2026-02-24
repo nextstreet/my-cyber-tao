@@ -8,7 +8,7 @@
       <section v-if="step === 'intro'" class="flex flex-col items-center space-y-8 animate-fade-in">
         <header class="text-center"><h1 class="text-3xl font-serif tracking-[0.3em]">CYBER TAO</h1></header>
         
-        <textarea v-model="question" placeholder="询问虚空..." class="w-full bg-transparent border-b border-tao-gold/20 text-center py-4 focus:outline-none focus:border-tao-gold transition-all resize-none"></textarea>
+        <textarea v-model="question" placeholder="天人合一..." class="w-full bg-transparent border-b border-tao-gold/20 text-center py-4 focus:outline-none focus:border-tao-gold transition-all resize-none"></textarea>
         
         <SpiritBottle :lastReadingTime="lastReadingTime" />
 
