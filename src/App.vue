@@ -12,7 +12,7 @@
       
       <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-8 md:space-y-12" style="margin:auto"> 
         <header class="text-center w-full animate-fade-in">
-          <h1 class="text-4xl md:text-5xl font-serif tracking-[0.5em] text-white drop-shadow-[0_0_15px_rgba(200,170,110,0.4)]">CYBER TAO</h1>
+          <h1 class="text-3xl md:text-3xl font-serif tracking-[0.5em] text-white drop-shadow-[0_0_15px_rgba(200,170,110,0.4)]">CYBER TAO</h1>
           <div class="h-[1px] w-16 bg-tao-gold/60 mx-auto mt-6 mb-6"></div>
           <p class="text-tao-gold/60 text-[10px] md:text-xs tracking-[0.3em] font-mono leading-relaxed uppercase">
             吉凶悔吝 ：Fatum et Fluxus
