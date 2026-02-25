@@ -8,14 +8,14 @@
       </video>
     </div>
 
-    <main class="relative z-10 w-full max-w-3xl h-[85vh] bg-[#0a0a0a]/90 backdrop-blur-2xl border border-tao-gold/30 shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2xl flex flex-col p-8 md:p-16 overflow-hidden">
+    <main class="relative z-10 w-full max-w-2xl h-[90vh] md:h-[85vh] bg-[#0a0a0a]/90 backdrop-blur-2xl border border-tao-gold/30 shadow-[0_0_40px_rgba(0,0,0,0.8)] rounded-xl flex flex-col p-6 md:p-12 overflow-hidden">
       
-      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-xl mx-auto space-y-12" style="margin: auto;"> 
+      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-8 md:space-y-12"> 
         <header class="text-center w-full animate-fade-in">
-          <h1 class="text-3xl md:text-6xl font-serif tracking-[0.6em] text-white drop-shadow-[0_0_20px_rgba(200,170,110,0.4)]">CYBER TAO</h1>
-          <div class="h-[1px] w-24 bg-tao-gold/60 mx-auto mt-8 mb-8"></div>
-          <p class="text-tao-gold/60 text-xs md:text-sm tracking-[0.3em] font-mono leading-relaxed uppercase">
-            Submit your intent to the neural matrix.<br/>Six tosses will align your destiny.
+          <h1 class="text-4xl md:text-5xl font-serif tracking-[0.5em] text-white drop-shadow-[0_0_15px_rgba(200,170,110,0.4)]">CYBER TAO</h1>
+          <div class="h-[1px] w-16 bg-tao-gold/60 mx-auto mt-6 mb-6"></div>
+          <p class="text-tao-gold/60 text-[10px] md:text-xs tracking-[0.3em] font-mono leading-relaxed uppercase">
+            Submit your intent to the matrix.<br/>Six tosses align your destiny.
           </p>
         </header>
 
@@ -23,7 +23,7 @@
           <textarea 
             v-model="question" 
             placeholder="ENTER THE VOID..." 
-            class="w-full bg-black/40 border-b border-tao-gold/30 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-2xl placeholder:opacity-10 italic resize-none"
+            class="w-full bg-black/40 border-b border-tao-gold/30 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-xl md:text-2xl placeholder:opacity-10 italic resize-none"
             rows="2"
           ></textarea>
           
@@ -38,7 +38,7 @@
         <button 
           @click="step = 'ritual'" 
           :disabled="!question || (!hasSpirit && !isAdmin)" 
-          class="w-full py-6 bg-transparent border border-tao-gold/50 text-tao-gold hover:bg-tao-gold hover:text-black disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-tao-gold transition-all duration-500 text-sm font-black tracking-[1em] uppercase shadow-[0_0_15px_rgba(200,170,110,0.1)]"
+          class="w-full py-5 md:py-6 bg-transparent border border-tao-gold/50 text-tao-gold hover:bg-tao-gold hover:text-black disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-tao-gold transition-all duration-500 text-xs md:text-sm font-black tracking-[0.8em] uppercase shadow-[0_0_15px_rgba(200,170,110,0.1)]"
         >
           INITIATE PROTOCOL
         </button>
@@ -48,35 +48,47 @@
         <CoinToss @complete="onRitualComplete" />
       </section>
 
-      <section v-else-if="step === 'result'" class="flex-1 flex flex-col items-center justify-between w-full h-full">
-        <div class="w-full flex-1 flex flex-col items-center justify-center space-y-8">
-          <div class="text-center">
-            <h2 class="text-6xl md:text-7xl font-serif text-white tracking-[0.4em] mb-4 drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{{ hexagramData.nameZh }}</h2>
-            <p class="text-sm tracking-[0.8em] text-tao-gold/50 uppercase">{{ hexagramData.nameEn }}</p>
+      <section v-else-if="step === 'result'" class="flex-1 flex flex-col items-center w-full h-full overflow-hidden">
+        
+        <div v-if="loading" class="flex-1 flex flex-col items-center justify-center space-y-6">
+          <div class="w-10 h-10 border-2 border-tao-gold/20 border-t-tao-gold rounded-full animate-spin"></div>
+          <span class="text-[10px] tracking-[0.5em] text-tao-gold/40 uppercase">Synchronizing...</span>
+        </div>
+        
+        <div v-else class="w-full flex-1 flex flex-col pt-4 overflow-y-auto custom-scrollbar pr-2 animate-fade-in-up">
+          
+          <div class="text-center w-full flex flex-col items-center mb-8 shrink-0">
+            <h2 class="text-5xl md:text-6xl font-serif text-white tracking-[0.4em] mb-3 drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{{ hexagramData.nameZh }}</h2>
+            <p class="text-[10px] tracking-[0.8em] text-tao-gold/50 uppercase">{{ hexagramData.nameEn }}</p>
+            
+            <div class="w-12 h-px bg-tao-gold/30 my-6"></div>
+            
+            <p class="text-white/90 font-serif text-lg md:text-xl leading-relaxed tracking-widest max-w-sm text-center">
+              {{ hexagramData.poemZh }}
+            </p>
           </div>
 
-          <div v-if="loading" class="flex flex-col items-center space-y-4">
-            <div class="w-12 h-12 border-2 border-tao-gold/20 border-t-tao-gold rounded-full animate-spin"></div>
-            <span class="text-[10px] tracking-[0.5em] text-tao-gold/40">SYNCHRONIZING...</span>
-          </div>
-          
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-4xl animate-fade-in-up">
-            <div class="space-y-6">
-              <p class="text-white font-serif text-2xl md:text-3xl border-l-4 border-tao-gold pl-8 leading-relaxed">
-                {{ hexagramData.poemZh }}
-              </p>
+          <div class="w-full relative mt-auto shrink-0">
+            <div class="absolute -top-2.5 left-4 px-2 bg-[#0a0a0a] text-[9px] text-tao-gold/60 font-mono tracking-widest uppercase z-10">
+              Neural Analysis
             </div>
-            <div class="bg-white/[0.03] border border-white/10 p-8 rounded-lg backdrop-blur-sm shadow-2xl">
-              <p class="text-gray-300 font-mono text-sm md:text-base leading-relaxed italic whitespace-pre-wrap">
+            <div class="bg-white/[0.02] border border-tao-gold/20 p-6 md:p-8 rounded-sm backdrop-blur-md relative">
+              <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-tao-gold/50"></div>
+              <div class="absolute top-0 right-0 w-2 h-2 border-t border-r border-tao-gold/50"></div>
+              <div class="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-tao-gold/50"></div>
+              <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-tao-gold/50"></div>
+              
+              <p class="text-gray-300 font-mono text-xs md:text-sm leading-relaxed italic whitespace-pre-wrap">
                 {{ aiResult }}
               </p>
             </div>
           </div>
+          
         </div>
 
-        <div v-if="!loading" class="grid grid-cols-2 gap-8 w-full max-w-lg pt-12">
-          <button @click="talismanRef.generate()" class="py-5 bg-tao-gold text-black text-xs font-black tracking-[0.4em] hover:bg-white transition-all uppercase rounded-sm shadow-lg shadow-tao-gold/20">Extract Talisman</button>
-          <button @click="reset" class="py-5 border border-tao-gold/40 text-xs text-tao-gold tracking-[0.4em] hover:bg-white/5 transition-all uppercase rounded-sm">Return</button>
+        <div v-if="!loading" class="grid grid-cols-2 gap-4 w-full pt-8 shrink-0 border-t border-tao-gold/10 mt-6">
+          <button @click="talismanRef.generate()" class="py-4 bg-tao-gold text-black text-[10px] md:text-xs font-black tracking-[0.4em] hover:bg-white transition-all uppercase rounded-sm shadow-lg shadow-tao-gold/20">Extract</button>
+          <button @click="reset" class="py-4 border border-tao-gold/40 text-[10px] md:text-xs text-tao-gold tracking-[0.4em] hover:bg-white/5 transition-all uppercase rounded-sm">Return</button>
         </div>
       </section>
     </main>
@@ -93,17 +105,6 @@
     />
   </div>
 </template>
-
-<style scoped>
-.animate-fade-in { animation: fadeIn 1.5s ease-out; }
-.animate-fade-in-up { animation: fadeInUp 1s ease-out forwards; }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes fadeInUp { 
-  from { opacity: 0; transform: translateY(20px); } 
-  to { opacity: 1; transform: translateY(0); } 
-}
-</style>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
@@ -145,7 +146,6 @@ const initIdentity = async () => {
   if (data) {
     isAdmin.value = data.is_unlimited
     const today = new Date().toISOString().split('T')[0]
-    // 如果日期变了，重置分享次数
     if (data.last_share_date !== today) {
       shareCount.value = 0
     } else {
@@ -184,7 +184,6 @@ const onRitualComplete = async (lines) => {
 
     if (error) throw error
 
-    // 更新卦象基本数据与 AI 解读
     hexagramData.value = {
       nameZh: aiData.hexagramNameZh,
       nameEn: aiData.hexagramNameEn,
@@ -192,11 +191,9 @@ const onRitualComplete = async (lines) => {
     }
     aiResult.value = aiData.interpretation
 
-    // 更新本地与远程状态
     const now = new Date().toISOString()
     await supabase.from('device_profiles').update({ last_reading_at: now }).eq('device_id', deviceId.value)
     
-    // 异步插入日志
     supabase.from('divination_logs').insert([{
       device_id: deviceId.value,
       question: question.value,
@@ -231,7 +228,6 @@ const handleRefillShare = async () => {
       const newCount = shareCount.value + 1
       await supabase.from('device_profiles').update({ share_count: newCount, last_share_date: today }).eq('device_id', deviceId.value)
       shareCount.value = newCount
-      // 临时清除限制
       lastReadingTime.value = null
       localStorage.removeItem('cyber_tao_last_reading')
     }
@@ -247,11 +243,20 @@ const reset = () => {
 </script>
 
 <style scoped>
-.animate-fade-in {
-  animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+.animate-fade-in { animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.animate-fade-in-up { animation: fadeInUp 1s ease-out forwards; }
+
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(10px); } 
+  to { opacity: 1; transform: translateY(0); } 
 }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fadeInUp { 
+  from { opacity: 0; transform: translateY(20px); } 
+  to { opacity: 1; transform: translateY(0); } 
 }
+
+/* 隐藏主容器滚动条但允许滚动 */
+.custom-scrollbar::-webkit-scrollbar { width: 3px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(200, 170, 110, 0.3); border-radius: 4px; }
 </style>
