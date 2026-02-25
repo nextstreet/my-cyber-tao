@@ -15,7 +15,7 @@
           <h1 class="text-4xl md:text-5xl font-serif tracking-[0.5em] text-white drop-shadow-[0_0_15px_rgba(200,170,110,0.4)]">CYBER TAO</h1>
           <div class="h-[1px] w-16 bg-tao-gold/60 mx-auto mt-6 mb-6"></div>
           <p class="text-tao-gold/60 text-[10px] md:text-xs tracking-[0.3em] font-mono leading-relaxed uppercase">
-            Submit your intent to the matrix.<br/>Six tosses align your destiny.
+            吉凶悔吝 ：Fatum et Fluxus
           </p>
         </header>
 
@@ -87,7 +87,7 @@
         </div>
 
         <div v-if="!loading" class="grid grid-cols-2 gap-4 w-full pt-8 shrink-0 border-t border-tao-gold/10 mt-6">
-          <button @click="talismanRef.generate()" class="py-4 bg-tao-gold text-black text-[10px] md:text-xs font-black tracking-[0.4em] hover:bg-white transition-all uppercase rounded-sm shadow-lg shadow-tao-gold/20">Extract</button>
+          <button @click="talismanRef.generate()" class="py-4 border border-tao-gold/40 bg-tao-gold text-tao-gold text-[10px] md:text-xs font-black tracking-[0.4em] hover:bg-white transition-all uppercase rounded-sm shadow-lg shadow-tao-gold/20">Extract</button>
           <button @click="reset" class="py-4 border border-tao-gold/40 text-[10px] md:text-xs text-tao-gold tracking-[0.4em] hover:bg-white/5 transition-all uppercase rounded-sm">Return</button>
         </div>
       </section>
