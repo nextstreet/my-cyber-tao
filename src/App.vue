@@ -10,7 +10,7 @@
 
     <main class="relative z-10 w-full max-w-2xl h-[90vh] md:h-[85vh] bg-[#0a0a0a]/90 backdrop-blur-2xl border border-tao-gold/30 shadow-[0_0_40px_rgba(0,0,0,0.8)] rounded-xl flex flex-col p-6 md:p-12 overflow-hidden">
       
-      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-8 md:space-y-12"> 
+      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-8 md:space-y-12" style="margin:auto"> 
         <header class="text-center w-full animate-fade-in">
           <h1 class="text-4xl md:text-5xl font-serif tracking-[0.5em] text-white drop-shadow-[0_0_15px_rgba(200,170,110,0.4)]">CYBER TAO</h1>
           <div class="h-[1px] w-16 bg-tao-gold/60 mx-auto mt-6 mb-6"></div>
@@ -38,7 +38,7 @@
         <button 
           @click="step = 'ritual'" 
           :disabled="!question || (!hasSpirit && !isAdmin)" 
-          class="w-full py-5 md:py-6 bg-transparent border border-tao-gold/50 text-tao-gold hover:bg-tao-gold hover:text-black disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-tao-gold transition-all duration-500 text-xs md:text-sm font-black tracking-[0.8em] uppercase shadow-[0_0_15px_rgba(200,170,110,0.1)]"
+          class="w-full py-5 md:py-6 bg-transparent border border-tao-gold/50 text-tao-gold hover:bg-tao-white hover:text-tao-gold disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-tao-gold transition-all duration-500 text-xs md:text-sm font-black tracking-[0.8em] uppercase shadow-[0_0_15px_rgba(200,170,110,0.1)]"
         >
           INITIATE PROTOCOL
         </button>
