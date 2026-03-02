@@ -1,8 +1,3 @@
-以下是根据你提供的四个维度的完整整合建议，对现有 `<template>`、`<script setup>` 和 `<style scoped>` 进行的深度重构代码。
-
-移除了多余的废话，直接交付整合后的技术实现方案：
-
-```vue
 <template>
   <div v-if="showModal" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/98 p-4 backdrop-blur-xl overflow-y-auto">
     
