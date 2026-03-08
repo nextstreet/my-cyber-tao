@@ -30,7 +30,7 @@ body {
   font-family: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
 }
 .rice-paper-overlay {
-  background-image: url('texture-rice-paper.png');
+  background-image: url('/public/texture-rice-paper.png');
   /* 使用 'multiply'（正片叠底）模式：
      它会让白色的部分变透明，只保留黑色的纹理和瑕疵，
      从而让下方的赛博背景和文本显现出来，
