@@ -1,0 +1,374 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" style="background:transparent">
+  <defs>
+    <style>
+      text { font-family: 'STSong', 'SimSun', 'NSimSun', serif; fill: #FFFFFF; }
+    </style>
+  </defs>
+
+  <!-- ==============================
+       OUTER RING: 64 Hexagrams (simplified labels around edge)
+       ============================== -->
+  <!-- 64 hexagram names arranged in outer ring at r=370 -->
+  <!-- We place 64 labels evenly: angle step = 360/64 = 5.625 deg -->
+  <!-- Starting angle offset so they align nicely -->
+
+  <g id="hexagram-names" font-size="7.5" text-anchor="middle" dominant-baseline="middle">
+    <!-- Generated positions: cx = 400 + 370*sin(angle), cy = 400 - 370*cos(angle) -->
+    <!-- 64 gua names in traditional sequence -->
+    <text transform="rotate(0,400,400) translate(400,30)">乾</text>
+    <text transform="rotate(5.625,400,400) translate(400,30)">姤</text>
+    <text transform="rotate(11.25,400,400) translate(400,30)">遁</text>
+    <text transform="rotate(16.875,400,400) translate(400,30)">否</text>
+    <text transform="rotate(22.5,400,400) translate(400,30)">观</text>
+    <text transform="rotate(28.125,400,400) translate(400,30)">剥</text>
+    <text transform="rotate(33.75,400,400) translate(400,30)">坤</text>
+    <text transform="rotate(39.375,400,400) translate(400,30)">复</text>
+    <text transform="rotate(45,400,400) translate(400,30)">临</text>
+    <text transform="rotate(50.625,400,400) translate(400,30)">泰</text>
+    <text transform="rotate(56.25,400,400) translate(400,30)">大壮</text>
+    <text transform="rotate(61.875,400,400) translate(400,30)">夬</text>
+    <text transform="rotate(67.5,400,400) translate(400,30)">需</text>
+    <text transform="rotate(73.125,400,400) translate(400,30)">比</text>
+    <text transform="rotate(78.75,400,400) translate(400,30)">节</text>
+    <text transform="rotate(84.375,400,400) translate(400,30)">既济</text>
+    <text transform="rotate(90,400,400) translate(400,30)">屯</text>
+    <text transform="rotate(95.625,400,400) translate(400,30)">益</text>
+    <text transform="rotate(101.25,400,400) translate(400,30)">震</text>
+    <text transform="rotate(106.875,400,400) translate(400,30)">噬嗑</text>
+    <text transform="rotate(112.5,400,400) translate(400,30)">随</text>
+    <text transform="rotate(118.125,400,400) translate(400,30)">无妄</text>
+    <text transform="rotate(123.75,400,400) translate(400,30)">明夷</text>
+    <text transform="rotate(129.375,400,400) translate(400,30)">贲</text>
+    <text transform="rotate(135,400,400) translate(400,30)">艮</text>
+    <text transform="rotate(140.625,400,400) translate(400,30)">蒙</text>
+    <text transform="rotate(146.25,400,400) translate(400,30)">师</text>
+    <text transform="rotate(151.875,400,400) translate(400,30)">谦</text>
+    <text transform="rotate(157.5,400,400) translate(400,30)">小过</text>
+    <text transform="rotate(163.125,400,400) translate(400,30)">旅</text>
+    <text transform="rotate(168.75,400,400) translate(400,30)">蹇</text>
+    <text transform="rotate(174.375,400,400) translate(400,30)">咸</text>
+    <text transform="rotate(180,400,400) translate(400,30)">兑</text>
+    <text transform="rotate(185.625,400,400) translate(400,30)">困</text>
+    <text transform="rotate(191.25,400,400) translate(400,30)">萃</text>
+    <text transform="rotate(196.875,400,400) translate(400,30)">革</text>
+    <text transform="rotate(202.5,400,400) translate(400,30)">大过</text>
+    <text transform="rotate(208.125,400,400) translate(400,30)">升</text>
+    <text transform="rotate(213.75,400,400) translate(400,30)">井</text>
+    <text transform="rotate(219.375,400,400) translate(400,30)">鼎</text>
+    <text transform="rotate(225,400,400) translate(400,30)">巽</text>
+    <text transform="rotate(230.625,400,400) translate(400,30)">小畜</text>
+    <text transform="rotate(236.25,400,400) translate(400,30)">家人</text>
+    <text transform="rotate(241.875,400,400) translate(400,30)">中孚</text>
+    <text transform="rotate(247.5,400,400) translate(400,30)">渐</text>
+    <text transform="rotate(253.125,400,400) translate(400,30)">涣</text>
+    <text transform="rotate(258.75,400,400) translate(400,30)">履</text>
+    <text transform="rotate(264.375,400,400) translate(400,30)">睽</text>
+    <text transform="rotate(270,400,400) translate(400,30)">离</text>
+    <text transform="rotate(275.625,400,400) translate(400,30)">丰</text>
+    <text transform="rotate(281.25,400,400) translate(400,30)">革</text>
+    <text transform="rotate(286.875,400,400) translate(400,30)">未济</text>
+    <text transform="rotate(292.5,400,400) translate(400,30)">解</text>
+    <text transform="rotate(298.125,400,400) translate(400,30)">恒</text>
+    <text transform="rotate(303.75,400,400) translate(400,30)">讼</text>
+    <text transform="rotate(309.375,400,400) translate(400,30)">大有</text>
+    <text transform="rotate(315,400,400) translate(400,30)">坎</text>
+    <text transform="rotate(320.625,400,400) translate(400,30)">晋</text>
+    <text transform="rotate(326.25,400,400) translate(400,30)">同人</text>
+    <text transform="rotate(331.875,400,400) translate(400,30)">大畜</text>
+    <text transform="rotate(337.5,400,400) translate(400,30)">损</text>
+    <text transform="rotate(343.125,400,400) translate(400,30)">颐</text>
+    <text transform="rotate(348.75,400,400) translate(400,30)">归妹</text>
+    <text transform="rotate(354.375,400,400) translate(400,30)">丰</text>
+  </g>
+
+  <!-- Outer boundary circles -->
+  <circle cx="400" cy="400" r="390" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.3"/>
+  <circle cx="400" cy="400" r="355" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.4"/>
+
+  <!-- ==============================
+       RING: 十天干 + 十二地支 (r=320)
+       ============================== -->
+  <!-- 22 characters total, spaced evenly: 360/22 = 16.36 deg -->
+  <g id="stems-branches" font-size="11" text-anchor="middle" dominant-baseline="middle">
+    <!-- 十天干: 甲乙丙丁戊己庚辛壬癸 -->
+    <!-- 十二地支: 子丑寅卯辰巳午未申酉戌亥 -->
+    <!-- Interleaved arrangement: total 22 items -->
+    <text transform="rotate(0,400,400) translate(400,82)">子</text>
+    <text transform="rotate(16.36,400,400) translate(400,82)">甲</text>
+    <text transform="rotate(32.72,400,400) translate(400,82)">丑</text>
+    <text transform="rotate(49.09,400,400) translate(400,82)">乙</text>
+    <text transform="rotate(65.45,400,400) translate(400,82)">寅</text>
+    <text transform="rotate(81.81,400,400) translate(400,82)">丙</text>
+    <text transform="rotate(98.18,400,400) translate(400,82)">卯</text>
+    <text transform="rotate(114.54,400,400) translate(400,82)">丁</text>
+    <text transform="rotate(130.9,400,400) translate(400,82)">辰</text>
+    <text transform="rotate(147.27,400,400) translate(400,82)">戊</text>
+    <text transform="rotate(163.63,400,400) translate(400,82)">巳</text>
+    <text transform="rotate(180,400,400) translate(400,82)">己</text>
+    <text transform="rotate(196.36,400,400) translate(400,82)">午</text>
+    <text transform="rotate(212.72,400,400) translate(400,82)">庚</text>
+    <text transform="rotate(229.09,400,400) translate(400,82)">未</text>
+    <text transform="rotate(245.45,400,400) translate(400,82)">辛</text>
+    <text transform="rotate(261.81,400,400) translate(400,82)">申</text>
+    <text transform="rotate(278.18,400,400) translate(400,82)">壬</text>
+    <text transform="rotate(294.54,400,400) translate(400,82)">酉</text>
+    <text transform="rotate(310.9,400,400) translate(400,82)">癸</text>
+    <text transform="rotate(327.27,400,400) translate(400,82)">戌</text>
+    <text transform="rotate(343.63,400,400) translate(400,82)">亥</text>
+  </g>
+
+  <circle cx="400" cy="400" r="310" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.5"/>
+  <circle cx="400" cy="400" r="295" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.3"/>
+
+  <!-- ==============================
+       EIGHT TRIGRAMS (八卦) at r=245
+       Each trigram is 3 lines (爻), solid=yang, broken=yin
+       Arranged: 乾S坎SE艮E震NE坤N离NW兑W巽SW (先天八卦 Fuxi arrangement)
+       Angles (from top, clockwise): 乾=0°(S), 兑=45°, 离=90°, 震=135°, 巽=180°, 坎=225°, 艮=270°, 坤=315°
+       Using 后天八卦 (King Wen): 坎N=0°, 艮NE=45°, 震E=90°, 巽SE=135°, 离S=180°, 坤SW=225°, 兑W=270°, 乾NW=315°
+       ============================== -->
+
+  <!-- Helper: trigram lines drawn at local coords, then rotated into position -->
+  <!-- Line format: yang=solid bar, yin=two short bars with gap -->
+  <!-- Each trigram centered at distance 245 from center -->
+  <!-- Lines: bottom=first yao, mid=second, top=third -->
+  <!-- Width=36, height per line=6, gap between lines=5 -->
+
+  <g id="trigrams" stroke="#FFFFFF" stroke-width="2" fill="none">
+
+    <!-- 坎 ☵ (010) North, 0° = top -->
+    <!-- yao1=yin, yao2=yang, yao3=yin -->
+    <g transform="translate(400,155)">
+      <!-- yao3 top: yin (broken) -->
+      <line x1="-18" y1="-22" x2="-4" y2="-22"/>
+      <line x1="4" y1="-22" x2="18" y2="-22"/>
+      <!-- yao2 mid: yang (solid) -->
+      <line x1="-18" y1="-11" x2="18" y2="-11"/>
+      <!-- yao1 bot: yin (broken) -->
+      <line x1="-18" y1="0" x2="-4" y2="0"/>
+      <line x1="4" y1="0" x2="18" y2="0"/>
+      <text x="0" y="20" font-size="13" fill="#FFFFFF" stroke="none" text-anchor="middle">坎</text>
+    </g>
+
+    <!-- 艮 ☶ (001) NE, 45° -->
+    <!-- yao1=yin, yao2=yin, yao3=yang -->
+    <g transform="rotate(45,400,400) translate(400,155) rotate(-45)">
+      <!-- yao3 top: yang -->
+      <line x1="-18" y1="-22" x2="18" y2="-22"/>
+      <!-- yao2 mid: yin -->
+      <line x1="-18" y1="-11" x2="-4" y2="-11"/>
+      <line x1="4" y1="-11" x2="18" y2="-11"/>
+      <!-- yao1 bot: yin -->
+      <line x1="-18" y1="0" x2="-4" y2="0"/>
+      <line x1="4" y1="0" x2="18" y2="0"/>
+      <text x="0" y="20" font-size="13" fill="#FFFFFF" stroke="none" text-anchor="middle">艮</text>
+    </g>
+
+    <!-- 震 ☳ (100) East, 90° -->
+    <!-- yao1=yang, yao2=yin, yao3=yin -->
+    <g transform="rotate(90,400,400) translate(400,155) rotate(-90)">
+      <!-- yao3 top: yin -->
+      <line x1="-18" y1="-22" x2="-4" y2="-22"/>
+      <line x1="4" y1="-22" x2="18" y2="-22"/>
+      <!-- yao2 mid: yin -->
+      <line x1="-18" y1="-11" x2="-4" y2="-11"/>
+      <line x1="4" y1="-11" x2="18" y2="-11"/>
+      <!-- yao1 bot: yang -->
+      <line x1="-18" y1="0" x2="18" y2="0"/>
+      <text x="0" y="20" font-size="13" fill="#FFFFFF" stroke="none" text-anchor="middle">震</text>
+    </g>
+
+    <!-- 巽 ☴ (011) SE, 135° -->
+    <!-- yao1=yin, yao2=yang, yao3=yang -->
+    <g transform="rotate(135,400,400) translate(400,155) rotate(-135)">
+      <!-- yao3 top: yang -->
+      <line x1="-18" y1="-22" x2="18" y2="-22"/>
+      <!-- yao2 mid: yang -->
+      <line x1="-18" y1="-11" x2="18" y2="-11"/>
+      <!-- yao1 bot: yin -->
+      <line x1="-18" y1="0" x2="-4" y2="0"/>
+      <line x1="4" y1="0" x2="18" y2="0"/>
+      <text x="0" y="20" font-size="13" fill="#FFFFFF" stroke="none" text-anchor="middle">巽</text>
+    </g>
+
+    <!-- 离 ☲ (101) South, 180° -->
+    <!-- yao1=yang, yao2=yin, yao3=yang -->
+    <g transform="rotate(180,400,400) translate(400,155) rotate(-180)">
+      <!-- yao3 top: yang -->
+      <line x1="-18" y1="-22" x2="18" y2="-22"/>
+      <!-- yao2 mid: yin -->
+      <line x1="-18" y1="-11" x2="-4" y2="-11"/>
+      <line x1="4" y1="-11" x2="18" y2="-11"/>
+      <!-- yao1 bot: yang -->
+      <line x1="-18" y1="0" x2="18" y2="0"/>
+      <text x="0" y="20" font-size="13" fill="#FFFFFF" stroke="none" text-anchor="middle">离</text>
+    </g>
+
+    <!-- 坤 ☷ (000) SW, 225° -->
+    <!-- yao1=yin, yao2=yin, yao3=yin -->
+    <g transform="rotate(225,400,400) translate(400,155) rotate(-225)">
+      <!-- yao3 top: yin -->
+      <line x1="-18" y1="-22" x2="-4" y2="-22"/>
+      <line x1="4" y1="-22" x2="18" y2="-22"/>
+      <!-- yao2 mid: yin -->
+      <line x1="-18" y1="-11" x2="-4" y2="-11"/>
+      <line x1="4" y1="-11" x2="18" y2="-11"/>
+      <!-- yao1 bot: yin -->
+      <line x1="-18" y1="0" x2="-4" y2="0"/>
+      <line x1="4" y1="0" x2="18" y2="0"/>
+      <text x="0" y="20" font-size="13" fill="#FFFFFF" stroke="none" text-anchor="middle">坤</text>
+    </g>
+
+    <!-- 兑 ☱ (110) West, 270° -->
+    <!-- yao1=yang, yao2=yang, yao3=yin -->
+    <g transform="rotate(270,400,400) translate(400,155) rotate(-270)">
+      <!-- yao3 top: yin -->
+      <line x1="-18" y1="-22" x2="-4" y2="-22"/>
+      <line x1="4" y1="-22" x2="18" y2="-22"/>
+      <!-- yao2 mid: yang -->
+      <line x1="-18" y1="-11" x2="18" y2="-11"/>
+      <!-- yao1 bot: yang -->
+      <line x1="-18" y1="0" x2="18" y2="0"/>
+      <text x="0" y="20" font-size="13" fill="#FFFFFF" stroke="none" text-anchor="middle">兑</text>
+    </g>
+
+    <!-- 乾 ☰ (111) NW, 315° -->
+    <!-- yao1=yang, yao2=yang, yao3=yang -->
+    <g transform="rotate(315,400,400) translate(400,155) rotate(-315)">
+      <!-- yao3 top: yang -->
+      <line x1="-18" y1="-22" x2="18" y2="-22"/>
+      <!-- yao2 mid: yang -->
+      <line x1="-18" y1="-11" x2="18" y2="-11"/>
+      <!-- yao1 bot: yang -->
+      <line x1="-18" y1="0" x2="18" y2="0"/>
+      <text x="0" y="20" font-size="13" fill="#FFFFFF" stroke="none" text-anchor="middle">乾</text>
+    </g>
+
+  </g>
+
+  <!-- Inner ring circles bounding the trigrams -->
+  <circle cx="400" cy="400" r="210" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.6"/>
+  <circle cx="400" cy="400" r="190" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.4"/>
+
+  <!-- Dividing lines between the 8 sectors -->
+  <g stroke="#FFFFFF" stroke-width="1" opacity="0.25">
+    <line x1="400" y1="190" x2="400" y2="610"/>
+    <line x1="190" y1="400" x2="610" y2="400"/>
+    <line x1="237" y1="237" x2="563" y2="563"/>
+    <line x1="563" y1="237" x2="237" y2="563"/>
+  </g>
+
+  <!-- ==============================
+       TAI CHI (太极) symbol at center, r=130
+       Two interlocking fish
+       ============================== -->
+  <g id="taichi">
+    <!-- Outer circle -->
+    <circle cx="400" cy="400" r="130" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+
+    <!-- Yang fish (top half, white outline) -->
+    <!-- Large S-curve path -->
+    <!-- Top semicircle: from (400,270) arc to (400,400) -->
+    <!-- Small yang circle top: center (400,335), r=65 -->
+    <path d="M 400 270 
+             A 65 65 0 0 1 400 400
+             A 65 65 0 0 0 400 530
+             A 130 130 0 0 1 400 270" 
+          fill="none" stroke="#FFFFFF" stroke-width="2"/>
+
+    <!-- Small inner circles -->
+    <circle cx="400" cy="335" r="20" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="400" cy="465" r="20" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+
+    <!-- Inner dot for yang eye (small filled dot = small circle) -->
+    <circle cx="400" cy="335" r="5" fill="#FFFFFF"/>
+    <!-- Inner dot for yin eye -->
+    <circle cx="400" cy="465" r="5" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+  </g>
+
+  <!-- Center decorative ring -->
+  <circle cx="400" cy="400" r="135" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.3"/>
+
+  <!-- ==============================
+       Outermost decorative ring and title area
+       ============================== -->
+  <circle cx="400" cy="400" r="395" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.6"/>
+
+  <!-- Tick marks at every 5.625° for 64 hexagram divisions -->
+  <g stroke="#FFFFFF" stroke-width="1" opacity="0.4">
+    <!-- 64 tick marks on outer ring -->
+    <line transform="rotate(0,400,400)"   x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(5.625,400,400)"   x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(11.25,400,400)"  x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(16.875,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(22.5,400,400)"   x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(28.125,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(33.75,400,400)"  x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(39.375,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(45,400,400)"     x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(50.625,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(56.25,400,400)"  x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(61.875,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(67.5,400,400)"   x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(73.125,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(78.75,400,400)"  x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(84.375,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(90,400,400)"     x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(95.625,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(101.25,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(106.875,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(112.5,400,400)"  x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(118.125,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(123.75,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(129.375,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(135,400,400)"    x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(140.625,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(146.25,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(151.875,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(157.5,400,400)"  x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(163.125,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(168.75,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(174.375,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(180,400,400)"    x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(185.625,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(191.25,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(196.875,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(202.5,400,400)"  x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(208.125,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(213.75,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(219.375,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(225,400,400)"    x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(230.625,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(236.25,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(241.875,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(247.5,400,400)"  x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(253.125,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(258.75,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(264.375,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(270,400,400)"    x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(275.625,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(281.25,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(286.875,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(292.5,400,400)"  x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(298.125,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(303.75,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(309.375,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(315,400,400)"    x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(320.625,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(326.25,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(331.875,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(337.5,400,400)"  x1="400" y1="5"  x2="400" y2="20"/>
+    <line transform="rotate(343.125,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+    <line transform="rotate(348.75,400,400)" x1="400" y1="5"  x2="400" y2="15"/>
+    <line transform="rotate(354.375,400,400)" x1="400" y1="5" x2="400" y2="15"/>
+  </g>
+
+  <!-- Cardinal direction markers -->
+  <g font-size="14" fill="#FFFFFF" stroke="none" text-anchor="middle" dominant-baseline="middle" opacity="0.5">
+    <text x="400" y="14">北</text>
+    <text x="786" y="404">东</text>
+    <text x="400" y="790">南</text>
+    <text x="14" y="404">西</text>
+  </g>
+
+</svg>
