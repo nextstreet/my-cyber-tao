@@ -29,8 +29,17 @@ body {
 .font-serif {
   font-family: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
 }
-
-/* 宣纸纹理混合层 */
+.rice-paper-overlay {
+  background-image: url('texture-rice-paper.png');
+  /* 使用 'multiply'（正片叠底）模式：
+     它会让白色的部分变透明，只保留黑色的纹理和瑕疵，
+     从而让下方的赛博背景和文本显现出来，
+     并在上方完美呈现“中式古籍”的质感。
+  */
+  mix-blend-mode: multiply;
+  opacity: 0.15; /* 调整透明度，让效果不至于太强烈 */
+}
+/* 宣纸纹理混合层 
 .rice-paper-overlay {
   position: absolute;
   inset: 0;
@@ -38,7 +47,7 @@ body {
   opacity: 0.05;
   mix-blend-mode: overlay;
   pointer-events: none;
-}
+}*/
 
 /* 赛博扫描线 */
 .scanlines {
