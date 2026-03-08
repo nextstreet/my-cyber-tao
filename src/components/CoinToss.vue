@@ -1,32 +1,33 @@
 <template>
-  <div class="flex flex-col items-center w-full min-h-[500px] justify-between">
-    <div class="flex flex-col-reverse gap-4 h-44 justify-end">
-      <div v-for="(line, i) in lines" :key="i" class="animate-in">
-        <div v-if="line === 1" class="w-44 h-2.5 bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.6)] border border-white/5"></div>
-        <div v-else class="w-44 h-2.5 flex justify-between">
-          <div class="w-[43%] h-full bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.6)] border border-white/5"></div>
-          <div class="w-[43%] h-full bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.6)] border border-white/5"></div>
+  <div class="flex flex-col items-center w-full min-h-[500px] justify-between relative">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[url('/bagua-array.svg')] bg-contain bg-no-repeat bg-center opacity-10 animate-spin-slow pointer-events-none"></div>
+
+    <div class="flex flex-col-reverse gap-4 h-44 justify-end relative z-10">
+       <div v-for="(line, i) in lines" :key="i" class="animate-in">
+        <div v-if="line === 1" class="w-48 h-3 bg-[#c8aa6e] shadow-[0_0_15px_rgba(200,170,110,0.8)] border border-white/20 rounded-sm"></div>
+        <div v-else class="w-48 h-3 flex justify-between">
+          <div class="w-[42%] h-full bg-[#c8aa6e] shadow-[0_0_15px_rgba(200,170,110,0.8)] border border-white/20 rounded-sm"></div>
+          <div class="w-[42%] h-full bg-[#c8aa6e] shadow-[0_0_15px_rgba(200,170,110,0.8)] border border-white/20 rounded-sm"></div>
         </div>
       </div>
-      <div v-if="lines.length === 0" class="text-center opacity-20 italic text-[10px] tracking-[0.5em] px-8 leading-relaxed">
+      <div v-if="lines.length === 0" class="text-center opacity-30 italic text-[10px] tracking-[0.6em] px-8 leading-relaxed font-mono">
         OSCILLATING PROBABILITY FIELD...<br>RESONATE WITH THE VOID.
       </div>
     </div>
 
-    <div class="flex gap-10 my-12">
-      <div v-for="(coin, index) in coins" :key="index" class="coin-container w-16 h-16">
+    <div class="flex gap-12 my-12 relative z-10">
+      <div v-for="(coin, index) in coins" :key="index" class="coin-container w-20 h-20">
         <div 
-          class="coin-body"
+          class="coin-body drop-shadow-[0_0_15px_rgba(200,170,110,0.3)]"
           :class="{ 'is-tossing': isTossing }"
           :style="getRotation(coin.v)"
         >
-          <div class="coin-face front bg-[#1a1a1a] border-2 border-tao-gold/50 flex items-center justify-center">
-            <span class="text-tao-gold font-serif text-2xl drop-shadow-[0_0_5px_rgba(200,170,110,0.5)]">乾</span>
-            <div class="absolute inset-1 border border-tao-gold/10 rounded-full"></div>
+          <div class="coin-face front bg-[#0a0a0a] border-4 border-[#c8aa6e] flex items-center justify-center">
+            <div class="absolute inset-1 border border-[#c8aa6e]/30 rounded-full border-dashed animate-spin-slow"></div>
+            <span class="text-[#c8aa6e] font-serif font-black text-3xl drop-shadow-[0_0_8px_rgba(200,170,110,0.8)]">陽</span>
           </div>
-          <div class="coin-face back bg-[#1a1a1a] border-2 border-tao-gold/50 flex items-center justify-center">
-            <span class="text-tao-gold/80 font-serif text-2xl">坤</span>
-            <div class="absolute inset-1 border border-tao-gold/10 rounded-full"></div>
+          <div class="coin-face back bg-[#1a1a1a] border-4 border-[#c8aa6e]/50 flex items-center justify-center">
+            <span class="text-white/40 font-serif font-black text-3xl">陰</span>
           </div>
           <div class="coin-side"></div>
         </div>
@@ -36,10 +37,9 @@
     <button 
       @click="toss" 
       :disabled="isTossing || lines.length >= 6"
-      class="group relative w-full py-5 overflow-hidden border border-tao-gold/30 bg-black/40 transition-all hover:border-tao-gold disabled:opacity-10"
+      class="relative z-10 w-full py-5 border border-tao-gold bg-black/80 hover:bg-tao-gold hover:text-black transition-all disabled:opacity-20 disabled:border-white/10"
     >
-      <div class="absolute inset-0 bg-tao-gold/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      <span class="relative z-10 text-[11px] font-black tracking-[0.8em] text-tao-gold group-hover:text-white transition-colors">
+      <span class="text-[12px] font-black tracking-[0.8em] font-mono uppercase">
         {{ isTossing ? 'CALCULATING...' : (lines.length >= 6 ? 'ARRAY LOCKED' : `ITERATE HEXAGRAM ${lines.length + 1}`) }}
       </span>
     </button>
