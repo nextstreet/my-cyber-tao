@@ -116,28 +116,43 @@
   </div>
 
   <div class="fixed top-[-9999px] left-[-9999px] pointer-events-none">
-    <div ref="posterRef" class="w-[1080px] h-[1920px] bg-[#050505] flex flex-col overflow-hidden relative border-[16px] border-[#0a0a0a]">
-       <img :src="beastImageUrl" class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-screen scale-110" />
-       <div class="z-10 w-full p-16 flex justify-between items-start border-b border-tao-gold/20">
-          <div class="flex flex-col gap-4">
-            <h2 class="text-[54px] font-serif text-white/90 tracking-[0.3em] uppercase">{{ hexagramData.name }}</h2>
-            <div class="text-[24px] text-white/40 font-mono tracking-[0.5em] uppercase">USER HASH: {{ userHash }}</div>
+<div ref="posterRef" class="w-[1080px] h-[1920px] bg-[#050505] flex flex-col overflow-hidden relative border-[24px] border-[#0a0a0a]">
+       <img :src="beastImageUrl" class="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-screen scale-110" />
+       <div class="absolute inset-0 bg-[url('/texture-rice-paper.png')] opacity-10 mix-blend-overlay"></div>
+       <div class="scanlines opacity-40"></div>
+       
+       <div class="z-10 w-full p-16 flex justify-between items-start border-b-2 border-[#c8aa6e]/30 bg-gradient-to-b from-black/80 to-transparent">
+          <div class="flex flex-col gap-6 relative">
+            <h2 class="text-[64px] font-serif text-white tracking-[0.4em] uppercase font-bold drop-shadow-lg">{{ hexagramData.name }}</h2>
+            <div class="text-[28px] text-white/50 font-mono tracking-[0.6em] uppercase border-l-4 border-[#c8aa6e] pl-6">USER HASH: {{ userHash }}</div>
+            
+            <div class="absolute -top-4 -right-20 border-[6px] border-[#8b0000] text-[#8b0000] p-4 transform -rotate-12 opacity-80 mix-blend-screen">
+              <span class="text-[40px] font-serif font-black tracking-widest [writing-mode:vertical-rl]">天命<br>极数</span>
+            </div>
           </div>
-          <div class="text-[28px] text-tao-gold/60 font-serif tracking-[0.5em] [writing-mode:vertical-rl]">{{ lunarDateStamp }}</div>
+          <div class="text-[32px] text-[#c8aa6e]/80 font-serif tracking-[0.6em] [writing-mode:vertical-rl] font-bold">{{ lunarDateStamp }}</div>
        </div>
+
        <div class="z-10 flex-1 w-full p-20 flex justify-center items-center relative">
-          <h1 class="text-[280px] font-serif text-tao-gold tracking-[0.1em] font-bold [writing-mode:vertical-rl] drop-shadow-2xl absolute right-[35%]">{{ hexagramData.nameZh }}</h1>
-          <p class="text-[72px] text-white/90 font-serif tracking-[0.4em] [writing-mode:vertical-rl] leading-relaxed absolute left-[25%]">{{ hexagramData.poemZh }}</p>
+          <img src="/bagua-array.svg" class="absolute w-[800px] h-[800px] opacity-10" />
+          <h1 class="text-[320px] font-serif text-[#c8aa6e] tracking-[0.1em] font-black [writing-mode:vertical-rl] drop-shadow-[0_0_50px_rgba(200,170,110,0.4)] absolute right-[30%]">{{ hexagramData.nameZh }}</h1>
+          <p class="text-[80px] text-white font-serif tracking-[0.5em] [writing-mode:vertical-rl] leading-loose absolute left-[20%] font-bold drop-shadow-2xl">{{ hexagramData.poemZh }}</p>
        </div>
-       <div class="z-10 w-full p-16 bg-[#0a0a0a]/80 backdrop-blur-xl border-t border-white/10 flex gap-12 items-end">
+
+       <div class="z-10 w-full p-16 bg-[#0a0a0a]/90 backdrop-blur-3xl border-t-2 border-[#c8aa6e]/40 flex gap-12 items-center relative">
+          <div class="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-[#c8aa6e]"></div>
           <div class="flex-1">
-            <p class="text-[34px] text-white/80 font-mono italic leading-[1.6] text-justify">{{ aiPredictionText }}</p>
+            <div class="text-[#8b0000] text-[24px] font-black tracking-[0.4em] mb-4 uppercase">Neural Decree</div>
+            <p class="text-[40px] text-white/90 font-serif leading-[1.8] text-justify tracking-wide">{{ aiPredictionText }}</p>
           </div>
-          <div class="flex flex-col items-center gap-6 border-l border-tao-gold/20 pl-12 shrink-0">
-            <span class="text-[20px] text-tao-gold/40 font-serif tracking-[0.8em] [writing-mode:vertical-rl] uppercase">Sync Rate: {{ syncRate }}%</span>
-            <img src="/qr-code.png" class="w-40 h-40 grayscale brightness-150 p-4 border border-tao-gold/30 bg-black/60" />
+          <div class="flex flex-col items-center gap-8 border-l-2 border-white/10 pl-16 shrink-0">
+            <span class="text-[28px] text-[#22d3ee] font-mono tracking-[0.5em] [writing-mode:vertical-rl] uppercase">Sync Rate: {{ syncRate }}%</span>
+            <div class="p-2 border border-[#c8aa6e]/50 bg-black">
+              <img src="/qr-code.png" class="w-48 h-48 grayscale brightness-150 contrast-150" />
+            </div>
           </div>
        </div>
+    </div>
     </div>
 
     <div ref="squareRef" class="w-[1080px] h-[1080px] bg-[#050505] flex flex-col justify-between overflow-hidden relative border-[20px] border-[#0a0a0a] p-16">
