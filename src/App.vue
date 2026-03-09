@@ -16,7 +16,12 @@
       </div>
 
     <div class="absolute inset-0 z-10 flex items-center justify-center p-4 md:p-8">
-      <main class="relative w-full max-w-2xl h-[90vh] md:h-[85vh] bg-[#0a0a0a]/90 backdrop-blur-2xl border border-tao-gold/20 shadow-[0_0_60px_rgba(0,0,0,1)] rounded-sm flex flex-col p-6 md:p-12 overflow-hidden">
+      <main class="relative w-full max-w-2xl h-[90vh] md:h-[85vh] bg-[#0a0a0a]/90 backdrop-blur-2xl border border-tao-gold/20 shadow-[0_0_60px_rgba(0,0,0,1)] rounded-sm flex flex-col p-6 md:p-12 overflow-hidden" style="display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+    align-items: center;">
         
         <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-tao-gold/40"></div>
         <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-tao-gold/40"></div>
