@@ -11,91 +11,100 @@
 
     <div class="relative w-[85vw] max-w-[400px] aspect-[9/16] md:max-w-[420px] perspective-2000" @click="isFlipped = !isFlipped">
       <div 
-        class="relative w-full h-full transition-all duration-1000 transform-style-3d cursor-pointer shadow-[0_0_50px_rgba(0,0,0,0.8)]"
+        class="relative w-full h-full transition-transform duration-1000 transform-style-3d cursor-pointer shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-xl"
         :class="{ 'rotate-y-180': isFlipped }"
-        :style="visualSeedStyles"
       >
-        <div class="absolute inset-0 backface-hidden rounded-xl border border-white/10 bg-[#050505] flex flex-col overflow-hidden">
-          <div class="absolute inset-0 cyber-grid opacity-[0.08]" :style="gridOffsetStyle"></div>
-          
-          <div class="relative p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
-            <div class="flex items-center gap-3">
-              <div v-if="userData" class="w-8 h-8 rounded-sm bg-cyan-900/50 border border-cyan-500/50 overflow-hidden">
-                <img :src="userData.avatar" class="w-full h-full object-cover grayscale brightness-125" />
+        <div class="absolute inset-0 backface-hidden rounded-xl border border-white/10 bg-[#050505] overflow-hidden transform-rotate-0">
+          <div class="w-full h-full flex flex-col relative" :style="visualSeedStyles">
+            <div class="absolute inset-0 cyber-grid opacity-[0.08]" :style="gridOffsetStyle"></div>
+            
+            <div class="relative p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+              <div class="flex items-center gap-3">
+                <div v-if="userData" class="w-8 h-8 rounded-sm bg-cyan-900/50 border border-cyan-500/50 overflow-hidden">
+                  <img :src="userData.avatar" class="w-full h-full object-cover grayscale brightness-125" />
+                </div>
+                <div v-else class="w-8 h-8 rounded-sm bg-white/5 border border-white/20 flex items-center justify-center">
+                  <span class="text-[10px] text-white/40">?</span>
+                </div>
+                <div class="flex flex-col">
+                  <span :class="['text-[10px] font-mono tracking-widest uppercase', userData ? 'text-cyan-400' : 'text-white/40']">
+                    {{ userData ? userData.name : 'TEMPORARY NEURAL LINK' }}
+                  </span>
+                  <span class="text-[8px] text-white/30 font-mono tracking-widest">{{ userHash }}</span>
+                </div>
               </div>
-              <div v-else class="w-8 h-8 rounded-sm bg-white/5 border border-white/20 flex items-center justify-center">
-                <span class="text-[10px] text-white/40">?</span>
+            </div>
+
+            <div class="relative flex-1 flex flex-col items-center justify-center p-6 border-b border-white/5">
+              <h1 class="text-2xl font-serif text-white/90 tracking-[0.3em] uppercase mb-4">{{ hexagramData.name }}</h1>
+              <div class="relative w-full aspect-square max-w-[200px] flex items-center justify-center">
+                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+                  <polygon points="50,15 85,38 72,80 28,80 15,38" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+                  <polygon points="50,25 75,43 65,72 35,72 25,43" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+                  <polygon :points="radarPoints" fill="currentColor" class="opacity-20 text-current" stroke="currentColor" stroke-width="1.5" />
+                  
+                  <g class="font-mono tracking-widest uppercase">
+                    <text x="50" y="6" text-anchor="middle" class="text-[5px] fill-current opacity-90">ORDER</text>
+                    <text x="50" y="10" text-anchor="middle" class="text-[3px] fill-current opacity-40 font-serif">秩序</text>
+                    <text x="92" y="36" text-anchor="start" class="text-[5px] fill-current opacity-90">SENSE</text>
+                    <text x="92" y="40" text-anchor="start" class="text-[3px] fill-current opacity-40 font-serif">感知</text>
+                    <text x="75" y="90" text-anchor="middle" class="text-[5px] fill-current opacity-90">ORIGIN</text>
+                    <text x="75" y="94" text-anchor="middle" class="text-[3px] fill-current opacity-40 font-serif">根源</text>
+                    <text x="25" y="90" text-anchor="middle" class="text-[5px] fill-current opacity-90">SYNC</text>
+                    <text x="25" y="94" text-anchor="middle" class="text-[3px] fill-current opacity-40 font-serif">同步</text>
+                    <text x="8" y="36" text-anchor="end" class="text-[5px] fill-current opacity-90">CHAOS</text>
+                    <text x="8" y="40" text-anchor="end" class="text-[3px] fill-current opacity-40 font-serif">混沌</text>
+                  </g>
+                </svg>
               </div>
-              <div class="flex flex-col">
-                <span :class="['text-[10px] font-mono tracking-widest uppercase', userData ? 'text-cyan-400' : 'text-white/40']">
-                  {{ userData ? userData.name : 'TEMPORARY NEURAL LINK' }}
+            </div>
+
+            <div class="relative h-1/3 p-6 flex flex-col justify-between bg-gradient-to-t from-white/[0.05] to-transparent">
+              <div class="overflow-hidden">
+                <div class="w-8 h-px bg-white/30 mb-4"></div>
+                <p class="text-white/80 font-mono text-xs leading-relaxed italic line-clamp-3">
+                  {{ shortAiText }}
+                </p>
+              </div>
+              <div class="flex justify-between items-end mt-4">
+                <span class="text-[10px] text-white/40 font-serif tracking-[0.5em] [writing-mode:vertical-rl] border-l border-white/10 pl-2">
+                  {{ lunarDateStamp }}
                 </span>
-                <span class="text-[8px] text-white/30 font-mono tracking-widest">{{ userHash }}</span>
+                <span class="text-[8px] text-white/20 font-mono tracking-widest uppercase">SYS V2.0 // DECODED</span>
               </div>
-            </div>
-          </div>
-
-          <div class="relative flex-1 flex flex-col items-center justify-center p-6 border-b border-white/5">
-            <h1 class="text-2xl font-serif text-white/90 tracking-[0.3em] uppercase mb-4">{{ hexagramData.name }}</h1>
-            <div class="relative w-full aspect-square max-w-[200px] flex items-center justify-center">
-              <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-                <polygon points="50,10 90,38 75,85 25,85 10,38" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
-                <polygon points="50,25 75,43 65,72 35,72 25,43" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
-                <polygon :points="radarPoints" fill="currentColor" class="opacity-20 text-current" stroke="currentColor" stroke-width="1.5" />
-                <g class="text-[4px] fill-white/50 font-mono tracking-widest">
-                  <text x="50" y="8" text-anchor="middle">秩序</text>
-                  <text x="92" y="38" text-anchor="start">感知</text>
-                  <text x="75" y="90" text-anchor="middle">根源</text>
-                  <text x="25" y="90" text-anchor="middle">同步</text>
-                  <text x="8" y="38" text-anchor="end">混沌</text>
-                </g>
-              </svg>
-            </div>
-          </div>
-
-          <div class="relative h-1/3 p-6 flex flex-col justify-between bg-gradient-to-t from-white/[0.05] to-transparent">
-            <div class="overflow-hidden">
-              <div class="w-8 h-px bg-white/30 mb-4"></div>
-              <p class="text-white/80 font-mono text-xs leading-relaxed italic line-clamp-3">
-                {{ shortAiText }}
-              </p>
-            </div>
-            <div class="flex justify-between items-end mt-4">
-              <span class="text-[10px] text-white/40 font-serif tracking-[0.5em] [writing-mode:vertical-rl] border-l border-white/10 pl-2">
-                {{ lunarDateStamp }}
-              </span>
-              <span class="text-[8px] text-white/20 font-mono tracking-widest uppercase">SYS V2.0 // DECODED</span>
             </div>
           </div>
         </div>
 
-        <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-xl border border-tao-gold/30 bg-[#050505] overflow-hidden flex flex-col">
-          <div class="relative h-[55%] w-full border-b border-tao-gold/20">
-            <img :src="beastImageUrl" class="absolute inset-0 w-full h-full object-cover opacity-70 mix-blend-screen scale-105" />
-            
-            <svg class="absolute inset-0 w-full h-full opacity-60 pointer-events-none drop-shadow-[0_0_8px_rgba(200,170,110,0.8)]" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path v-for="(path, i) in talismanPaths" :key="i" :d="path" fill="none" stroke="#c8aa6e" stroke-width="0.5" class="animate-pulse" :style="`animation-delay: ${i * 0.5}s`" />
-            </svg>
+        <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-xl border border-tao-gold/30 bg-[#050505] overflow-hidden">
+          <div class="w-full h-full flex flex-col relative" :style="visualSeedStyles">
+            <div class="relative h-[55%] w-full border-b border-tao-gold/20">
+              <img v-if="beastImageUrl" :src="beastImageUrl" class="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-screen scale-105" />
+              
+              <svg class="absolute inset-0 w-full h-full opacity-60 pointer-events-none drop-shadow-[0_0_8px_rgba(200,170,110,0.8)]" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path v-for="(path, i) in talismanPaths" :key="i" :d="path" fill="none" stroke="#c8aa6e" stroke-width="0.5" class="animate-pulse" :style="`animation-delay: ${i * 0.5}s`" />
+              </svg>
 
-            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/40 to-[#050505]"></div>
-            <div class="absolute top-4 left-4 text-[8px] text-tao-gold/50 tracking-[0.5em] font-serif uppercase">Sacred Entity</div>
-          </div>
-
-          <div class="relative h-[45%] w-full p-6 flex justify-between items-start bg-gradient-to-t from-[#0a0a0a] to-[#050505]">
-            <div class="flex gap-6 h-full">
-              <h1 class="text-6xl font-serif text-tao-gold tracking-widest font-bold [writing-mode:vertical-rl] drop-shadow-[0_0_15px_rgba(200,170,110,0.4)] h-full">
-                {{ hexagramData.nameZh }}
-              </h1>
-              <div class="w-px h-3/4 bg-tao-gold/20 my-auto"></div>
-              <p class="text-white/80 text-lg font-serif tracking-[0.4em] [writing-mode:vertical-rl] leading-loose h-full pt-2">
-                {{ hexagramData.poemZh }}
-              </p>
+              <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/40 to-[#050505]"></div>
+              <div class="absolute top-4 left-4 text-[8px] text-tao-gold/50 tracking-[0.5em] font-serif uppercase">Sacred Entity</div>
             </div>
-            <div class="flex flex-col items-end justify-between h-full pb-2">
-               <div class="text-[10px] text-tao-gold/30 tracking-[0.8em] font-serif uppercase [writing-mode:vertical-rl]">Divine Archive</div>
-               <div class="p-1.5 border border-tao-gold/20 bg-black/80 backdrop-blur-sm">
-                 <img src="/qr-code.png" class="w-10 h-10 grayscale brightness-125 contrast-125" />
-               </div>
+
+            <div class="relative h-[45%] w-full p-6 flex justify-between items-start bg-gradient-to-t from-[#0a0a0a] to-[#050505]">
+              <div class="flex gap-6 h-full">
+                <h1 class="text-6xl font-serif text-tao-gold tracking-widest font-bold [writing-mode:vertical-rl] drop-shadow-[0_0_15px_rgba(200,170,110,0.4)] h-full">
+                  {{ hexagramData.nameZh }}
+                </h1>
+                <div class="w-px h-3/4 bg-tao-gold/20 my-auto"></div>
+                <p class="text-white/80 text-lg font-serif tracking-[0.4em] [writing-mode:vertical-rl] leading-loose h-full pt-2">
+                  {{ hexagramData.poemZh }}
+                </p>
+              </div>
+              <div class="flex flex-col items-end justify-between h-full pb-2">
+                 <div class="text-[10px] text-tao-gold/30 tracking-[0.8em] font-serif uppercase [writing-mode:vertical-rl]">Divine Archive</div>
+                 <div class="p-1.5 border border-tao-gold/20 bg-black/80 backdrop-blur-sm">
+                   <img src="/qr-code.png" class="w-10 h-10 grayscale brightness-125 contrast-125" />
+                 </div>
+              </div>
             </div>
           </div>
         </div>
@@ -114,6 +123,7 @@
       <button @click="close" class="text-white/30 text-[10px] tracking-[0.4em] hover:text-white transition-colors uppercase mt-2">Dismiss</button>
     </div>
   </div>
+
 
   <div class="fixed top-[-9999px] left-[-9999px] pointer-events-none">
 <div ref="posterRef" class="w-[1080px] h-[1920px] bg-[#050505] flex flex-col overflow-hidden relative border-[24px] border-[#0a0a0a]">
@@ -175,6 +185,7 @@
     </div>
   
 </template>
+
 
 <script setup>
 import { ref, computed } from 'vue'
@@ -329,8 +340,18 @@ defineExpose({ generate })
 <style scoped>
 .perspective-2000 { perspective: 2000px; }
 .transform-style-3d { transform-style: preserve-3d; }
-.backface-hidden { backface-visibility: hidden; }
-.rotate-y-180 { transform: rotateY(180deg); }
+
+/* 必须加上 -webkit- 前缀，并且确保初始旋转为 0 */
+.backface-hidden { 
+  backface-visibility: hidden; 
+  -webkit-backface-visibility: hidden; 
+}
+.transform-rotate-0 {
+  transform: rotateY(0deg);
+}
+.rotate-y-180 { 
+  transform: rotateY(180deg); 
+}
 
 .cyber-grid {
   background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
@@ -349,6 +370,7 @@ defineExpose({ generate })
   to { opacity: 0.8; }
 }
 .animate-fade-in { animation: fade-in 1s ease-out forwards; }
+
 </style>
 
-```
+
