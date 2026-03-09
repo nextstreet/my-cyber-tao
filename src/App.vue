@@ -1,5 +1,12 @@
+问题出在最外层 `<div>` 的 `flex` 布局。原代码中的 `flex items-center justify-center` 会将 `<main>`（主界面）和 `<TalismanCard>`（卡片组件）作为同级的 Flex 子元素对待，导致两者在文档流中被强制左右并排。
+
+解决方法是将最外层的 `flex` 属性移除，为 `<main>` 单独增加一个用于居中的绝对定位包裹层，从而将 `<TalismanCard>` 完全隔离在排版流之外。
+
+请用以下代码完整替换 `App.vue` 的 `<template>` 部分（`<script>` 和 `<style>` 保持原样不变）：
+
+```vue
 <template>
-  <div class="fixed inset-0 bg-[#050505] text-tao-gold flex items-center justify-center p-4 md:p-8 overflow-hidden selection:bg-tao-gold/30">
+  <div class="fixed inset-0 bg-[#050505] text-tao-gold overflow-hidden selection:bg-tao-gold/30">
     
     <div class="absolute inset-0 z-0 pointer-events-none">
       <div class="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black z-10 opacity-80"></div>
@@ -10,117 +17,124 @@
       <img src="/bagua-array.svg" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] md:w-[80vw] opacity-5 animate-spin-slow" />
     </div>
 
-    <main class="relative z-10 w-full max-w-2xl h-[90vh] md:h-[85vh] bg-[#0a0a0a]/80 backdrop-blur-xl border-x border-y border-tao-gold/20 shadow-[0_0_50px_rgba(0,0,0,0.9)] rounded-sm flex flex-col p-6 md:p-12 overflow-hidden">
-      <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-tao-gold/40"></div>
-      <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-tao-gold/40"></div>
-      <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-tao-gold/40"></div>
-      <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-tao-gold/40"></div>
-      
-      <div class="rice-paper-overlay"></div>
-
-      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-10 relative z-20" style="margin:auto"> 
-        <header class="text-center w-full animate-fade-in relative">
-          <div class="absolute -right-2 md:-right-8 -top-4 border-2 border-[#8b0000] text-[#8b0000] p-1.5 transform rotate-12 opacity-80 backdrop-blur-sm">
-            <span class="text-[12px] font-serif font-black tracking-widest [writing-mode:vertical-rl] shadow-[0_0_5px_rgba(139,0,0,0.5)]">天命<br>验证</span>
-          </div>
-          
-          <h1 class="text-4xl md:text-5xl font-serif tracking-[0.4em] text-white drop-shadow-[0_0_20px_rgba(200,170,110,0.5)] mb-2 font-bold">CYBER TAO</h1>
-          <p class="text-tao-gold/70 text-xs md:text-sm tracking-[0.5em] font-serif uppercase">天行健 · 极数流转</p>
-          <div class="h-[1px] w-24 bg-gradient-to-r from-transparent via-tao-gold/60 to-transparent mx-auto mt-6 mb-6"></div>
-          <p class="text-white/40 text-[9px] md:text-[10px] tracking-[0.4em] font-mono leading-relaxed uppercase">
-            Fatum et Fluxus // INITIALIZE
-          </p>
-        </header>
-
-        <div class="w-full space-y-8 relative">
-          <div class="absolute inset-0 border border-tao-gold/10 bg-black/40 blur-md -z-10"></div>
-          <textarea 
-            v-model="question" 
-            placeholder="ENTER THE VOID / 叩问虚空" 
-            class="w-full bg-transparent border-b-2 border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-xl md:text-2xl placeholder:opacity-20 placeholder:font-serif font-serif resize-none shadow-inner"
-            rows="2"
-          ></textarea>
-          
-          <SpiritBottle 
-            :lastReadingTime="lastReadingTime" 
-            :isUnlimited="isAdmin" 
-            :shareCount="shareCount" 
-            @refill="handleRefillShare" 
-          />
-        </div>
-
-        <button 
-          @click="step = 'ritual'" 
-          :disabled="!question || (!hasSpirit && !isAdmin)" 
-          class="w-full py-5 md:py-6 bg-black/60 border border-tao-gold/50 text-tao-gold hover:bg-tao-gold hover:text-black hover:shadow-[0_0_30px_rgba(200,170,110,0.4)] disabled:opacity-20 transition-all duration-500 text-sm font-black tracking-[0.6em] uppercase animate-pulse-glow"
-        >
-          INITIATE PROTOCOL
-        </button>
-      </section>
-
-      <section v-else-if="step === 'ritual'" class="flex-1 flex items-center justify-center relative z-20">
-        <CoinToss @complete="onRitualComplete" />
-      </section>
-
-      <section v-else-if="step === 'result'" class="flex-1 flex flex-col items-center w-full h-full overflow-hidden relative z-20">
+    <div class="absolute inset-0 z-10 flex items-center justify-center p-4 md:p-8">
+      <main class="relative w-full max-w-2xl h-[90vh] md:h-[85vh] bg-[#0a0a0a]/80 backdrop-blur-xl border-x border-y border-tao-gold/20 shadow-[0_0_50px_rgba(0,0,0,0.9)] rounded-sm flex flex-col p-6 md:p-12 overflow-hidden">
+        <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-tao-gold/40"></div>
+        <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-tao-gold/40"></div>
+        <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-tao-gold/40"></div>
+        <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-tao-gold/40"></div>
         
-        <div v-if="loading" class="flex-1 flex flex-col items-center justify-center space-y-8">
-          <div class="relative w-24 h-24 flex items-center justify-center">
-            <img src="/bagua-array.svg" class="absolute inset-0 w-full h-full opacity-60 animate-spin-slow" />
-            <div class="w-12 h-12 border-y-2 border-tao-gold rounded-full animate-spin"></div>
-            <span class="absolute text-white/80 font-serif text-lg">卦</span>
-          </div>
-          <div class="text-center space-y-2">
-            <div class="text-xs tracking-[0.6em] text-tao-gold uppercase">Aligning Quantum Qi...</div>
-            <div class="text-[9px] font-mono text-white/30">DECODING HEXAGRAM MULTIVERSE</div>
-          </div>
-        </div>
-        
-        <div v-else class="w-full flex-1 flex flex-col pt-2 overflow-y-auto custom-scrollbar pr-4 animate-fade-in-up">
-          
-          <div class="text-center w-full flex flex-col items-center mb-8 shrink-0 relative">
-            <h2 class="text-6xl md:text-7xl font-serif text-white tracking-widest mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] font-bold">{{ hexagramData.nameZh }}</h2>
-            <p class="text-[11px] font-mono tracking-[1em] text-tao-gold/60 uppercase">{{ hexagramData.nameEn }}</p>
-            
-            <img src="/cloud-divider.svg" class="h-6 w-32 my-6 opacity-40" />
-            
-            <p class="text-white/90 font-serif text-xl md:text-2xl leading-loose tracking-[0.2em] max-w-sm text-center">
-              {{ hexagramData.poemZh }}
-            </p>
-          </div>
+        <div class="rice-paper-overlay"></div>
 
-          <div class="w-full relative mt-auto shrink-0 mb-4">
-            <div class="absolute -top-3 left-6 px-3 bg-[#8b0000] text-[#050505] text-[10px] font-black tracking-[0.3em] uppercase z-10 shadow-[0_0_10px_rgba(139,0,0,0.5)]">
-              Neural Decree // 判词
+        <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-10 relative z-20" style="margin:auto"> 
+          <header class="text-center w-full animate-fade-in relative">
+            <div class="absolute -right-2 md:-right-8 -top-4 border-2 border-[#8b0000] text-[#8b0000] p-1.5 transform rotate-12 opacity-80 backdrop-blur-sm">
+              <span class="text-[12px] font-serif font-black tracking-widest [writing-mode:vertical-rl] shadow-[0_0_5px_rgba(139,0,0,0.5)]">天命<br>验证</span>
             </div>
-            <div class="bg-gradient-to-b from-white/[0.05] to-transparent border border-tao-gold/30 p-8 md:p-10 rounded-sm relative shadow-inner">
-              <div class="rice-paper-overlay opacity-20"></div>
-              <p class="text-white/80 font-serif text-sm md:text-base leading-[2] tracking-wider text-justify whitespace-pre-wrap relative z-10">
-                {{ aiResult }}
+            
+            <h1 class="text-4xl md:text-5xl font-serif tracking-[0.4em] text-white drop-shadow-[0_0_20px_rgba(200,170,110,0.5)] mb-2 font-bold">CYBER TAO</h1>
+            <p class="text-tao-gold/70 text-xs md:text-sm tracking-[0.5em] font-serif uppercase">天行健 · 极数流转</p>
+            <div class="h-[1px] w-24 bg-gradient-to-r from-transparent via-tao-gold/60 to-transparent mx-auto mt-6 mb-6"></div>
+            <p class="text-white/40 text-[9px] md:text-[10px] tracking-[0.4em] font-mono leading-relaxed uppercase">
+              Fatum et Fluxus // INITIALIZE
+            </p>
+          </header>
+
+          <div class="w-full space-y-8 relative">
+            <div class="absolute inset-0 border border-tao-gold/10 bg-black/40 blur-md -z-10"></div>
+            <textarea 
+              v-model="question" 
+              placeholder="ENTER THE VOID / 叩问虚空" 
+              class="w-full bg-transparent border-b-2 border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-xl md:text-2xl placeholder:opacity-20 placeholder:font-serif font-serif resize-none shadow-inner"
+              rows="2"
+            ></textarea>
+            
+            <SpiritBottle 
+              :lastReadingTime="lastReadingTime" 
+              :isUnlimited="isAdmin" 
+              :shareCount="shareCount" 
+              @refill="handleRefillShare" 
+            />
+          </div>
+
+          <button 
+            @click="step = 'ritual'" 
+            :disabled="!question || (!hasSpirit && !isAdmin)" 
+            class="w-full py-5 md:py-6 bg-black/60 border border-tao-gold/50 text-tao-gold hover:bg-tao-gold hover:text-black hover:shadow-[0_0_30px_rgba(200,170,110,0.4)] disabled:opacity-20 transition-all duration-500 text-sm font-black tracking-[0.6em] uppercase animate-pulse-glow"
+          >
+            INITIATE PROTOCOL
+          </button>
+        </section>
+
+        <section v-else-if="step === 'ritual'" class="flex-1 flex items-center justify-center relative z-20">
+          <CoinToss @complete="onRitualComplete" />
+        </section>
+
+        <section v-else-if="step === 'result'" class="flex-1 flex flex-col items-center w-full h-full overflow-hidden relative z-20">
+          
+          <div v-if="loading" class="flex-1 flex flex-col items-center justify-center space-y-8">
+            <div class="relative w-24 h-24 flex items-center justify-center">
+              <img src="/bagua-array.svg" class="absolute inset-0 w-full h-full opacity-60 animate-spin-slow" />
+              <div class="w-12 h-12 border-y-2 border-tao-gold rounded-full animate-spin"></div>
+              <span class="absolute text-white/80 font-serif text-lg">卦</span>
+            </div>
+            <div class="text-center space-y-2">
+              <div class="text-xs tracking-[0.6em] text-tao-gold uppercase">Aligning Quantum Qi...</div>
+              <div class="text-[9px] font-mono text-white/30">DECODING HEXAGRAM MULTIVERSE</div>
+            </div>
+          </div>
+          
+          <div v-else class="w-full flex-1 flex flex-col pt-2 overflow-y-auto custom-scrollbar pr-4 animate-fade-in-up">
+            
+            <div class="text-center w-full flex flex-col items-center mb-8 shrink-0 relative">
+              <h2 class="text-6xl md:text-7xl font-serif text-white tracking-widest mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] font-bold">{{ hexagramData.nameZh }}</h2>
+              <p class="text-[11px] font-mono tracking-[1em] text-tao-gold/60 uppercase">{{ hexagramData.nameEn }}</p>
+              
+              <img src="/cloud-divider.svg" class="h-6 w-32 my-6 opacity-40" />
+              
+              <p class="text-white/90 font-serif text-xl md:text-2xl leading-loose tracking-[0.2em] max-w-sm text-center">
+                {{ hexagramData.poemZh }}
               </p>
             </div>
+
+            <div class="w-full relative mt-auto shrink-0 mb-4">
+              <div class="absolute -top-3 left-6 px-3 bg-[#8b0000] text-[#050505] text-[10px] font-black tracking-[0.3em] uppercase z-10 shadow-[0_0_10px_rgba(139,0,0,0.5)]">
+                Neural Decree // 判词
+              </div>
+              <div class="bg-gradient-to-b from-white/[0.05] to-transparent border border-tao-gold/30 p-8 md:p-10 rounded-sm relative shadow-inner">
+                <div class="rice-paper-overlay opacity-20"></div>
+                <p class="text-white/80 font-serif text-sm md:text-base leading-[2] tracking-wider text-justify whitespace-pre-wrap relative z-10">
+                  {{ aiResult }}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div v-if="!loading" class="grid grid-cols-2 gap-6 w-full pt-6 shrink-0 border-t border-tao-gold/20 mt-2 z-20">
-          <button @click="talismanRef.generate()" class="py-4 bg-tao-gold/10 border border-tao-gold text-tao-gold text-xs font-black tracking-[0.4em] hover:bg-tao-gold hover:text-black transition-all uppercase shadow-[0_0_20px_rgba(200,170,110,0.2)]">Extract Talisman</button>
-          <button @click="reset" class="py-4 border border-white/20 text-xs text-white/50 tracking-[0.4em] hover:bg-white/10 hover:text-white transition-all uppercase">Return to Void</button>
-        </div>
-      </section>
-    </main>
+          <div v-if="!loading" class="grid grid-cols-2 gap-6 w-full pt-6 shrink-0 border-t border-tao-gold/20 mt-2 z-20">
+            <button @click="talismanRef.generate()" class="py-4 bg-tao-gold/10 border border-tao-gold text-tao-gold text-xs font-black tracking-[0.4em] hover:bg-tao-gold hover:text-black transition-all uppercase shadow-[0_0_20px_rgba(200,170,110,0.2)]">Extract Talisman</button>
+            <button @click="reset" class="py-4 border border-white/20 text-xs text-white/50 tracking-[0.4em] hover:bg-white/10 hover:text-white transition-all uppercase">Return to Void</button>
+          </div>
+        </section>
+      </main>
+    </div>
 
-    <TalismanCard 
-      ref="talismanRef" 
-      :hexagramData="{ 
-        name: hexagramData.nameEn, 
-        nameZh: hexagramData.nameZh, 
-        poemZh: hexagramData.poemZh, 
-        lines: hexagramResult 
-      }" 
-      :aiPredictionText="aiResult"
-    />
+    <div class="relative z-50 pointer-events-none">
+      <TalismanCard 
+        ref="talismanRef" 
+        class="pointer-events-auto"
+        :hexagramData="{ 
+          name: hexagramData.nameEn, 
+          nameZh: hexagramData.nameZh, 
+          poemZh: hexagramData.poemZh, 
+          lines: hexagramResult 
+        }" 
+        :aiPredictionText="aiResult"
+      />
+    </div>
   </div>
 </template>
+
+```
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
