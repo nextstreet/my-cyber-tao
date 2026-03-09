@@ -1,10 +1,3 @@
-问题出在最外层 `<div>` 的 `flex` 布局。原代码中的 `flex items-center justify-center` 会将 `<main>`（主界面）和 `<TalismanCard>`（卡片组件）作为同级的 Flex 子元素对待，导致两者在文档流中被强制左右并排。
-
-解决方法是将最外层的 `flex` 属性移除，为 `<main>` 单独增加一个用于居中的绝对定位包裹层，从而将 `<TalismanCard>` 完全隔离在排版流之外。
-
-请用以下代码完整替换 `App.vue` 的 `<template>` 部分（`<script>` 和 `<style>` 保持原样不变）：
-
-```vue
 <template>
   <div class="fixed inset-0 bg-[#050505] text-tao-gold overflow-hidden selection:bg-tao-gold/30">
     
@@ -134,7 +127,6 @@
   </div>
 </template>
 
-```
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
