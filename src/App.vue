@@ -30,45 +30,47 @@
         
         <div class="rice-paper-overlay opacity-[0.08]"></div>
 
-        <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-8 relative z-20"> 
-          <header class="text-center w-full animate-fade-in">
-            <h1 class="text-4xl md:text-5xl font-serif tracking-[0.4em] text-white drop-shadow-[0_0_15px_rgba(200,170,110,0.5)] mb-3 font-bold uppercase">Cyber Tao</h1>
-            <div class="flex items-center justify-center gap-3 text-tao-gold/60 text-[10px] tracking-[0.3em]">
-              <span>FATUM ET FLUXUS</span>
-              <span class="w-1.5 h-1.5 bg-tao-gold/40 rotate-45"></span>
-              <span>INITIALIZE_SEQUENCE</span>
-            </div>
-          </header>
+<section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-10"> 
+  <header class="text-center w-full animate-fade-in flex flex-col items-center">
+    <div class="mb-6 opacity-80">
+      <svg width="80" height="80" viewBox="0 0 100 100" class="animate-spin-slow">
+        <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" stroke-width="0.5" class="text-tao-gold/30" />
+        <path d="M50 5 L50 20 M50 80 L50 95..." stroke="currentColor" stroke-width="2" class="text-tao-gold/60" />
+        <text x="50" y="55" text-anchor="middle" class="fill-tao-gold font-serif text-[10px]">☯</text>
+      </svg>
+    </div>
 
-          <div class="w-full space-y-6 relative">
-            <textarea 
-              v-model="question" 
-              placeholder="ENTER THE VOID / 叩问虚空" 
-              class="w-full bg-black/40 border-b-2 border-tao-gold/20 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-xl md:text-2xl placeholder:opacity-20 font-serif resize-none"
-              rows="2"
-            ></textarea>
-            
-            <SpiritBottle 
-              :lastReadingTime="lastReadingTime" 
-              :isUnlimited="isAdmin" 
-              :shareCount="shareCount" 
-              @refill="handleRefillShare" 
-            />
-          </div>
+    <h1 class="text-4xl md:text-5xl font-serif tracking-[0.6em] text-white drop-shadow-[0_0_20px_rgba(200,170,110,0.5)]">CYBER TAO</h1>
+    
+    <p class="text-tao-gold/80 text-xs md:text-sm tracking-[0.4em] font-mono leading-relaxed uppercase mt-4">
+      吉凶悔吝 ：Fatum et Fluxus
+    </p>
+  </header>
 
-          <button 
-            @click="step = 'ritual'" 
-            :disabled="!question || (!hasSpirit && !isAdmin)" 
-            class="w-full py-5 bg-tao-gold/10 border border-tao-gold/50 text-tao-gold hover:bg-tao-gold hover:text-black transition-all duration-500 text-sm font-black tracking-[0.6em] animate-pulse-glow"
-          >
-            INITIATE PROTOCOL
-          </button>
-          
-          <div class="text-[9px] text-white/20 font-mono flex gap-4 mt-4">
-            <span>CORE_SYNC: READY</span>
-            <span>OSCILLATION: STABLE</span>
-          </div>
-        </section>
+  <div class="w-full space-y-10 flex flex-col items-center">
+    <textarea 
+      v-model="question" 
+      placeholder="输入你的困惑..." 
+      class="w-full bg-black/40 border-b border-tao-gold/50 text-center py-6 focus:outline-none focus:border-tao-gold transition-all text-white text-2xl md:text-3xl placeholder:opacity-20 italic resize-none"
+      rows="2"
+    ></textarea>
+    
+    <div class="relative w-24 h-40 border-2 border-tao-gold/30 rounded-t-lg bg-gradient-to-b from-tao-gold/10 to-transparent flex items-end justify-center p-2">
+       <div class="flex gap-1">
+          <div v-for="i in 5" :key="i" class="w-1.5 h-32 bg-tao-gold/40 rounded-full animate-pulse" :style="{ animationDelay: `${i*0.2}s` }"></div>
+       </div>
+       <div class="absolute -bottom-6 text-[10px] tracking-[0.2em] text-tao-gold/60 uppercase">Spirit Vessel</div>
+    </div>
+  </div>
+
+  <button 
+    @click="step = 'ritual'" 
+    :disabled="!question || (!hasSpirit && !isAdmin)" 
+    class="w-full py-6 bg-tao-gold/10 border-2 border-tao-gold text-tao-gold hover:bg-tao-gold hover:text-black transition-all duration-500 text-sm md:text-base font-black tracking-[1em] uppercase shadow-[0_0_30px_rgba(200,170,110,0.2)]"
+  >
+    开启仪式
+  </button>
+</section>
 
         <section v-else-if="step === 'ritual'" class="flex-1 flex items-center justify-center relative z-20">
           <CoinToss @complete="onRitualComplete" />
