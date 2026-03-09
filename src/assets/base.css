@@ -76,3 +76,50 @@ body {
 .animate-pulse-glow {
   animation: pulse-glow 3s ease-in-out infinite;
 }
+/* base.css 补丁 */
+
+/* 1. 纯 CSS 赛博网格背景 - 极其轻量 */
+.cyber-grid-bg {
+  background-image: 
+    linear-gradient(rgba(200, 170, 110, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 170, 110, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center center;
+  /* 增加透视感效果 */
+  transform: perspective(500px) rotateX(60deg) scale(2.5);
+  transform-origin: top;
+}
+
+/* 2. 强制修复图片溢出问题 */
+img {
+  max-width: none; /* 允许装饰图超出视口而不挤压容器 */
+  user-select: none;
+}
+
+/* 3. 扫描线动画 */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 0, 0, 0.5) 51%,
+    transparent 51%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+}
+
+/* 4. 滚动条美化 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c8aa6e55;
+  border-radius: 10px;
+}
+
+/* 5. 确保 main 容器始终居中且不被挤压 */
+main {
+  flex-shrink: 0; /* 禁止被外部元素挤压 */
+}
