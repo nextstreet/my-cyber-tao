@@ -8,6 +8,7 @@ export default {
         'tao-gold': '#C8AA6E',
         'tao-gold-light': '#F2Dba5',
         'tao-red': '#8A2A2A',
+        'bg-tao-white':'#ffddfa',
       },
       fontFamily: {
         serif: ['"Playfair Display"', 'serif'],

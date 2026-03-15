@@ -1,29 +1,34 @@
-@import './base.css';
 @import 'tailwindcss';
 
-/* 赛博道观全局样式 */
-body {
-  background-color: #050505;
-  color: #c8aa6e;
-  font-family: 'Playfair Display', serif;
-  overflow-x: hidden;
+/* ── Web Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');
+
+/* ── Global Reset (minimal) ── */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-/* 简单的 CRT 扫描线效果 (可选) */
-.scanline {
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0),
-    rgba(255, 255, 255, 0) 50%,
-    rgba(0, 0, 0, 0.1) 50%,
-    rgba(0, 0, 0, 0.1)
-  );
-  background-size: 100% 4px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 50;
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #020408;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  height: 100%;
+}
+
+/* ── Selection ── */
+::selection {
+  background: rgba(200, 170, 110, 0.25);
+  color: #fff;
+}
+
+/* ── Textarea no-resize global ── */
+textarea {
+  resize: none;
 }
