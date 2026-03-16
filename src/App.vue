@@ -27,19 +27,22 @@
       </div>
 
       <!-- ─── INTRO ─── -->
-      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-between w-full py-5 px-5 overflow-hidden">
+      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-between w-full py-3 px-5 overflow-hidden">
 
-        <header class="text-center w-full animate-fade-in shrink-0">
-          <h1 class="text-2xl md:text-3xl font-serif tracking-[0.5em] text-white neon-text-gold">
+        <!-- 标题 + 太极核心 -->
+        <header class="text-center w-full animate-fade-in shrink-0 flex flex-col items-center">
+          <h1 class="text-xl md:text-2xl font-serif tracking-[0.6em] text-white neon-text-gold mb-1">
             CYBER TAO
           </h1>
-          <div class="h-px w-16 bg-gradient-to-r from-transparent via-tao-gold to-transparent mx-auto mt-3 mb-3"></div>
-          <p class="text-tao-gold/80 text-[10px] md:text-xs tracking-[0.35em] font-mono uppercase">
-            吉凶悔吝 ：Fatum et Fluxus
+          <p class="text-tao-gold/60 text-[8px] tracking-[0.4em] font-mono uppercase mb-3">
+            吉凶悔吝 · Fatum et Fluxus
           </p>
+
+          <!-- ✦ 太极旋转核心 ✦ -->
+          <TaijituCore />
         </header>
 
-        <div class="w-full space-y-4 flex-1 flex flex-col justify-center">
+        <div class="w-full space-y-3 flex-1 flex flex-col justify-center">
           <!-- Terminal Input -->
           <div class="relative cyber-terminal-box">
             <div class="flex items-start gap-2 p-3">
@@ -223,6 +226,7 @@ import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
 import TalismanCard from './components/TalismanCard.vue'
 import SystemLog from './components/SystemLog.vue'
+import TaijituCore from './components/TaijituCore.vue'
 
 const step = ref('intro')
 const question = ref('')
