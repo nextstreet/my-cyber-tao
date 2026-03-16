@@ -1,198 +1,245 @@
 <template>
-  <!-- GODLIKE 全屏故障特效遮罩 -->
-  <div
-    v-if="godlikeTriggered"
-    class="fixed inset-0 z-[200] pointer-events-none overflow-hidden"
-    :class="{ 'godlike-active': godlikeTriggered }"
-  >
+  <!-- GODLIKE 全屏故障特效 -->
+  <div v-if="godlikeTriggered" class="fixed inset-0 z-[200] pointer-events-none overflow-hidden">
     <div class="absolute inset-0 glitch-overlay"></div>
     <div class="absolute inset-0 rgb-dispersion"></div>
     <div class="absolute inset-0 scanlines-heavy"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10 screen-shake">
-      <div class="text-[10px] font-mono tracking-[1em] text-rose-400 animate-pulse uppercase mb-2">⚠ GODLIKE SYNC ACHIEVED</div>
-      <div class="text-6xl font-serif text-rose-300 drop-shadow-[0_0_30px_rgba(239,68,68,0.8)] animate-pulse">{{ props.hexagramData?.nameZh }}</div>
+    <div class="absolute inset-0 flex items-center justify-center">
+      <div class="text-center screen-shake">
+        <div class="font-mono uppercase mb-3 animate-pulse" style="font-size:10px;letter-spacing:1em;color:rgba(239,68,68,0.9)">⚠ GODLIKE SYNC ACHIEVED</div>
+        <div class="font-serif animate-pulse" style="font-size:64px;color:#fca5a5;text-shadow:0 0 30px rgba(239,68,68,0.8)">{{ props.hexagramData?.nameZh }}</div>
+      </div>
     </div>
   </div>
 
   <!-- 主弹窗 -->
-  <div v-if="showModal" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/98 p-4 backdrop-blur-xl overflow-y-auto">
+  <div v-if="showModal" class="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-y-auto"
+       style="background:rgba(0,0,0,0.97);backdrop-filter:blur(20px)">
 
     <!-- 稀有度标签 -->
-    <div class="flex items-center gap-4 mb-5 animate-fade-in">
-      <div class="h-px w-10 bg-white/15"></div>
-      <div :class="['text-[9px] tracking-[0.6em] font-black uppercase px-3 py-1 border font-mono', rarityColor]"
-           :style="rarityGlowStyle">
-        {{ rarityLabel }} // SYNC: {{ syncRate }}%
+    <div class="flex items-center gap-4 mb-4 animate-fade-in px-4">
+      <div class="h-px flex-1" :style="{ background: `linear-gradient(to right, transparent, ${rarityAccent}40)` }"></div>
+      <div class="font-mono font-black uppercase px-4 py-1.5 border"
+           style="font-size:10px;letter-spacing:0.5em"
+           :style="{ color: rarityAccent, borderColor: rarityAccent+'50', boxShadow: `0 0 16px ${rarityAccent}25, inset 0 0 12px ${rarityAccent}08` }">
+        {{ rarityLabel }} ◈ SYNC {{ syncRate }}%
       </div>
-      <div class="h-px w-10 bg-white/15"></div>
+      <div class="h-px flex-1" :style="{ background: `linear-gradient(to left, transparent, ${rarityAccent}40)` }"></div>
     </div>
 
-    <!-- 卡片容器 -->
-    <div
-      class="relative w-[82vw] max-w-[380px] aspect-[9/16] perspective-2000"
-      @click="isFlipped = !isFlipped"
-    >
-      <div
-        class="relative w-full h-full transition-all duration-1000 transform-style-3d cursor-pointer"
-        :class="{ 'rotate-y-180': isFlipped }"
-        :style="[visualSeedStyles, godlikeTriggered ? 'animation: godlike-shake 0.3s ease-in-out' : '']"
-      >
+    <!-- 卡片 -->
+    <div class="relative perspective-2000 px-4"
+         style="width:min(82vw,360px);aspect-ratio:9/16"
+         @click="isFlipped = !isFlipped">
+      <div class="relative w-full h-full transform-style-3d cursor-pointer transition-all duration-1000"
+           :class="{ 'rotate-y-180': isFlipped }"
+           :style="visualSeedStyles">
 
-        <!-- ══════════════ FRONT FACE ══════════════ -->
-        <div class="absolute inset-0 backface-hidden rounded-xl border bg-[#050505] flex flex-col overflow-hidden"
-             :style="{ borderColor: cardBorderColor }">
+        <!-- ══ 正面 ══ -->
+        <div class="absolute inset-0 backface-hidden flex flex-col overflow-hidden"
+             :style="frontFaceStyle">
 
-          <!-- 背景网格 -->
-          <div class="absolute inset-0 cyber-grid opacity-[0.06]" :style="gridOffsetStyle"></div>
-          <!-- 噪点纹理层（视觉种子驱动） -->
-          <div class="absolute inset-0 noise-layer pointer-events-none" :style="noiseStyle"></div>
-
-          <!-- HUD 数据层 - 顶边 -->
-          <div class="absolute top-0 inset-x-0 flex justify-between items-center px-2 py-1 z-20 pointer-events-none">
-            <span class="text-[6px] font-mono tracking-wider" :style="hudTextStyle">SYNC·{{ syncRate }}%</span>
-            <span class="text-[6px] font-mono tracking-wider" :style="hudTextStyle">ENTROPY·{{ entropyLabel }}</span>
+          <!-- 背景：视觉种子噪点 -->
+          <div class="absolute inset-0 pointer-events-none" :style="noiseBgStyle"></div>
+          <!-- 背景：赛博网格 -->
+          <div class="absolute inset-0 pointer-events-none cyber-grid-bg" :style="gridStyle"></div>
+          <!-- 边角装饰 -->
+          <div class="absolute inset-0 pointer-events-none z-20">
+            <div class="absolute top-0 left-0 w-5 h-5" :style="cornerStyle('tl')"></div>
+            <div class="absolute top-0 right-0 w-5 h-5" :style="cornerStyle('tr')"></div>
+            <div class="absolute bottom-0 left-0 w-5 h-5" :style="cornerStyle('bl')"></div>
+            <div class="absolute bottom-0 right-0 w-5 h-5" :style="cornerStyle('br')"></div>
           </div>
 
-          <!-- Header -->
-          <div class="relative pt-6 px-4 pb-3 border-b border-white/10 flex justify-between items-center bg-white/[0.02] z-10">
+          <!-- HUD 顶部 -->
+          <div class="absolute top-0 inset-x-0 flex justify-between items-center px-2.5 pt-1.5 z-30 pointer-events-none">
+            <span class="font-mono" style="font-size:6px;letter-spacing:0.3em" :style="hudStyle">SYNC·{{ syncRate }}%</span>
+            <span class="font-mono" style="font-size:6px;letter-spacing:0.3em" :style="hudStyle">ENTROPY·{{ entropyLabel }}</span>
+          </div>
+
+          <!-- 身份头部 -->
+          <div class="relative z-10 flex justify-between items-center px-3.5 pt-7 pb-3 border-b" :style="{ borderColor: rarityAccent+'18' }">
             <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-sm bg-white/5 border border-white/20 flex items-center justify-center shrink-0">
-                <span class="text-[8px] text-white/40 font-mono">ID</span>
+              <div class="flex items-center justify-center rounded-sm" style="width:28px;height:28px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15)">
+                <span class="font-mono" style="font-size:7px;color:rgba(255,255,255,0.35)">ID</span>
               </div>
-              <div class="flex flex-col">
-                <span class="text-[8px] font-mono tracking-widest uppercase text-white/50">TEMPORAL LINK</span>
-                <span class="text-[7px] text-white/25 font-mono tracking-wider">{{ userHash }}</span>
+              <div>
+                <div class="font-mono uppercase" style="font-size:8px;letter-spacing:0.4em;color:rgba(255,255,255,0.45)">TEMPORAL LINK</div>
+                <div class="font-mono" style="font-size:7px;letter-spacing:0.2em;color:rgba(255,255,255,0.22)">{{ userHash }}</div>
               </div>
             </div>
-            <div class="text-[7px] font-mono text-right" :style="hudTextStyle">
+            <div class="text-right font-mono" style="font-size:7px" :style="hudStyle">
               <div>{{ lunarDateStamp }}</div>
-              <div class="text-white/20 mt-0.5">{{ cardTimestamp }}</div>
+              <div style="color:rgba(255,255,255,0.2);margin-top:2px">{{ cardDate }}</div>
             </div>
           </div>
 
-          <!-- 雷达图区域 -->
-          <div class="relative flex-1 flex flex-col items-center justify-center p-5 border-b border-white/5 z-10">
-            <h1 class="text-xl font-serif text-white/90 tracking-[0.3em] uppercase mb-3">{{ hexagramData.name }}</h1>
-            <div class="relative w-full aspect-square max-w-[180px]">
-              <svg viewBox="0 0 100 100" class="w-full h-full" :style="radarGlowStyle">
-                <!-- 外多边形框 -->
-                <polygon points="50,8 92,36 76,86 24,86 8,36" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/>
-                <polygon points="50,22 74,40 66,71 34,71 26,40" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/>
+          <!-- 雷达区 -->
+          <div class="relative z-10 flex-1 flex flex-col items-center justify-center px-5 border-b" :style="{ borderColor: rarityAccent+'12' }">
+            <div class="font-serif text-white/85 uppercase mb-3" style="font-size:18px;letter-spacing:0.3em">{{ hexagramData.name }}</div>
+            <div class="relative" style="width:170px;height:170px">
+              <svg viewBox="0 0 100 100" class="w-full h-full" :style="{ filter: `drop-shadow(0 0 5px ${rarityAccent}55)` }">
+                <!-- 外框 -->
+                <polygon points="50,8 92,36 76,86 24,86 8,36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+                <polygon points="50,22 74,40 66,71 34,71 26,40" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.4"/>
                 <!-- 轴线 -->
-                <line x1="50" y1="8" x2="50" y2="22" stroke="rgba(255,255,255,0.05)" stroke-width="0.3"/>
-                <line x1="92" y1="36" x2="74" y2="40" stroke="rgba(255,255,255,0.05)" stroke-width="0.3"/>
-                <!-- 数据多边形 -->
-                <polygon :points="radarPoints" fill="currentColor" class="opacity-20" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="50" y1="8" x2="50" y2="86" stroke="rgba(255,255,255,0.04)" stroke-width="0.3"/>
+                <line x1="8" y1="36" x2="92" y2="36" stroke="rgba(255,255,255,0.04)" stroke-width="0.3"/>
+                <!-- 数据面 -->
+                <polygon :points="radarPoints" :fill="rarityAccent+'22'" :stroke="rarityAccent" stroke-width="1.2" opacity="0.9"/>
+                <!-- 顶点高亮 -->
+                <circle v-for="(pt, i) in radarPointArr" :key="i" :cx="pt.x" :cy="pt.y" r="1.8"
+                        :fill="rarityAccent" :style="{ filter: `drop-shadow(0 0 3px ${rarityAccent})` }"/>
                 <!-- 标签 -->
-                <g class="text-[4px] fill-white/40 font-mono">
-                  <text x="50" y="6" text-anchor="middle">秩序</text>
-                  <text x="95" y="37" text-anchor="start">感知</text>
-                  <text x="76" y="93" text-anchor="middle">根源</text>
-                  <text x="24" y="93" text-anchor="middle">同步</text>
-                  <text x="5" y="37" text-anchor="end">混沌</text>
-                </g>
+                <text x="50" y="5.5" text-anchor="middle" font-family="monospace" font-size="3.8" :fill="rarityAccent+'88'">秩序</text>
+                <text x="95.5" y="37" text-anchor="start"  font-family="monospace" font-size="3.8" :fill="rarityAccent+'88'">感知</text>
+                <text x="76"   y="93" text-anchor="middle" font-family="monospace" font-size="3.8" :fill="rarityAccent+'88'">根源</text>
+                <text x="24"   y="93" text-anchor="middle" font-family="monospace" font-size="3.8" :fill="rarityAccent+'88'">同步</text>
+                <text x="4.5"  y="37" text-anchor="end"    font-family="monospace" font-size="3.8" :fill="rarityAccent+'88'">混沌</text>
               </svg>
             </div>
           </div>
 
-          <!-- 底部摘要 -->
-          <div class="relative p-4 flex flex-col gap-3 bg-gradient-to-t from-white/[0.04] to-transparent z-10">
-            <div class="w-6 h-px bg-white/25"></div>
-            <p class="text-white/70 font-mono text-[9px] leading-relaxed italic line-clamp-3">{{ shortAiText }}</p>
-            <div class="flex justify-between items-end">
-              <span class="text-[8px] text-white/30 font-serif tracking-[0.5em] [writing-mode:vertical-rl] border-l border-white/10 pl-1.5">
-                {{ lunarDateStamp }}
-              </span>
-              <span class="text-[7px] text-white/15 font-mono tracking-widest">SYS V2.0 // DECODED</span>
+          <!-- 卦辞摘要 -->
+          <div class="relative z-10 px-4 py-3 flex flex-col gap-2">
+            <div class="w-5 h-px" :style="{ background: rarityAccent+'50' }"></div>
+            <p class="font-mono italic leading-relaxed line-clamp-3" style="font-size:9px;color:rgba(255,255,255,0.65)">
+              {{ shortAiText }}
+            </p>
+            <div class="flex justify-between items-end mt-1">
+              <span class="font-serif" style="font-size:8px;color:rgba(255,255,255,0.28);writing-mode:vertical-rl;letter-spacing:0.4em;border-left:1px solid rgba(255,255,255,0.12);padding-left:4px">{{ lunarDateStamp }}</span>
+              <span class="font-mono" style="font-size:6px;color:rgba(255,255,255,0.14);letter-spacing:0.25em">SYS V2.0 // DECODED</span>
             </div>
           </div>
 
-          <!-- HUD 数据层 - 右边 -->
-          <div class="absolute right-0 top-16 bottom-16 flex flex-col justify-between items-end pr-1.5 z-20 pointer-events-none">
-            <span class="text-[5px] font-mono [writing-mode:vertical-rl] tracking-wider" :style="hudTextStyle">KARMA·{{ karmaIndex }}</span>
-            <span class="text-[5px] font-mono [writing-mode:vertical-rl] tracking-wider" :style="hudTextStyle">FLUX·{{ fluxRate }}</span>
+          <!-- HUD 侧边 -->
+          <div class="absolute right-0 top-16 bottom-16 z-20 flex flex-col justify-between items-end pr-1.5 pointer-events-none">
+            <span class="font-mono" style="font-size:5px;writing-mode:vertical-rl;letter-spacing:0.3em" :style="hudStyle">KARMA·{{ karmaIndex }}</span>
+            <span class="font-mono" style="font-size:5px;writing-mode:vertical-rl;letter-spacing:0.3em" :style="hudStyle">FLUX·{{ fluxRate }}</span>
+          </div>
+          <div class="absolute left-0 top-16 bottom-16 z-20 flex flex-col justify-between items-start pl-1.5 pointer-events-none">
+            <span class="font-mono" style="font-size:5px;writing-mode:vertical-rl;letter-spacing:0.3em;transform:rotate(180deg)" :style="hudStyle">NODE·{{ nodeId }}</span>
+            <span class="font-mono" style="font-size:5px;writing-mode:vertical-rl;letter-spacing:0.3em;transform:rotate(180deg)" :style="hudStyle">VER·2.0.{{ versionSuffix }}</span>
           </div>
 
-          <!-- HUD 数据层 - 左边 -->
-          <div class="absolute left-0 top-16 bottom-16 flex flex-col justify-between items-start pl-1.5 z-20 pointer-events-none">
-            <span class="text-[5px] font-mono [writing-mode:vertical-rl] tracking-wider rotate-180" :style="hudTextStyle">NODE·{{ nodeId }}</span>
-            <span class="text-[5px] font-mono [writing-mode:vertical-rl] tracking-wider rotate-180" :style="hudTextStyle">VER·2.0.{{ versionSuffix }}</span>
+          <!-- HUD 底边 -->
+          <div class="absolute bottom-0 inset-x-0 flex justify-between px-2.5 pb-1.5 z-30 pointer-events-none">
+            <span class="font-mono" style="font-size:6px;letter-spacing:0.25em" :style="hudStyle">ARCHIVE·#CT-{{ archiveId }}</span>
+            <span class="font-mono" style="font-size:6px;letter-spacing:0.25em" :style="hudStyle">{{ rarityLabel }}</span>
           </div>
         </div>
 
-        <!-- ══════════════ BACK FACE ══════════════ -->
-        <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-xl border bg-[#050505] overflow-hidden flex flex-col"
-             :style="{ borderColor: cardBorderColor }">
+        <!-- ══ 背面 ══ -->
+        <div class="absolute inset-0 backface-hidden rotate-y-180 flex flex-col overflow-hidden"
+             :style="backFaceStyle">
 
-          <!-- 神兽图像层 -->
-          <div class="relative h-[55%] w-full border-b border-tao-gold/20">
-            <img :src="beastImageUrl" class="absolute inset-0 w-full h-full object-cover opacity-65 mix-blend-screen scale-105" />
+          <!-- 神兽图层 -->
+          <div class="relative flex-[0_0_58%] overflow-hidden border-b" :style="{ borderColor: rarityAccent+'25' }">
 
-            <!-- 电路板符咒 SVG 层 -->
-            <svg class="absolute inset-0 w-full h-full z-10 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none"
-                 :style="circuitGlowStyle">
-              <!-- 经典符咒路径 + 电路板节点 -->
-              <g fill="none" stroke="#c8aa6e" stroke-width="0.4" opacity="0.7">
-                <!-- 流动符咒笔画 -->
-                <path v-for="(path, i) in talismanPaths" :key="`t${i}`"
-                      :d="path" stroke-width="0.5"
-                      class="circuit-pulse"
-                      :style="`animation-delay: ${i * 0.7}s`" />
-                <!-- 电路板节点 -->
-                <circle v-for="(node, i) in circuitNodes" :key="`n${i}`"
-                        :cx="node.x" :cy="node.y" r="1.2"
-                        :fill="node.filled ? '#c8aa6e' : 'none'"
-                        stroke="#c8aa6e" stroke-width="0.4"
-                        class="circuit-pulse"
-                        :style="`animation-delay: ${i * 0.4}s`" />
-                <!-- 横线连接 -->
-                <line v-for="(line, i) in circuitLines" :key="`l${i}`"
-                      :x1="line.x1" :y1="line.y1" :x2="line.x2" :y2="line.y2"
-                      stroke-width="0.3" opacity="0.5"
-                      class="circuit-pulse"
-                      :style="`animation-delay: ${i * 0.6}s`" />
+            <!-- 神兽图 -->
+            <img :src="beastImageUrl"
+                 class="absolute inset-0 w-full h-full object-cover mix-blend-screen scale-110"
+                 style="opacity:0.7"/>
+
+            <!-- ★ 神兽能量粒子光晕（CSS 动画模拟）-->
+            <div class="absolute inset-0 z-[5] pointer-events-none beast-aura" :style="beastAuraStyle"></div>
+
+            <!-- ★ 电路符咒 SVG 层（全层流动）-->
+            <svg class="absolute inset-0 w-full h-full z-10 pointer-events-none"
+                 viewBox="0 0 100 100" preserveAspectRatio="none"
+                 :style="{ filter: `drop-shadow(0 0 4px ${rarityAccent}99)` }">
+
+              <!-- 主符咒笔画（种子驱动路径）-->
+              <g fill="none" :stroke="rarityAccent" opacity="0.6">
+                <path v-for="(p, i) in talismanPaths" :key="`p${i}`" :d="p"
+                      stroke-width="0.45" class="circuit-flow"
+                      :style="`animation-delay:${i*0.9}s;animation-duration:${3+i*0.5}s`"/>
               </g>
-              <!-- 四角古典纹样 -->
-              <g stroke="#c8aa6e" stroke-width="0.6" fill="none" opacity="0.5">
-                <path d="M5,5 L15,5 L15,8 M5,5 L5,15 L8,15"/>
-                <path d="M95,5 L85,5 L85,8 M95,5 L95,15 L92,15"/>
-                <path d="M5,95 L15,95 L15,92 M5,95 L5,85 L8,85"/>
-                <path d="M95,95 L85,95 L85,92 M95,95 L95,85 L92,85"/>
+
+              <!-- 电路节点 -->
+              <g :stroke="rarityAccent" fill="none">
+                <circle v-for="(n, i) in circuitNodes" :key="`n${i}`"
+                        :cx="n.x" :cy="n.y" r="1.3"
+                        :fill="n.filled ? rarityAccent : 'none'"
+                        stroke-width="0.4"
+                        class="node-pulse"
+                        :style="`animation-delay:${i*0.45}s`"/>
               </g>
+
+              <!-- 连接线 -->
+              <g :stroke="rarityAccent+'70'" fill="none">
+                <line v-for="(ln, i) in circuitLines" :key="`l${i}`"
+                      :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
+                      stroke-width="0.3"
+                      class="circuit-flow"
+                      :style="`animation-delay:${i*0.55}s;animation-duration:${4+i*0.3}s`"/>
+              </g>
+
+              <!-- ★ 流动的符文文字 -->
+              <g :fill="rarityAccent+'60'" font-family="serif" font-size="4">
+                <text v-for="(rune, i) in runePositions" :key="`r${i}`"
+                      :x="rune.x" :y="rune.y"
+                      class="rune-float"
+                      :style="`animation-delay:${i*0.8}s`">{{ rune.char }}</text>
+              </g>
+
+              <!-- 四角华纹 -->
+              <g :stroke="rarityAccent" stroke-width="0.7" fill="none" opacity="0.55">
+                <path d="M4,4 L14,4 L14,7 M4,4 L4,14 L7,14"/>
+                <path d="M96,4 L86,4 L86,7 M96,4 L96,14 L93,14"/>
+                <path d="M4,96 L14,96 L14,93 M4,96 L4,86 L7,86"/>
+                <path d="M96,96 L86,96 L86,93 M96,96 L96,86 L93,86"/>
+              </g>
+
+              <!-- ★ 能量扫描线（水平流动）-->
+              <line class="scan-line" x1="0" :y1="scanY" x2="100" :y2="scanY"
+                    :stroke="rarityAccent" stroke-width="0.3" opacity="0.5"/>
             </svg>
 
-            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/30 to-[#050505] z-20"></div>
-            <div class="absolute top-3 left-3 text-[7px] text-tao-gold/40 tracking-[0.5em] font-serif uppercase z-30">Sacred Entity</div>
+            <!-- 渐变遮罩 -->
+            <div class="absolute inset-0 z-20 pointer-events-none"
+                 style="background:linear-gradient(to bottom,rgba(5,5,5,0.1) 0%,rgba(5,5,5,0.3) 60%,rgba(5,5,5,0.95) 100%)"></div>
 
-            <!-- GODLIKE 专属标记 -->
+            <!-- 神兽标签 -->
+            <div class="absolute top-3 left-3 z-30 font-serif uppercase" style="font-size:7px;letter-spacing:0.5em" :style="{ color: rarityAccent+'55' }">Sacred Entity</div>
+
+            <!-- GODLIKE 标记 -->
             <div v-if="isGodlike" class="absolute top-3 right-3 z-30">
-              <span class="text-[7px] font-mono tracking-widest text-rose-400 border border-rose-500/40 px-1.5 py-0.5 animate-pulse
-                            shadow-[0_0_10px_rgba(239,68,68,0.4)]">
+              <span class="font-mono animate-pulse" style="font-size:7px;letter-spacing:0.3em;color:#f87171;border:1px solid rgba(239,68,68,0.4);padding:2px 6px;box-shadow:0 0 10px rgba(239,68,68,0.4)">
                 ⚡ GODLIKE
               </span>
             </div>
           </div>
 
-          <!-- 信息区 -->
-          <div class="relative h-[45%] w-full p-5 flex justify-between items-start bg-gradient-to-t from-[#0a0a0a] to-[#050505]">
+          <!-- 卦象文字区 -->
+          <div class="relative flex-1 overflow-hidden" :style="backInfoStyle">
             <!-- 噪点层 -->
-            <div class="absolute inset-0 noise-layer pointer-events-none opacity-50" :style="noiseStyle"></div>
+            <div class="absolute inset-0 pointer-events-none" :style="{ ...noiseBgStyle, opacity: 0.035 }"></div>
 
-            <div class="flex gap-5 h-full z-10">
-              <h1 class="text-5xl font-serif text-tao-gold tracking-widest font-bold [writing-mode:vertical-rl] drop-shadow-[0_0_15px_rgba(200,170,110,0.4)] h-full"
-                  :style="goldNeonStyle">
-                {{ hexagramData.nameZh }}
-              </h1>
-              <div class="w-px h-3/4 bg-tao-gold/20 my-auto"></div>
-              <p class="text-white/80 text-base font-serif tracking-[0.4em] [writing-mode:vertical-rl] leading-loose h-full pt-2">
-                {{ hexagramData.poemZh }}
-              </p>
-            </div>
+            <div class="relative z-10 h-full p-5 flex justify-between items-start">
+              <!-- 竖排卦名 + 卦辞 -->
+              <div class="flex gap-4 h-full">
+                <h1 class="font-serif font-bold h-full" style="font-size:52px;writing-mode:vertical-rl;letter-spacing:0.15em"
+                    :style="{ color: rarityAccent, textShadow: `0 0 20px ${rarityAccent}55, 0 0 40px ${rarityAccent}28` }">
+                  {{ hexagramData.nameZh }}
+                </h1>
+                <div class="w-px h-3/4 my-auto" :style="{ background: rarityAccent+'25' }"></div>
+                <p class="font-serif text-white/75 h-full pt-2" style="font-size:15px;writing-mode:vertical-rl;letter-spacing:0.4em;line-height:1.8">
+                  {{ hexagramData.poemZh }}
+                </p>
+              </div>
 
-            <div class="flex flex-col items-end justify-between h-full pb-2 z-10">
-              <div class="text-[8px] text-tao-gold/30 tracking-[0.8em] font-serif uppercase [writing-mode:vertical-rl]">Divine Archive</div>
-              <div class="p-1 border border-tao-gold/20 bg-black/80 backdrop-blur-sm">
-                <img src="/qr-code.png" class="w-9 h-9 grayscale brightness-125 contrast-125" />
+              <!-- 右侧：档案标签 + QR -->
+              <div class="flex flex-col items-end justify-between h-full pb-2">
+                <div class="font-serif uppercase" style="font-size:8px;letter-spacing:0.7em;writing-mode:vertical-rl" :style="{ color: rarityAccent+'30' }">Divine Archive</div>
+                <!-- HUD 数据块 -->
+                <div class="flex flex-col gap-1 items-end mb-2">
+                  <div class="font-mono" style="font-size:6px;letter-spacing:0.2em" :style="hudStyle">SYNC {{ syncRate }}%</div>
+                  <div class="font-mono" style="font-size:6px;letter-spacing:0.2em" :style="hudStyle">#CT-{{ archiveId }}</div>
+                </div>
+                <div class="p-1.5 border bg-black/80" :style="{ borderColor: rarityAccent+'25' }">
+                  <img src="/qr-code.png" class="w-9 h-9 grayscale" style="filter:grayscale(1) brightness(1.3) contrast(1.2)"/>
+                </div>
               </div>
             </div>
           </div>
@@ -201,64 +248,71 @@
       </div>
     </div>
 
+    <!-- 翻转提示 -->
+    <p class="font-mono mt-3 animate-pulse" style="font-size:9px;letter-spacing:0.35em;color:rgba(200,170,110,0.3)">
+      TAP TO FLIP
+    </p>
+
     <!-- 操作按钮 -->
-    <div class="mt-6 flex flex-col items-center gap-3 animate-fade-up">
-      <div class="flex gap-3">
+    <div class="mt-3 flex flex-col items-center gap-3 animate-fade-up px-4 w-full" style="max-width:360px">
+      <div class="flex gap-3 w-full">
         <button @click="downloadImage('poster')"
-                class="px-5 py-2.5 bg-white/8 border border-white/20 text-white text-[9px] tracking-[0.3em] hover:bg-white/15 transition-colors uppercase">
-          Save 9:16 Poster
+                class="flex-1 border font-mono uppercase transition-all hover:bg-white/8"
+                style="padding:10px 0;font-size:10px;letter-spacing:0.3em;border-color:rgba(255,255,255,0.18);color:rgba(255,255,255,0.6)">
+          9:16 POSTER
         </button>
         <button @click="downloadImage('square')"
-                class="px-5 py-2.5 bg-tao-gold/15 border border-tao-gold/40 text-tao-gold text-[9px] tracking-[0.3em] font-bold hover:bg-tao-gold/25 transition-colors uppercase shadow-[0_0_15px_rgba(200,170,110,0.2)]">
-          IG 1:1 Square
+                class="flex-1 border font-mono uppercase font-bold transition-all"
+                style="padding:10px 0;font-size:10px;letter-spacing:0.3em"
+                :style="{ borderColor: rarityAccent+'55', color: rarityAccent, background: rarityAccent+'12', boxShadow: `0 0 14px ${rarityAccent}20` }">
+          1:1 SQUARE
         </button>
       </div>
-      <button @click="close" class="text-white/25 text-[9px] tracking-[0.4em] hover:text-white/60 transition-colors uppercase mt-1">Dismiss</button>
+      <button @click="close" class="font-mono uppercase transition-colors hover:text-white/60"
+              style="font-size:9px;letter-spacing:0.4em;color:rgba(255,255,255,0.22)">Dismiss</button>
     </div>
   </div>
 
-  <!-- 导出用隐藏 DOM -->
-  <div class="fixed top-[-9999px] left-[-9999px] pointer-events-none">
-    <div ref="posterRef" class="w-[1080px] h-[1920px] bg-[#050505] flex flex-col overflow-hidden relative border-[16px] border-[#0a0a0a]">
-      <img :src="beastImageUrl" class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-screen scale-110" />
+  <!-- 导出隐藏DOM -->
+  <div class="fixed pointer-events-none" style="top:-9999px;left:-9999px">
+    <div ref="posterRef" class="w-[1080px] h-[1920px] bg-[#050505] flex flex-col overflow-hidden relative" :style="{ border: `16px solid #090909` }">
+      <img :src="beastImageUrl" class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-screen scale-110"/>
       <div class="z-10 w-full p-16 flex justify-between items-start border-b border-tao-gold/20">
-        <div class="flex flex-col gap-4">
-          <h2 class="text-[54px] font-serif text-white/90 tracking-[0.3em] uppercase">{{ hexagramData.name }}</h2>
-          <div class="text-[24px] text-white/40 font-mono tracking-[0.5em] uppercase">USER HASH: {{ userHash }}</div>
-          <div class="text-[20px] text-tao-gold/40 font-mono tracking-widest">SYNC: {{ syncRate }}% · {{ rarityLabel }}</div>
+        <div>
+          <h2 class="font-serif text-white/90 uppercase" style="font-size:54px;letter-spacing:0.3em">{{ hexagramData.name }}</h2>
+          <div class="font-mono text-white/35 mt-3" style="font-size:22px;letter-spacing:0.4em">HASH: {{ userHash }}</div>
+          <div class="font-mono mt-2" style="font-size:18px;letter-spacing:0.3em" :style="{ color: rarityAccent+'70' }">{{ rarityLabel }} · SYNC {{ syncRate }}%</div>
         </div>
-        <div class="text-[28px] text-tao-gold/60 font-serif tracking-[0.5em] [writing-mode:vertical-rl]">{{ lunarDateStamp }}</div>
+        <div class="font-serif" style="font-size:26px;letter-spacing:0.5em;writing-mode:vertical-rl" :style="{ color: rarityAccent+'60' }">{{ lunarDateStamp }}</div>
       </div>
       <div class="z-10 flex-1 w-full p-20 flex justify-center items-center relative">
-        <h1 class="text-[280px] font-serif text-tao-gold tracking-[0.1em] font-bold [writing-mode:vertical-rl] absolute right-[35%]">{{ hexagramData.nameZh }}</h1>
-        <p class="text-[72px] text-white/90 font-serif tracking-[0.4em] [writing-mode:vertical-rl] leading-relaxed absolute left-[25%]">{{ hexagramData.poemZh }}</p>
+        <h1 class="font-serif font-bold" style="font-size:280px;letter-spacing:0.1em;writing-mode:vertical-rl;position:absolute;right:35%" :style="{ color: rarityAccent }">{{ hexagramData.nameZh }}</h1>
+        <p class="font-serif text-white/90" style="font-size:72px;letter-spacing:0.4em;writing-mode:vertical-rl;position:absolute;left:25%">{{ hexagramData.poemZh }}</p>
       </div>
-      <div class="z-10 w-full p-16 bg-[#0a0a0a]/80 border-t border-white/10 flex gap-12 items-end">
-        <div class="flex-1">
-          <p class="text-[34px] text-white/80 font-mono italic leading-[1.6] text-justify">{{ aiPredictionText }}</p>
-        </div>
+      <div class="z-10 w-full p-16 border-t border-white/10 flex gap-12 items-end" style="background:rgba(10,10,10,0.85)">
+        <p class="flex-1 font-mono italic text-white/80 leading-relaxed text-justify" style="font-size:34px">{{ aiPredictionText }}</p>
         <div class="flex flex-col items-center gap-6 border-l border-tao-gold/20 pl-12 shrink-0">
-          <span class="text-[20px] text-tao-gold/40 font-serif tracking-[0.8em] [writing-mode:vertical-rl] uppercase">Sync Rate: {{ syncRate }}%</span>
-          <img src="/qr-code.png" class="w-40 h-40 grayscale brightness-150 p-4 border border-tao-gold/30 bg-black/60" />
+          <span class="font-serif uppercase" style="font-size:18px;letter-spacing:0.7em;writing-mode:vertical-rl" :style="{ color: rarityAccent+'45' }">Sync {{ syncRate }}%</span>
+          <img src="/qr-code.png" class="w-40 h-40 grayscale" style="filter:grayscale(1) brightness(1.5);padding:16px;border:1px solid rgba(200,170,110,0.3);background:rgba(0,0,0,0.6)"/>
         </div>
       </div>
     </div>
 
-    <div ref="squareRef" class="w-[1080px] h-[1080px] bg-[#050505] flex flex-col justify-between overflow-hidden relative border-[20px] border-[#0a0a0a] p-16">
-      <img :src="beastImageUrl" class="absolute inset-0 w-full h-full object-cover opacity-25 mix-blend-screen scale-125" />
+    <div ref="squareRef" class="w-[1080px] h-[1080px] bg-[#050505] flex flex-col justify-between overflow-hidden relative p-16" :style="{ border: `20px solid #090909` }">
+      <img :src="beastImageUrl" class="absolute inset-0 w-full h-full object-cover opacity-25 mix-blend-screen scale-125"/>
       <div class="z-10 flex justify-between items-start w-full">
         <div>
-          <h2 class="text-[48px] font-serif text-tao-gold tracking-[0.3em] font-bold">{{ hexagramData.nameZh }} // {{ hexagramData.name }}</h2>
-          <div class="text-[24px] text-white/50 font-mono tracking-widest mt-4">SYNC: {{ syncRate }}% | {{ rarityLabel }}</div>
+          <h2 class="font-serif font-bold" style="font-size:48px;letter-spacing:0.3em" :style="{ color: rarityAccent }">{{ hexagramData.nameZh }} // {{ hexagramData.name }}</h2>
+          <div class="font-mono text-white/45 mt-3" style="font-size:22px;letter-spacing:0.3em">SYNC: {{ syncRate }}% | {{ rarityLabel }}</div>
         </div>
-        <div class="text-[24px] text-white/40 font-serif tracking-[0.5em] [writing-mode:vertical-rl] h-[200px]">{{ lunarDateStamp }}</div>
+        <div class="font-serif" style="font-size:22px;letter-spacing:0.5em;writing-mode:vertical-rl;height:200px" :style="{ color: rarityAccent+'45' }">{{ lunarDateStamp }}</div>
       </div>
       <div class="z-10 flex w-full gap-12 items-end">
-        <div class="flex-1 border-t border-tao-gold/30 pt-8">
-          <p class="text-[36px] text-white/90 font-mono italic leading-relaxed">{{ shortAiText }}</p>
+        <div class="flex-1 pt-8 border-t border-tao-gold/25">
+          <p class="font-mono italic text-white/90 leading-relaxed" style="font-size:34px">{{ shortAiText }}</p>
         </div>
-        <div class="shrink-0 p-4 border border-tao-gold/30 bg-black/80">
-          <img src="/qr-code.png" class="w-32 h-32 grayscale brightness-150" />
+        <div class="shrink-0 p-4 border border-tao-gold/28 bg-black/80">
+          <img src="/qr-code.png" class="w-32 h-32 grayscale" style="filter:grayscale(1) brightness(1.5)"/>
         </div>
       </div>
     </div>
@@ -266,217 +320,247 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { toPng } from 'html-to-image'
 
 const props = defineProps(['hexagramData', 'aiPredictionText', 'userData'])
-const showModal = ref(false)
-const isFlipped = ref(false)
-const godlikeTriggered = ref(false)
-const posterRef = ref(null)
-const squareRef = ref(null)
-const generateTime = ref(Date.now())
 
-// ─── 视觉种子算法 (userId + timestamp + hexagram) ───
+const showModal     = ref(false)
+const isFlipped     = ref(false)
+const godlikeTriggered = ref(false)
+const posterRef     = ref(null)
+const squareRef     = ref(null)
+const generateTime  = ref(Date.now())
+const scanY         = ref(0)
+
+// ── 扫描线动画 ──
+let scanRaf = null
+const animateScan = () => {
+  scanY.value = (scanY.value + 0.3) % 100
+  scanRaf = requestAnimationFrame(animateScan)
+}
+onMounted(() => { scanRaf = requestAnimationFrame(animateScan) })
+onUnmounted(() => { if (scanRaf) cancelAnimationFrame(scanRaf) })
+
+// ── 视觉种子算法 ──
 const seed = computed(() => {
-  const uid = props.userData?.id || 'guest'
+  const uid      = props.userData?.id || 'guest'
   const hexLines = props.hexagramData?.lines?.join('') || '000000'
-  const str = `${uid}-${generateTime.value}-${hexLines}`
+  const str      = `${uid}-${generateTime.value}-${hexLines}`
   let hash = 0
   for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i)
-    hash |= 0
+    hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0
   }
   return Math.abs(hash)
 })
 
-// ─── Hash 签名 ───
-const userHash = computed(() => `0x${seed.value.toString(16).toUpperCase().padStart(8, '0')}`)
+const userHash = computed(() => `0x${seed.value.toString(16).toUpperCase().padStart(8,'0')}`)
 
-// ─── 同步率 ───
+// ── 同步率 + 稀有度 ──
 const syncRate = computed(() => {
-  const rate = 80 + (seed.value % 200) / 10
-  return (rate > 99.9 ? 99.9 : rate).toFixed(1)
+  const r = 80 + (seed.value % 200) / 10
+  return (r > 99.9 ? 99.9 : r).toFixed(1)
 })
-
 const isGodlike = computed(() => parseFloat(syncRate.value) >= 99.0)
 
-// ─── 稀有度体系 ───
 const rarityInfo = computed(() => {
-  const rate = parseFloat(syncRate.value)
-  if (rate >= 99.0) return { label: 'GODLIKE', color: 'text-rose-400 border-rose-500/50', hue: 'hue-rotate(-45deg)', accent: '#ef4444' }
-  if (rate >= 95.1) return { label: 'ULTRA RARE', color: 'text-tao-gold border-tao-gold/50', hue: 'hue-rotate(30deg)', accent: '#c8aa6e' }
-  if (rate >= 90.1) return { label: 'RARE', color: 'text-cyan-300 border-cyan-300/50', hue: 'hue-rotate(180deg)', accent: '#67e8f9' }
-  return { label: 'COMMON', color: 'text-white/60 border-white/20', hue: 'hue-rotate(0deg)', accent: '#ffffff' }
+  const r = parseFloat(syncRate.value)
+  if (r >= 99.0) return { label:'GODLIKE',    accent:'#ef4444', hue:'hue-rotate(-45deg)' }
+  if (r >= 95.1) return { label:'ULTRA RARE', accent:'#c8aa6e', hue:'hue-rotate(20deg)' }
+  if (r >= 90.1) return { label:'RARE',       accent:'#67e8f9', hue:'hue-rotate(175deg)' }
+  return               { label:'COMMON',     accent:'#22d3ee', hue:'hue-rotate(0deg)' }
+})
+const rarityLabel  = computed(() => rarityInfo.value.label)
+const rarityAccent = computed(() => rarityInfo.value.accent)
+
+// ── 视觉种子驱动样式 ──
+const visualSeedStyles = computed(() => ({ filter: rarityInfo.value.hue }))
+
+// 边框颜色微偏色（种子驱动，每张唯一）
+const borderTint = computed(() => {
+  const hueShift = (seed.value % 30) - 15   // ±15 度偏色
+  const sat      = 40 + (seed.value % 20)   // 饱和度微调
+  return `hsla(${38 + hueShift}, ${sat}%, 55%, 0.45)`
 })
 
-const rarityLabel = computed(() => rarityInfo.value.label)
-const rarityColor = computed(() => rarityInfo.value.color)
-
-const rarityGlowStyle = computed(() => ({
-  boxShadow: `0 0 10px ${rarityInfo.value.accent}30, 0 0 20px ${rarityInfo.value.accent}15`
+const frontFaceStyle = computed(() => ({
+  background: '#050507',
+  borderRadius: '12px',
+  border: `1px solid ${borderTint.value}`,
+  boxShadow: `0 0 0 1px ${rarityAccent.value}15, inset 0 0 40px rgba(0,0,0,0.7)`,
 }))
 
-// ─── 视觉种子驱动样式 ───
-const visualSeedStyles = computed(() => ({
-  filter: rarityInfo.value.hue,
-  color: rarityInfo.value.label === 'COMMON' ? '#22d3ee' : 'currentColor'
+const backFaceStyle = computed(() => ({
+  background: '#040406',
+  borderRadius: '12px',
+  border: `1px solid ${borderTint.value}`,
+  boxShadow: `0 0 0 1px ${rarityAccent.value}15`,
 }))
 
-const cardBorderColor = computed(() => `${rarityInfo.value.accent}40`)
-
-const goldNeonStyle = computed(() => ({
-  textShadow: `0 0 20px ${rarityInfo.value.accent}60, 0 0 40px ${rarityInfo.value.accent}30`
+const backInfoStyle = computed(() => ({
+  background: `linear-gradient(to top, #0a0a0c, #050507)`,
 }))
 
-const radarGlowStyle = computed(() => ({
-  filter: `drop-shadow(0 0 4px ${rarityInfo.value.accent}60)`
+// 噪点背景（频率由种子驱动，每张纹路唯一）
+const noiseBgStyle = computed(() => ({
+  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.${65+(seed.value%30)}' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E")`,
+  backgroundSize:  `${120 + (seed.value % 80)}px`,
+  opacity:          0.05 + (seed.value % 3) * 0.012,
 }))
 
-const circuitGlowStyle = computed(() => ({
-  filter: `drop-shadow(0 0 3px ${rarityInfo.value.accent}80)`
+const gridStyle = computed(() => ({
+  backgroundPosition: `${seed.value % 28}px ${seed.value % 28}px`,
+  opacity: 0.05,
 }))
 
-const hudTextStyle = computed(() => ({
-  color: `${rarityInfo.value.accent}70`,
-  textShadow: `0 0 6px ${rarityInfo.value.accent}40`
+// 四角装饰（使用稀有度颜色）
+const cornerStyle = (pos) => {
+  const styles = {
+    position: 'absolute',
+    width: '18px', height: '18px',
+  }
+  const c = rarityAccent.value
+  if (pos === 'tl') return { ...styles, top:0, left:0, borderTop:`2px solid ${c}cc`, borderLeft:`2px solid ${c}cc` }
+  if (pos === 'tr') return { ...styles, top:0, right:0, borderTop:`2px solid ${c}cc`, borderRight:`2px solid ${c}cc` }
+  if (pos === 'bl') return { ...styles, bottom:0, left:0, borderBottom:`2px solid ${c}cc`, borderLeft:`2px solid ${c}cc` }
+  return { ...styles, bottom:0, right:0, borderBottom:`2px solid ${c}cc`, borderRight:`2px solid ${c}cc` }
+}
+
+const hudStyle = computed(() => ({
+  color: `${rarityAccent.value}80`,
+  textShadow: `0 0 6px ${rarityAccent.value}45`,
 }))
 
-const gridOffsetStyle = computed(() => ({
-  backgroundPosition: `${seed.value % 50}px ${seed.value % 50}px`
+// 神兽光晕（根据稀有度变化）
+const beastAuraStyle = computed(() => ({
+  background: `radial-gradient(ellipse at 50% 60%, ${rarityAccent.value}18 0%, transparent 65%)`,
+  animation: 'beast-pulse 3s ease-in-out infinite',
 }))
 
-// 噪点纹理（种子驱动偏移，边框微偏色）
-const noiseStyle = computed(() => ({
-  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.${65 + (seed.value % 30)}' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E")`,
-  backgroundSize: `${150 + (seed.value % 100)}px`,
-  opacity: 0.04 + (seed.value % 3) * 0.01
-}))
-
-// ─── HUD 实时数据（种子驱动，视觉唯一性）───
-const entropyLabel = computed(() => {
-  const labels = ['STABLE', 'NOMINAL', 'OPTIMAL', 'CRITICAL']
-  return labels[seed.value % labels.length]
-})
-
-const karmaIndex = computed(() => {
-  return ((seed.value % 9999) / 100).toFixed(2)
-})
-
-const fluxRate = computed(() => {
-  return `${(seed.value % 100) / 10}GHz`
-})
-
-const nodeId = computed(() => `N${(seed.value % 9999).toString().padStart(4, '0')}`)
-
-const versionSuffix = computed(() => (seed.value % 999).toString().padStart(3, '0'))
-
-const cardTimestamp = computed(() => {
+// ── HUD 数据（种子驱动）──
+const entropyLabel = computed(() => ['STABLE','NOMINAL','OPTIMAL','CRITICAL'][seed.value % 4])
+const karmaIndex   = computed(() => ((seed.value % 9999) / 100).toFixed(2))
+const fluxRate     = computed(() => `${(seed.value % 100) / 10}GHz`)
+const nodeId       = computed(() => `N${(seed.value % 9999).toString().padStart(4,'0')}`)
+const versionSuffix= computed(() => (seed.value % 999).toString().padStart(3,'0'))
+const archiveId    = computed(() => seed.value.toString(16).toUpperCase().slice(-4))
+const cardDate     = computed(() => {
   const d = new Date(generateTime.value)
   return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`
 })
 
-// ─── 雷达图数据点 ───
-const radarPoints = computed(() => {
-  const getVal = (offset) => 30 + ((seed.value >> offset) % 60)
-  const order = getVal(1), perceive = getVal(2), origin = getVal(3), sync = getVal(4), chaos = getVal(5)
-  const p1 = `50,${50 - (order * 0.4)}`
-  const p2 = `${50 + (perceive * 0.38)},${50 - (perceive * 0.12)}`
-  const p3 = `${50 + (origin * 0.23)},${50 + (origin * 0.35)}`
-  const p4 = `${50 - (sync * 0.23)},${50 + (sync * 0.35)}`
-  const p5 = `${50 - (chaos * 0.38)},${50 - (chaos * 0.12)}`
-  return `${p1} ${p2} ${p3} ${p4} ${p5}`
+// ── 雷达图 ──
+const radarPointArr = computed(() => {
+  const gv = (o) => 30 + ((seed.value >> o) % 60)
+  const [a,b,c,d,e] = [gv(1),gv(2),gv(3),gv(4),gv(5)]
+  return [
+    { x: 50,                   y: 50 - (a * 0.4) },
+    { x: 50 + (b * 0.38),      y: 50 - (b * 0.12) },
+    { x: 50 + (c * 0.23),      y: 50 + (c * 0.35) },
+    { x: 50 - (d * 0.23),      y: 50 + (d * 0.35) },
+    { x: 50 - (e * 0.38),      y: 50 - (e * 0.12) },
+  ]
 })
+const radarPoints = computed(() =>
+  radarPointArr.value.map(p => `${p.x},${p.y}`).join(' ')
+)
 
-// ─── 电路板符咒路径（种子驱动，每张唯一）───
+// ── 电路符咒（种子驱动路径）──
 const talismanPaths = computed(() => {
   const s = seed.value
   return [
-    `M ${20+(s%15)},${10+(s%20)} Q ${40+(s%25)},50 50,${75+(s%15)} T ${75+(s%15)},${85+(s%10)}`,
-    `M 10,${45+(s%20)} L ${35+(s%20)},${50+(s%10)} L ${50+(s%10)},${85+(s%10)}`,
-    `M ${75+(s%15)},10 C ${55+(s%20)},30 ${40+(s%15)},65 ${20+(s%15)},${78+(s%12)}`,
-    `M 50,${8+(s%12)} L ${50+(s%5)},${38+(s%25)} L ${75+(s%15)},${78+(s%12)}`,
-  ].slice(0, 2 + (s % 2))
+    `M ${18+(s%16)},${8+(s%22)} Q ${38+(s%28)},${48+(s%12)} 50,${72+(s%16)} T ${72+(s%16)},${86+(s%10)}`,
+    `M 8,${42+(s%22)} L ${32+(s%22)},${48+(s%12)} L ${48+(s%12)},${84+(s%12)}`,
+    `M ${72+(s%16)},8 C ${52+(s%22)},28 ${38+(s%16)},62 ${18+(s%16)},${76+(s%14)}`,
+    `M 48,${6+(s%14)} L ${50+(s%6)},${36+(s%28)} L ${73+(s%16)},${76+(s%14)}`,
+    `M ${25+(s%20)},${20+(s%15)} Q ${60+(s%15)},${35+(s%15)} ${78+(s%12)},${55+(s%20)}`,
+  ].slice(0, 3 + (s % 2))
 })
 
-// 电路板节点
 const circuitNodes = computed(() => {
   const s = seed.value
   return [
-    { x: 20+(s%20), y: 30+(s%20), filled: (s % 3) === 0 },
-    { x: 70+(s%15), y: 25+(s%15), filled: (s % 3) === 1 },
-    { x: 50, y: 50, filled: true },
-    { x: 30+(s%10), y: 70+(s%10), filled: (s % 2) === 0 },
-    { x: 75+(s%10), y: 65+(s%10), filled: (s % 2) === 1 },
+    { x:18+(s%22), y:28+(s%22), filled:(s%3)===0 },
+    { x:68+(s%16), y:22+(s%16), filled:(s%3)===1 },
+    { x:50,         y:50,        filled:true       },
+    { x:28+(s%12), y:68+(s%12), filled:(s%2)===0  },
+    { x:73+(s%12), y:62+(s%12), filled:(s%2)===1  },
+    { x:40+(s%18), y:38+(s%18), filled:(s%4)===0  },
   ]
 })
 
-// 电路连接线
 const circuitLines = computed(() => {
-  const nodes = circuitNodes.value
+  const n = circuitNodes.value
   return [
-    { x1: nodes[0].x, y1: nodes[0].y, x2: nodes[2].x, y2: nodes[2].y },
-    { x1: nodes[1].x, y1: nodes[1].y, x2: nodes[2].x, y2: nodes[2].y },
-    { x1: nodes[2].x, y1: nodes[2].y, x2: nodes[3].x, y2: nodes[3].y },
-    { x1: nodes[2].x, y1: nodes[2].y, x2: nodes[4].x, y2: nodes[4].y },
+    { x1:n[0].x, y1:n[0].y, x2:n[2].x, y2:n[2].y },
+    { x1:n[1].x, y1:n[1].y, x2:n[2].x, y2:n[2].y },
+    { x1:n[2].x, y1:n[2].y, x2:n[3].x, y2:n[3].y },
+    { x1:n[2].x, y1:n[2].y, x2:n[4].x, y2:n[4].y },
+    { x1:n[5].x, y1:n[5].y, x2:n[1].x, y2:n[1].y },
   ]
 })
 
-// ─── 时间印章 ───
-const lunarDateStamp = computed(() => {
-  const stems = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
-  const branches = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
-  const year = new Date(generateTime.value).getFullYear()
-  return `${stems[(year-4)%10]}${branches[(year-4)%12]}年·极数时空`
+// ── 流动符文字符位置 ──
+const runePositions = computed(() => {
+  const s = seed.value
+  const chars = ['乾','坤','坎','离','震','巽','艮','兑','☯','◈','⬡']
+  return [
+    { x: 10+(s%15), y: 18+(s%15), char: chars[s%chars.length]     },
+    { x: 75+(s%15), y: 15+(s%12), char: chars[(s+1)%chars.length] },
+    { x: 15+(s%12), y: 75+(s%15), char: chars[(s+2)%chars.length] },
+    { x: 72+(s%12), y: 72+(s%12), char: chars[(s+3)%chars.length] },
+    { x: 45+(s%8),  y: 12+(s%10), char: chars[(s+4)%chars.length] },
+  ]
 })
 
-// ─── AI 摘要 ───
+// ── 时间印章 ──
+const lunarDateStamp = computed(() => {
+  const stems   = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
+  const branches= ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+  const yr = new Date(generateTime.value).getFullYear()
+  return `${stems[(yr-4)%10]}${branches[(yr-4)%12]}年·极数时空`
+})
+
+// ── AI 摘要 ──
 const shortAiText = computed(() => {
   if (!props.aiPredictionText) return ''
-  const sentences = props.aiPredictionText.match(/[^.!?]+[.!?]+/g) || [props.aiPredictionText]
-  return sentences.slice(0, 2).join(' ').trim()
+  const sents = props.aiPredictionText.match(/[^.!?。！？]+[.!?。！？]+/g) || [props.aiPredictionText]
+  return sents.slice(0,2).join(' ').trim()
 })
 
-// ─── 神兽选取 ───
+// ── 神兽 ──
 const beastImageUrl = computed(() => {
-  const name = (props.hexagramData?.name || '').toLowerCase()
-  if (name.match(/heaven|sky|thunder|wind|wood/)) return '/guardian-dragon.png'
-  if (name.match(/fire|sun|bright|south/)) return '/guardian-phoenix.png'
-  if (name.match(/lake|mountain|metal|gold/)) return '/guardian-tiger.png'
-  if (name.match(/water|rain|moon|north/)) return '/guardian-turtle.png'
+  const n = (props.hexagramData?.name || '').toLowerCase()
+  if (n.match(/heaven|sky|thunder|wind|wood/)) return '/guardian-dragon.png'
+  if (n.match(/fire|sun|bright|south|clinging/)) return '/guardian-phoenix.png'
+  if (n.match(/lake|mountain|metal|gold/)) return '/guardian-tiger.png'
+  if (n.match(/water|rain|moon|north|abyss/)) return '/guardian-turtle.png'
   return '/guardian-qilin.png'
 })
 
-// ─── GODLIKE 触发状态机 ───
+// ── GODLIKE ──
 const triggerGodlike = () => {
   if (!isGodlike.value) return
   godlikeTriggered.value = true
-  // 屏幕震动 + RGB 色散持续 2.5 秒后消退
-  setTimeout(() => { godlikeTriggered.value = false }, 2500)
+  setTimeout(() => { godlikeTriggered.value = false }, 2800)
 }
 
-// ─── 生成 ───
 const generate = () => {
   generateTime.value = Date.now()
-  isFlipped.value = false
-  showModal.value = true
-  // 延迟 500ms 后检测 GODLIKE（等待动画落地）
-  setTimeout(triggerGodlike, 500)
+  isFlipped.value    = false
+  showModal.value    = true
+  setTimeout(triggerGodlike, 600)
 }
 
-// ─── 下载 ───
 const downloadImage = async (format) => {
-  const targetRef = format === 'poster' ? posterRef.value : squareRef.value
-  if (!targetRef) return
+  const el = format === 'poster' ? posterRef.value : squareRef.value
+  if (!el) return
   try {
-    const dataUrl = await toPng(targetRef, { quality: 1.0, pixelRatio: 2, backgroundColor: '#050505' })
+    const url  = await toPng(el, { quality:1, pixelRatio:2, backgroundColor:'#050505' })
     const link = document.createElement('a')
-    link.download = `CyberTao-${format}-${props.hexagramData.nameZh}.png`
-    link.href = dataUrl
-    link.click()
-  } catch (err) {
-    console.error('Save failed:', err)
-  }
+    link.download = `CyberTao-${format}-${props.hexagramData?.nameZh || 'card'}.png`
+    link.href = url; link.click()
+  } catch (e) { console.error('Export failed:', e) }
 }
 
 const close = () => { showModal.value = false }
@@ -484,89 +568,81 @@ defineExpose({ generate })
 </script>
 
 <style scoped>
-/* ─── 3D 卡片 ─── */
-.perspective-2000 { perspective: 2000px; }
-.transform-style-3d { transform-style: preserve-3d; }
-.backface-hidden { backface-visibility: hidden; }
-.rotate-y-180 { transform: rotateY(180deg); }
+/* 3D */
+.perspective-2000     { perspective: 2000px; }
+.transform-style-3d   { transform-style: preserve-3d; }
+.backface-hidden      { backface-visibility: hidden; }
+.rotate-y-180         { transform: rotateY(180deg); }
 
-/* ─── 背景网格 ─── */
-.cyber-grid {
+/* 背景网格 */
+.cyber-grid-bg {
   background-image:
-    linear-gradient(rgba(200,170,110,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200,170,110,0.05) 1px, transparent 1px);
-  background-size: 28px 28px;
+    linear-gradient(rgba(200,170,110,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,170,110,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-/* ─── 电路脉冲动画 ─── */
-@keyframes circuit-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+/* ★ 电路符咒流动 */
+@keyframes circuit-flow {
+  0%   { stroke-dashoffset: 200; opacity: 0.2; }
+  30%  { opacity: 0.85; }
+  70%  { opacity: 0.85; }
+  100% { stroke-dashoffset: 0;   opacity: 0.2; }
 }
-.circuit-pulse { animation: circuit-pulse 2s ease-in-out infinite; }
-
-/* ─── 卡片动画 ─── */
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-up { animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 0.85; }
-}
-.animate-fade-in { animation: fade-in 1s ease-out forwards; }
-
-/* ─── GODLIKE 故障特效 ─── */
-@keyframes godlike-shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-4px) rotateY(180deg); }
-  40% { transform: translateX(4px) rotateY(180deg); }
-  60% { transform: translateX(-3px) rotateY(180deg); }
-  80% { transform: translateX(3px) rotateY(180deg); }
+.circuit-flow {
+  stroke-dasharray: 30 10;
+  animation: circuit-flow 3.5s ease-in-out infinite;
 }
 
-.screen-shake {
-  animation: godlike-shake 0.4s ease-in-out 3;
+/* ★ 节点脉冲 */
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.3; r: 1.3; }
+  50%       { opacity: 1.0; r: 2.2; }
+}
+.node-pulse { animation: node-pulse 2s ease-in-out infinite; }
+
+/* ★ 符文浮动 */
+@keyframes rune-float {
+  0%, 100% { opacity: 0.15; transform: translateY(0); }
+  50%       { opacity: 0.65; transform: translateY(-2px); }
+}
+.rune-float { animation: rune-float 4s ease-in-out infinite; }
+
+/* ★ 神兽光晕脉冲 */
+@keyframes beast-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.9; }
 }
 
+/* 卡片进入 */
+@keyframes fade-in  { from{opacity:0} to{opacity:0.9} }
+@keyframes fade-up  { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+.animate-fade-in { animation: fade-in 0.9s ease-out forwards; }
+.animate-fade-up { animation: fade-up 0.7s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+/* GODLIKE 特效 */
 @keyframes glitch {
-  0%, 90%, 100% { clip-path: none; opacity: 0; }
-  91% { clip-path: inset(10% 0 80% 0); opacity: 0.6; transform: translate(-4px, 0); background: rgba(239,68,68,0.15); }
-  93% { clip-path: inset(60% 0 20% 0); opacity: 0.6; transform: translate(4px, 0); background: rgba(6,182,212,0.15); }
-  95% { clip-path: inset(30% 0 50% 0); opacity: 0.6; transform: translate(-2px, 0); background: rgba(239,68,68,0.1); }
-  97% { clip-path: none; opacity: 0.3; }
+  0%,88%,100%{ opacity:0 }
+  89%{ clip-path:inset(10% 0 80% 0); opacity:0.7; transform:translate(-5px); background:rgba(239,68,68,0.18); }
+  91%{ clip-path:inset(55% 0 25% 0); opacity:0.7; transform:translate(5px);  background:rgba(6,182,212,0.18); }
+  93%{ clip-path:inset(28% 0 52% 0); opacity:0.6; transform:translate(-3px); }
+  95%{ opacity:0.3 }
 }
+.glitch-overlay { background:transparent; animation:glitch 0.9s steps(1) 3; position:absolute; inset:0; }
 
-.glitch-overlay {
-  background: transparent;
-  animation: glitch 0.8s steps(1) 3;
-  position: absolute; inset: 0;
-}
-
-@keyframes rgb-split {
-  0%, 100% { opacity: 0; }
-  10%, 90% { opacity: 0.08; }
-  50% { opacity: 0.15; }
-}
-
+@keyframes rgb-split { 0%,100%{opacity:0} 10%,90%{opacity:0.09} 50%{opacity:0.18} }
 .rgb-dispersion {
-  background:
-    radial-gradient(ellipse at 30% 50%, rgba(239,68,68,0.3) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 50%, rgba(6,182,212,0.3) 0%, transparent 60%);
-  mix-blend-mode: screen;
-  animation: rgb-split 2.5s ease-in-out forwards;
+  background: radial-gradient(ellipse at 30% 50%,rgba(239,68,68,0.35) 0%,transparent 60%),
+              radial-gradient(ellipse at 70% 50%,rgba(6,182,212,0.35) 0%,transparent 60%);
+  mix-blend-mode:screen;
+  animation:rgb-split 2.8s ease-in-out forwards;
 }
-
 .scanlines-heavy {
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.3) 2px,
-    rgba(0,0,0,0.3) 4px
-  );
-  animation: rgb-split 2.5s ease-in-out forwards;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.28) 2px,rgba(0,0,0,0.28) 4px);
+  animation:rgb-split 2.8s ease-in-out forwards;
 }
+@keyframes godlike-shake {
+  0%,100%{transform:none} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)}
+}
+.screen-shake { animation:godlike-shake 0.35s ease-in-out 4; }
 </style>
