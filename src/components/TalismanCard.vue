@@ -373,54 +373,260 @@
     </div>
   </div>
 
-  <!-- 导出用隐藏 DOM（画质优先）-->
-  <div class="fixed pointer-events-none" style="top:-9999px;left:-9999px">
-    <!-- 9:16 海报 -->
-    <div ref="posterRef" style="width:1080px;height:1920px;background:#050505;display:flex;flex-direction:column;overflow:hidden;position:relative;border:16px solid #0a0a0a">
-      <img :src="beastImageUrl" style="position:absolute;inset:0;width:100%;height:55%;object-fit:cover;object-position:center 20%;opacity:0.75"/>
-      <div style="position:absolute;top:0;left:0;right:0;height:55%;background:linear-gradient(180deg,rgba(5,5,5,0.2) 0%,rgba(5,5,5,0.1) 50%,rgba(5,5,5,0.95) 100%)"></div>
-      <div style="position:relative;z-index:10;width:100%;padding:64px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid rgba(200,170,110,0.2)">
-        <div>
-          <div style="font-family:serif;font-size:54px;color:rgba(255,255,255,0.9);letter-spacing:0.3em;text-transform:uppercase">{{ hexagramData.name }}</div>
-          <div style="font-family:monospace;font-size:22px;color:rgba(255,255,255,0.3);margin-top:12px;letter-spacing:0.4em">HASH: {{ userHash }}</div>
-          <div style="font-family:monospace;font-size:18px;margin-top:8px;letter-spacing:0.3em" :style="{ color: rarityAccent+'80' }">{{ rarityLabel }} · SYNC {{ syncRate }}%</div>
+  <!-- ══════════════════════════════════════════
+       导出用隐藏 DOM
+       原则：
+       1. 全部 inline style，无 Tailwind class
+       2. 无 CSS 动画，用 SVG 静态路径替代特效
+       3. shortAiText（2句）替代全文
+       4. 神兽 opacity >= 0.82，layout 清晰分区
+  ══════════════════════════════════════════ -->
+  <div style="position:fixed;top:-9999px;left:-9999px;pointer-events:none">
+
+    <!-- ▌9:16 POSTER ▐ -->
+    <div ref="posterRef"
+         :style="{
+           width:'1080px', height:'1920px',
+           background:'#040408',
+           display:'flex', flexDirection:'column',
+           overflow:'hidden', position:'relative',
+           border:'20px solid #08080e',
+           fontFamily:'serif'
+         }">
+
+      <!-- 神兽图（上半 55%）-->
+      <div style="position:relative;height:55%;width:100%;flex-shrink:0;overflow:hidden">
+        <img :src="beastImageUrl"
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 15%;opacity:0.88"/>
+        <!-- 底部渐变收口 -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(to bottom,transparent,rgba(4,4,8,0.98))"></div>
+        <!-- 顶部暗化 -->
+        <div style="position:absolute;top:0;left:0;right:0;height:30%;background:linear-gradient(to bottom,rgba(4,4,8,0.55),transparent)"></div>
+
+        <!-- 静态 SVG 符咒层（覆盖在神兽上）-->
+        <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:5"
+             viewBox="0 0 100 100" preserveAspectRatio="none">
+          <!-- 四角华纹 -->
+          <g :stroke="rarityAccent" stroke-width="0.6" fill="none" opacity="0.55">
+            <path d="M2,2 L10,2 L10,5 M2,2 L2,10 L5,10"/>
+            <path d="M98,2 L90,2 L90,5 M98,2 L98,10 L95,10"/>
+            <path d="M2,98 L10,98 L10,95 M2,98 L2,90 L5,90"/>
+            <path d="M98,98 L90,98 L90,95 M98,98 L98,90 L95,90"/>
+          </g>
+          <!-- 静态符咒路径（只用基础 stroke，无动画）-->
+          <g fill="none" :stroke="rarityAccent" stroke-width="0.4" opacity="0.45">
+            <path :d="talismanPaths[0]" stroke-dasharray="8 4"/>
+            <path v-if="talismanPaths[1]" :d="talismanPaths[1]" stroke-dasharray="6 5"/>
+          </g>
+          <!-- 能量节点 -->
+          <g :stroke="rarityAccent" :fill="rarityAccent" opacity="0.6">
+            <circle :cx="circuitNodes[0].x" :cy="circuitNodes[0].y" r="1.2"/>
+            <circle :cx="circuitNodes[2].x" :cy="circuitNodes[2].y" r="1.6"/>
+            <circle :cx="circuitNodes[4].x" :cy="circuitNodes[4].y" r="1.2"/>
+          </g>
+          <!-- 神兽名水印 -->
+          <text x="50" y="52" text-anchor="middle" dominant-baseline="central"
+                font-family="serif" font-size="30" font-weight="bold"
+                :fill="rarityAccent+'10'">{{ hexagramData.nameZh }}</text>
+        </svg>
+
+        <!-- 顶部信息：稀有度 + 档案号 -->
+        <div style="position:absolute;top:0;left:0;right:0;z-index:10;padding:32px 48px;display:flex;justify-content:space-between;align-items:flex-start">
+          <div :style="{ fontFamily:'monospace', fontSize:'22px', letterSpacing:'0.35em', color:rarityAccent, textTransform:'uppercase',
+                         padding:'8px 20px', border:`1px solid ${rarityAccent}50`, background:'rgba(0,0,0,0.6)',
+                         boxShadow:`0 0 20px ${rarityAccent}30` }">
+            {{ rarityLabel }} ◈ SYNC {{ syncRate }}%
+          </div>
+          <div :style="{ fontFamily:'serif', fontSize:'24px', letterSpacing:'0.5em', writingMode:'vertical-rl', color:rarityAccent+'60' }">
+            {{ lunarDateStamp }}
+          </div>
         </div>
-        <div style="font-family:serif;font-size:26px;letter-spacing:0.5em;writing-mode:vertical-rl" :style="{ color: rarityAccent+'65' }">{{ lunarDateStamp }}</div>
+
+        <!-- 底部：卦名大字 + 英文名（叠在渐变上）-->
+        <div style="position:absolute;bottom:0;left:0;right:0;z-index:10;padding:40px 56px">
+          <div :style="{ fontFamily:'serif', fontSize:'120px', fontWeight:'bold', color:rarityAccent,
+                         letterSpacing:'0.08em', lineHeight:'1',
+                         textShadow:`0 0 40px ${rarityAccent}70, 0 0 80px ${rarityAccent}35` }">
+            {{ hexagramData.nameZh }}
+          </div>
+          <div :style="{ fontFamily:'monospace', fontSize:'28px', letterSpacing:'0.5em', color:'rgba(255,255,255,0.65)',
+                         textTransform:'uppercase', marginTop:'12px' }">
+            {{ hexagramData.name }}
+          </div>
+        </div>
       </div>
-      <div style="position:relative;z-index:10;flex:1;padding:80px;display:flex;align-items:center;justify-content:center">
-        <h1 style="font-family:serif;font-weight:bold;font-size:280px;letter-spacing:0.1em;writing-mode:vertical-rl;position:absolute;right:35%" :style="{ color: rarityAccent }">{{ hexagramData.nameZh }}</h1>
-        <p style="font-family:serif;font-size:72px;letter-spacing:0.4em;writing-mode:vertical-rl;line-height:1.6;position:absolute;left:25%;color:rgba(255,255,255,0.88)">{{ hexagramData.poemZh }}</p>
+
+      <!-- 分隔条：卦辞 + 爻象图 -->
+      <div :style="{ padding:'36px 56px', display:'flex', alignItems:'center', justifyContent:'space-between',
+                     borderTop:`1px solid ${rarityAccent}22`, borderBottom:`1px solid ${rarityAccent}22`,
+                     background:'rgba(6,6,12,0.95)' }">
+        <p :style="{ fontFamily:'serif', fontSize:'40px', color:'rgba(255,255,255,0.85)', letterSpacing:'0.4em', margin:0 }">
+          {{ hexagramData.poemZh }}
+        </p>
+        <!-- 爻象迷你图 -->
+        <div style="display:flex;flex-direction:column-reverse;gap:10px;flex-shrink:0">
+          <div v-for="(line, i) in (hexagramData.lines || [])" :key="i" style="display:flex;gap:8px">
+            <template v-if="line === 1">
+              <div :style="{ width:'72px', height:'10px', borderRadius:'2px', background:rarityAccent,
+                              boxShadow:`0 0 10px ${rarityAccent}88` }"></div>
+            </template>
+            <template v-else>
+              <div :style="{ width:'30px', height:'10px', borderRadius:'2px', background:rarityAccent,
+                              boxShadow:`0 0 10px ${rarityAccent}88` }"></div>
+              <div :style="{ width:'30px', height:'10px', borderRadius:'2px', background:rarityAccent,
+                              boxShadow:`0 0 10px ${rarityAccent}88` }"></div>
+            </template>
+          </div>
+        </div>
       </div>
-      <div style="position:relative;z-index:10;padding:64px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:48px;align-items:flex-end;background:rgba(10,10,10,0.88)">
-        <p style="flex:1;font-family:monospace;font-style:italic;font-size:34px;color:rgba(255,255,255,0.82);line-height:1.6;text-align:justify">{{ aiPredictionText }}</p>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:24px;border-left:1px solid rgba(200,170,110,0.2);padding-left:48px;flex-shrink:0">
-          <span style="font-family:serif;font-size:18px;letter-spacing:0.7em;writing-mode:vertical-rl;text-transform:uppercase" :style="{ color: rarityAccent+'45' }">Sync {{ syncRate }}%</span>
-          <img src="/qr-code.png" style="width:160px;height:160px;filter:grayscale(1) brightness(1.5);padding:16px;border:1px solid rgba(200,170,110,0.3);background:rgba(0,0,0,0.6)"/>
+
+      <!-- 下半：Oracle 短句（2句）+ 底部数据 -->
+      <div style="flex:1;display:flex;flex-direction:column;padding:56px;background:linear-gradient(180deg,#04040a,#060610)">
+        <!-- Oracle 文字 -->
+        <p :style="{ fontFamily:'monospace', fontStyle:'italic', fontSize:'44px',
+                     color:'rgba(255,255,255,0.88)', lineHeight:'1.7',
+                     letterSpacing:'0.02em', flex:1 }">
+          {{ shortAiText }}
+        </p>
+
+        <!-- 底部：hash + 分隔线 + QR -->
+        <div :style="{ display:'flex', alignItems:'flex-end', justifyContent:'space-between',
+                       paddingTop:'40px', borderTop:`1px solid ${rarityAccent}18` }">
+          <div>
+            <div :style="{ fontFamily:'monospace', fontSize:'22px', color:'rgba(255,255,255,0.25)', letterSpacing:'0.3em' }">
+              HASH: {{ userHash }}
+            </div>
+            <div :style="{ fontFamily:'monospace', fontSize:'20px', marginTop:'8px', letterSpacing:'0.3em', color:rarityAccent+'55' }">
+              ARCHIVE #CT-{{ archiveId }} · {{ cardDate }}
+            </div>
+          </div>
+          <img src="/qr-code.png"
+               style="width:140px;height:140px;filter:grayscale(1) brightness(1.5);padding:12px;background:rgba(0,0,0,0.75)"
+               :style="{ border:`1px solid ${rarityAccent}30` }"/>
         </div>
       </div>
     </div>
 
-    <!-- 1:1 方图 -->
-    <div ref="squareRef" style="width:1080px;height:1080px;background:#050505;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative;padding:64px;border:20px solid #0a0a0a">
-      <img :src="beastImageUrl" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 20%;opacity:0.35;mix-blend-mode:normal"/>
-      <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(5,5,5,0.6) 0%,rgba(5,5,5,0.4) 100%)"></div>
-      <div style="position:relative;z-index:10;display:flex;justify-content:space-between;align-items:flex-start;width:100%">
-        <div>
-          <h2 style="font-family:serif;font-weight:bold;font-size:48px;letter-spacing:0.3em" :style="{ color: rarityAccent }">{{ hexagramData.nameZh }} // {{ hexagramData.name }}</h2>
-          <div style="font-family:monospace;font-size:22px;color:rgba(255,255,255,0.45);margin-top:12px;letter-spacing:0.3em">SYNC: {{ syncRate }}% | {{ rarityLabel }}</div>
+    <!-- ▌1:1 SQUARE ▐ -->
+    <div ref="squareRef"
+         :style="{
+           width:'1080px', height:'1080px',
+           background:'#040408',
+           display:'flex', flexDirection:'column',
+           overflow:'hidden', position:'relative',
+           border:'20px solid #08080e'
+         }">
+
+      <!-- 神兽作为全卡背景 -->
+      <img :src="beastImageUrl"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 15%;opacity:0.78"/>
+
+      <!-- 渐变叠层（左上深、右下浅，让文字区域可读）-->
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(4,4,8,0.82) 0%,rgba(4,4,8,0.45) 50%,rgba(4,4,8,0.25) 100%)"></div>
+      <!-- 底部渐变（文字区域）-->
+      <div style="position:absolute;bottom:0;left:0;right:0;height:45%;background:linear-gradient(to top,rgba(4,4,8,0.96),transparent)"></div>
+
+      <!-- 静态 SVG 符咒层 -->
+      <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:5"
+           viewBox="0 0 100 100" preserveAspectRatio="none">
+        <g :stroke="rarityAccent" stroke-width="0.5" fill="none" opacity="0.5">
+          <path d="M2,2 L10,2 L10,5 M2,2 L2,10 L5,10"/>
+          <path d="M98,2 L90,2 L90,5 M98,2 L98,10 L95,10"/>
+          <path d="M2,98 L10,98 L10,95 M2,98 L2,90 L5,90"/>
+          <path d="M98,98 L90,98 L90,95 M98,98 L98,90 L95,90"/>
+        </g>
+        <g fill="none" :stroke="rarityAccent" stroke-width="0.35" opacity="0.35">
+          <path :d="talismanPaths[0]" stroke-dasharray="6 4"/>
+        </g>
+        <g :stroke="rarityAccent" :fill="rarityAccent" opacity="0.55">
+          <circle :cx="circuitNodes[0].x" :cy="circuitNodes[0].y" r="1.0"/>
+          <circle :cx="circuitNodes[2].x" :cy="circuitNodes[2].y" r="1.4"/>
+          <circle :cx="circuitNodes[3].x" :cy="circuitNodes[3].y" r="1.0"/>
+        </g>
+      </svg>
+
+      <!-- 内容层（z-index:10）-->
+      <div style="position:relative;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;padding:56px">
+
+        <!-- 顶部：稀有度 + hash -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div :style="{ fontFamily:'monospace', fontSize:'20px', letterSpacing:'0.4em', color:rarityAccent,
+                            textTransform:'uppercase', padding:'6px 16px', border:`1px solid ${rarityAccent}45`,
+                            background:'rgba(0,0,0,0.55)', display:'inline-block',
+                            boxShadow:`0 0 16px ${rarityAccent}28` }">
+              {{ rarityLabel }} · SYNC {{ syncRate }}%
+            </div>
+            <div style="font-family:monospace;font-size:17px;color:rgba(255,255,255,0.28);margin-top:10px;letter-spacing:0.3em">
+              {{ userHash }}
+            </div>
+          </div>
+          <div :style="{ fontFamily:'serif', fontSize:'20px', letterSpacing:'0.5em', writingMode:'vertical-rl',
+                          color:rarityAccent+'50', height:'140px' }">
+            {{ lunarDateStamp }}
+          </div>
         </div>
-        <div style="font-family:serif;font-size:22px;letter-spacing:0.5em;writing-mode:vertical-rl;height:200px" :style="{ color: rarityAccent+'45' }">{{ lunarDateStamp }}</div>
-      </div>
-      <div style="position:relative;z-index:10;display:flex;width:100%;gap:48px;align-items:flex-end">
-        <div style="flex:1;border-top:1px solid rgba(200,170,110,0.25);padding-top:32px">
-          <p style="font-family:monospace;font-style:italic;font-size:34px;color:rgba(255,255,255,0.9);line-height:1.6">{{ shortAiText }}</p>
+
+        <!-- 中区：爻象图（右对齐，避免和神兽重叠）-->
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;padding-bottom:24px">
+          <div style="display:flex;flex-direction:column-reverse;gap:8px">
+            <div v-for="(line, i) in (hexagramData.lines || [])" :key="i" style="display:flex;gap:7px;justify-content:flex-end">
+              <template v-if="line === 1">
+                <div :style="{ width:'60px', height:'9px', borderRadius:'2px', background:rarityAccent,
+                                boxShadow:`0 0 8px ${rarityAccent}99` }"></div>
+              </template>
+              <template v-else>
+                <div :style="{ width:'25px', height:'9px', borderRadius:'2px', background:rarityAccent,
+                                boxShadow:`0 0 8px ${rarityAccent}99` }"></div>
+                <div :style="{ width:'25px', height:'9px', borderRadius:'2px', background:rarityAccent,
+                                boxShadow:`0 0 8px ${rarityAccent}99` }"></div>
+              </template>
+            </div>
+          </div>
         </div>
-        <div style="flex-shrink:0;padding:16px;border:1px solid rgba(200,170,110,0.28);background:rgba(0,0,0,0.8)">
-          <img src="/qr-code.png" style="width:128px;height:128px;filter:grayscale(1) brightness(1.5)"/>
+
+        <!-- 底部：卦名 + Oracle + QR -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-end">
+          <div style="flex:1">
+            <!-- 卦名 + 英文 -->
+            <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:16px">
+              <span :style="{ fontFamily:'serif', fontWeight:'bold', fontSize:'88px', lineHeight:'1',
+                               color:rarityAccent, textShadow:`0 0 30px ${rarityAccent}65, 0 0 60px ${rarityAccent}30` }">
+                {{ hexagramData.nameZh }}
+              </span>
+              <span :style="{ fontFamily:'monospace', fontSize:'18px', letterSpacing:'0.4em',
+                               color:'rgba(255,255,255,0.55)', textTransform:'uppercase' }">
+                {{ hexagramData.name }}
+              </span>
+            </div>
+            <!-- Oracle 短句 -->
+            <div :style="{ fontFamily:'serif', fontSize:'26px', letterSpacing:'0.05em',
+                            color:'rgba(255,255,255,0.82)', lineHeight:'1.6',
+                            borderLeft:`3px solid ${rarityAccent}60`, paddingLeft:'20px',
+                            maxWidth:'620px' }">
+              {{ shortAiText }}
+            </div>
+            <!-- 底部数据条 -->
+            <div style="display:flex;gap:24px;margin-top:20px;align-items:center">
+              <span :style="{ fontFamily:'monospace', fontSize:'16px', color:rarityAccent+'55', letterSpacing:'0.25em' }">
+                #CT-{{ archiveId }}
+              </span>
+              <span style="font-family:monospace;font-size:16px;color:rgba(255,255,255,0.2);letter-spacing:0.2em">
+                {{ cardDate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- QR -->
+          <img src="/qr-code.png"
+               style="width:120px;height:120px;filter:grayscale(1) brightness(1.45);flex-shrink:0;margin-left:32px"
+               :style="{ padding:'10px', border:`1px solid ${rarityAccent}30`, background:'rgba(0,0,0,0.72)' }"/>
         </div>
       </div>
     </div>
+
   </div>
+</template>
 </template>
 
 <script setup>
