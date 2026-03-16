@@ -12,12 +12,21 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
+    // ★ 命运藏品专属页面
+    {
+      path: '/destiny/:cardId',
+      name: 'destiny',
+      component: () => import('../views/DestinyView.vue'),
+      meta: { title: 'Cyber Tao · Destiny Card' },
+    },
   ],
+})
+
+// 动态设置页面标题
+router.afterEach((to) => {
+  document.title = (to.meta.title as string) || 'Cyber Tao'
 })
 
 export default router
