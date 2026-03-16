@@ -1,5 +1,5 @@
 // src/utils/hexagramData.ts
-// 键名格式：从下往上的六爻（0=阴, 1=阳）
+
 
 export interface Hexagram {
   nameZh: string;
