@@ -1,125 +1,96 @@
-/* base.css */
+/* ═══════════════════════════════════════════════════
+   base.css — Cyber Tao 基础样式层
+   职责：CSS 变量 / 字体 / 全局重置 / 工具类
+   注意：不在此处 @import tailwindcss（由 main.css 统一处理）
+═══════════════════════════════════════════════════ */
+
+/* ── 额外字体（Noto Serif SC 用于中文，Share Tech Mono 用于英文等宽）── */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
+/* ── CSS 变量 ── */
 :root {
-  /* 保留原有变量 */
-  --vt-c-white: #ffffff;
-  --vt-c-black: #181818;
-  --color-text: rgba(255, 255, 255, 0.85);
-  --color-background: #252525;
-  --tao-gold: #c8aa6e;
-  --tao-red: #8b0000; /* 朱砂红 */
+  --tao-gold:        #c8aa6e;
+  --tao-gold-dim:    rgba(200, 170, 110, 0.5);
+  --tao-red:         #8a2a2a;
+  --tao-cyan:        #22d3ee;
+  --tao-bg:          #06090f;
+  --tao-panel:       #0c1018;
+  --color-text:      rgba(255, 255, 255, 0.9);
 }
 
+/* ── 全局重置（与 main.css 合并，不重复）── */
 *, *::before, *::after {
   box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
 }
 
-body {
-  min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  font-family: 'Share Tech Mono', monospace; /* 默认使用赛博等宽英文字体 */
-  overflow-x: hidden;
-}
-
-/* 强制中文字体使用宋体/明朝体风格 */
+/* ── 中文字体类 ── */
 .font-serif {
-  font-family: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+  font-family: 'Noto Serif SC', 'Songti SC', 'STSong', 'Playfair Display', serif;
 }
-.rice-paper-overlay {
-  background-image: url('/public/texture-rice-paper.png');
-  /* 使用 'multiply'（正片叠底）模式：
-     它会让白色的部分变透明，只保留黑色的纹理和瑕疵，
-     从而让下方的赛博背景和文本显现出来，
-     并在上方完美呈现“中式古籍”的质感。
-  */
-  mix-blend-mode: multiply;
-  opacity: 0.15; /* 调整透明度，让效果不至于太强烈 */
-}
-/* 宣纸纹理混合层 
-.rice-paper-overlay {
-  position: absolute;
-  inset: 0;
-  background-image: url('/texture-rice-paper.png');
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  pointer-events: none;
-}*/
 
-/* 赛博扫描线 */
+/* ── 等宽英文类（终端风格）── */
+.font-mono-cyber {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+}
+
+/* ── 宣纸纹理（保留，按需启用）── */
+.rice-paper-overlay {
+  background-image: url('/texture-rice-paper.png');
+  mix-blend-mode: multiply;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* ── 赛博扫描线（全局版，用于背景装饰）── */
 .scanlines {
-  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
-  background-size: 100% 4px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.18) 3px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 50;
-  opacity: 0.3;
+  opacity: 0.25;
 }
 
-/* 全局法阵动画 */
+/* ── 动画：慢旋转 ── */
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  to   { transform: rotate(360deg); }
 }
-.animate-spin-slow {
-  animation: spin-slow 60s linear infinite;
-}
+.animate-spin-slow { animation: spin-slow 60s linear infinite; }
 
+/* ── 动画：金色脉冲发光 ── */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 15px rgba(200, 170, 110, 0.2); }
-  50% { box-shadow: 0 0 30px rgba(200, 170, 110, 0.6); border-color: rgba(200, 170, 110, 0.8); }
+  0%, 100% { box-shadow: 0 0 10px rgba(200, 170, 110, 0.2); }
+  50%       { box-shadow: 0 0 28px rgba(200, 170, 110, 0.6); border-color: rgba(200, 170, 110, 0.8); }
 }
-.animate-pulse-glow {
-  animation: pulse-glow 3s ease-in-out infinite;
-}
-/* base.css 补丁 */
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
 
-/* 1. 纯 CSS 赛博网格背景 - 极其轻量 */
+/* ── 赛博透视网格背景（用于装饰层）── */
 .cyber-grid-bg {
-  background-image: 
-    linear-gradient(rgba(200, 170, 110, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200, 170, 110, 0.1) 1px, transparent 1px);
+  background-image:
+    linear-gradient(rgba(200, 170, 110, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 170, 110, 0.08) 1px, transparent 1px);
   background-size: 50px 50px;
   background-position: center center;
-  /* 增加透视感效果 */
   transform: perspective(500px) rotateX(60deg) scale(2.5);
   transform-origin: top;
 }
 
-/* 2. 强制修复图片溢出问题 */
+/* ── 图片全局修正 ── */
 img {
-  max-width: none; /* 允许装饰图超出视口而不挤压容器 */
+  max-width: none;
   user-select: none;
 }
 
-/* 3. 扫描线动画 */
-.scanlines {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 50%,
-    rgba(0, 0, 0, 0.5) 51%,
-    transparent 51%
-  );
-  background-size: 100% 4px;
-  pointer-events: none;
-}
+/* ── 滚动条美化（全局兜底）── */
+.custom-scrollbar::-webkit-scrollbar       { width: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(200, 170, 110, 0.4); border-radius: 10px; }
 
-/* 4. 滚动条美化 */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #c8aa6e55;
-  border-radius: 10px;
-}
-
-/* 5. 确保 main 容器始终居中且不被挤压 */
-main {
-  flex-shrink: 0; /* 禁止被外部元素挤压 */
-}
+/* ── main 容器保护 ── */
+main { flex-shrink: 0; }
