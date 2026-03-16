@@ -272,10 +272,14 @@
 
         <!-- 底部按钮 -->
         <div class="shrink-0 grid grid-cols-2 gap-3 px-4 py-3 border-t border-tao-gold/25">
-          <button @click="talismanRef.generate()"
+          <button @click="sealDestiny"
+            :disabled="sealLoading"
             class="border font-mono font-black uppercase transition-all cyber-btn-corners relative"
-            style="padding:12px 0;font-size:11px;letter-spacing:0.4em;border-color:rgba(200,170,110,0.55);color:#c8aa6e;background:rgba(200,170,110,0.10);box-shadow:0 0 12px rgba(200,170,110,0.18)">
-            EXTRACT
+            style="padding:12px 0;font-size:11px;letter-spacing:0.35em"
+            :style="sealLoading
+              ? 'border-color:rgba(200,170,110,0.2);color:rgba(200,170,110,0.3);background:transparent;cursor:not-allowed'
+              : 'border-color:rgba(200,170,110,0.8);color:#c8aa6e;background:rgba(200,170,110,0.12);box-shadow:0 0 20px rgba(200,170,110,0.28)'">
+            {{ sealLoading ? 'SEALING...' : '⬡ SEAL DESTINY' }}
           </button>
           <button @click="reset"
             class="border font-mono uppercase transition-all"
@@ -300,6 +304,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { supabase } from './lib/supabase'
 import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
@@ -322,6 +327,9 @@ const deviceId = ref('')
 const isAdmin = ref(false)
 const shareCount = ref(0)
 const MAX_SHARES_PER_DAY = 3
+const router = useRouter()
+const currentCardId = ref(null)   // 当前占卜生成的 card_id
+const sealLoading = ref(false)    // 封印中
 const matrixCanvas = ref(null)
 const currentTime = ref('')
 const showTimeline = ref(false)
@@ -509,6 +517,61 @@ const handleRefillShare = async () => {
       localStorage.removeItem('cyber_tao_last_reading')
     }
   } catch (e) { console.log('Share canceled') }
+}
+
+
+// ── 封印命运：生成唯一 card_id，写入 Supabase，跳转到专属页 ──
+const sealDestiny = async () => {
+  if (sealLoading.value || !hexagramData.value.nameZh) return
+  sealLoading.value = true
+  try {
+    const hexCode = hexagramResult.value.join('')
+    const now = new Date().toISOString()
+
+    // 生成 card_id：CT-XXXX-卦名-hash8
+    const rawId = `${deviceId.value}-${Date.now()}-${hexCode}`
+    const buf   = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawId))
+    const fullHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
+    const hash8 = fullHash.slice(0, 8).toUpperCase()
+
+    // 版号序列（简单实现：用现有记录数 + 1，后端用 sequence 更准确）
+    const { count } = await supabase.from('divination_logs').select('*', { count:'exact', head:true }).eq('is_sealed', true)
+    const editionNumber = (count || 0) + 1
+
+    const cardId = `CT-${String(editionNumber).padStart(4,'0')}-${hexagramData.value.nameZh}-${hash8}`
+
+    // 防伪哈希
+    const hashRaw = `${cardId}:${deviceId.value}:${hexCode}:${now}`
+    const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(hashRaw))
+    const verifiedHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('').slice(0, 16)
+
+    // 写入（update 最近一条未封印记录）
+    const { error } = await supabase
+      .from('divination_logs')
+      .update({
+        card_id: cardId,
+        edition_number: editionNumber,
+        verified_hash: verifiedHash,
+        oracle: aiOracle.value,
+        is_sealed: true,
+      })
+      .eq('device_id', deviceId.value)
+      .eq('hexagram_code', hexCode)
+      .is('card_id', null)
+      .order('id', { ascending: false })
+      .limit(1)
+
+    if (error) throw error
+
+    currentCardId.value = cardId
+    // 跳转到专属命运页
+    router.push(`/destiny/${encodeURIComponent(cardId)}`)
+  } catch (err) {
+    console.error('Seal error:', err)
+    alert('SEAL FAILED: ' + err.message)
+  } finally {
+    sealLoading.value = false
+  }
 }
 
 const reset = () => {
