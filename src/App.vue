@@ -118,7 +118,7 @@
           </div>
 
           <SpiritBottle
-            :lastReadingTime="lastReadingTime"
+            :dailyReadings="dailyReadings"
             :isUnlimited="isAdmin"
             :shareCount="shareCount"
             @refill="handleRefillShare"
@@ -310,7 +310,8 @@ const aiResult = ref('')
 const loading = ref(false)
 const talismanRef = ref(null)
 const fullAnalysisContainer = ref(null)
-const lastReadingTime = ref(null)
+const dailyReadings = ref(0)    // 今日已占卜次数
+const lastReadingTime = ref(null) // 仍保留用于兼容
 const hexagramData = ref({ nameZh:'', nameEn:'', poemZh:'' })
 const deviceId = ref('')
 const isAdmin = ref(false)
@@ -319,6 +320,8 @@ const MAX_SHARES_PER_DAY = 3
 const router = useRouter()
 const sealLoading = ref(false)
 const aiOracle = ref('')
+const geoRegion = ref('VOID')  // 来自 Edge Function
+const geoBeast  = ref('qilin') // 来自 Edge Function
 const matrixCanvas = ref(null)
 const currentTime = ref('')
 const showTimeline = ref(false)
@@ -345,8 +348,8 @@ const getSyncColor = (r) => {
   if (v >= 99) return '#ef4444'; if (v >= 95) return '#c8aa6e'; if (v >= 90) return '#22d3ee'
   return 'rgba(255,255,255,0.4)'
 }
-const calcSyncRate = (id, code) => {
-  const s = `${id}-${Date.now()}-${code}`
+const calcSyncRate = (id, code, geo = '') => {
+  const s = `${id}-${Date.now()}-${code}-${geo}`
   let h = 0
   for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0 }
   const r = 80 + (Math.abs(h) % 200) / 10
@@ -414,17 +417,19 @@ const initIdentity = async () => {
   }
   deviceId.value = id
   const { data } = await supabase.from('device_profiles')
-    .select('is_unlimited,last_reading_at,share_count,last_share_date').eq('device_id', id).single()
+    .select('is_unlimited,last_reading_date,daily_readings,share_count,last_share_date,ip_address').eq('device_id', id).single()
   if (data) {
     isAdmin.value = data.is_unlimited
     const today = new Date().toISOString().split('T')[0]
+    // 每日计数重置：如果不是今天，归零
+    dailyReadings.value = data.last_reading_date === today ? (data.daily_readings || 0) : 0
     shareCount.value = data.last_share_date !== today ? 0 : (data.share_count || 0)
   }
 }
 
 onMounted(() => {
   initIdentity(); loadHistory()
-  lastReadingTime.value = localStorage.getItem('cyber_tao_last_reading')
+  // lastReadingTime from DB via initIdentity
   initMatrix(); updateClock()
   clockInterval = setInterval(updateClock, 1000)
 })
@@ -434,8 +439,8 @@ onUnmounted(() => {
 })
 
 const hasSpirit = computed(() => {
-  if (!lastReadingTime.value) return true
-  return (Date.now() - new Date(lastReadingTime.value).getTime()) / 3600000 >= 12
+  if (isAdmin.value) return true
+  return dailyReadings.value < 3
 })
 const aiResultPreview = computed(() =>
   !aiResult.value ? '' : aiResult.value.slice(0, 100) + (aiResult.value.length > 100 ? '...' : '')
@@ -468,24 +473,38 @@ const onRitualComplete = async (payload) => {
     hexagramData.value = { nameZh: aiData.hexagramNameZh, nameEn: aiData.hexagramNameEn, poemZh: aiData.poemZh }
     aiOracle.value = aiData.oracle || ''
     aiResult.value = aiData.interpretation
+    geoRegion.value = aiData.geoRegion || 'VOID'
+    geoBeast.value  = aiData.geoBeast  || 'qilin'
 
     const now = new Date().toISOString()
     const hexCode = lines.join('')
-    await supabase.from('device_profiles').update({ last_reading_at: now }).eq('device_id', deviceId.value)
+    const today = now.split('T')[0]
+    const newCount = dailyReadings.value + 1
+    dailyReadings.value = newCount
+    await supabase.from('device_profiles').update({
+      last_reading_date: today,
+      daily_readings: newCount,
+      last_reading_at: now,
+      geo_region: aiData.geoRegion || '',
+      geo_beast:  aiData.geoBeast  || '',
+      ip_address: aiData.ipHash    || '',  // 存前两段
+    }).eq('device_id', deviceId.value)
     supabase.from('divination_logs').insert([{
       device_id: deviceId.value, question: question.value, hexagram_code: hexCode,
-      name_zh: aiData.hexagramNameZh, name_en: aiData.hexagramNameEn, interpretation: aiData.interpretation, oracle: aiData.oracle || ''
+      name_zh: aiData.hexagramNameZh, name_en: aiData.hexagramNameEn, interpretation: aiData.interpretation, oracle: aiData.oracle || '',
+      ip_hash: aiData.ipHash || '', geo_region: aiData.geoRegion || '', geo_beast: aiData.geoBeast || ''
     }]).then()
 
     saveHistory({
       id: Date.now(), timestamp: now, question: question.value, hexCode,
       nameZh: aiData.hexagramNameZh, nameEn: aiData.hexagramNameEn,
-      syncRate: calcSyncRate(deviceId.value, hexCode),
+      syncRate: calcSyncRate(deviceId.value, hexCode, aiData.geoRegion || ''),
       hasChangingLine: changingLines.some(Boolean),
+      geoRegion: aiData.geoRegion || '',
+      geoBeast: aiData.geoBeast || '',
     })
 
-    lastReadingTime.value = now
-    localStorage.setItem('cyber_tao_last_reading', now)
+    lastReadingTime.value = now  // 保留兼容
   } catch (err) {
     console.error('AI Error:', err)
     aiResult.value = 'SIGNAL INTERRUPTED: The digital void remains silent.'
@@ -493,17 +512,23 @@ const onRitualComplete = async (payload) => {
     loading.value = false }
 }
 
+// 封印命运卡后，触发分享弹窗，成功则 +1 次占卜（每天上限3次）
 const handleRefillShare = async () => {
-  if (hasSpirit.value || isAdmin.value) return
-  if (shareCount.value >= MAX_SHARES_PER_DAY) { alert('DAILY SYNC LIMIT REACHED.'); return }
+  if (shareCount.value >= MAX_SHARES_PER_DAY) { alert('DAILY SHARE LIMIT REACHED.'); return }
   try {
     if (navigator.share) {
       await navigator.share({ title: 'Cyber Tao', url: window.location.href })
       const today = new Date().toISOString().split('T')[0]
       const nc = shareCount.value + 1
-      await supabase.from('device_profiles').update({ share_count: nc, last_share_date: today }).eq('device_id', deviceId.value)
-      shareCount.value = nc; lastReadingTime.value = null
-      localStorage.removeItem('cyber_tao_last_reading')
+      const newReadings = Math.max(0, dailyReadings.value - 1) // 分享补一次
+      await supabase.from('device_profiles').update({
+        share_count: nc,
+        last_share_date: today,
+        daily_readings: newReadings,
+        last_reading_date: today,
+      }).eq('device_id', deviceId.value)
+      shareCount.value = nc
+      dailyReadings.value = newReadings
     }
   } catch (e) { console.log('Share canceled') }
 }
@@ -559,6 +584,7 @@ const reset = () => {
   step.value = 'intro'; question.value = ''; hexagramResult.value = []
   currentChangingLines.value = []; aiOracle.value = ''; aiResult.value = ''
   hexagramData.value = { nameZh:'', nameEn:'', poemZh:'' }; showTimeline.value = false
+  // dailyReadings not reset on return - keeps the count
 }
 </script>
 
