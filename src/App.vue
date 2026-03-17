@@ -1,120 +1,61 @@
 <template>
-  <div class="fixed inset-0 bg-[#06090f] text-tao-gold flex items-center justify-center p-3 md:p-6 overflow-hidden font-sans">
+  <div class="fixed inset-0 bg-[#020408] text-tao-gold flex items-center justify-center p-3 md:p-6 overflow-hidden font-sans selection:bg-tao-gold/30">
 
-    <canvas ref="matrixCanvas" class="absolute inset-0 z-0 pointer-events-none opacity-70"></canvas>
-    <div class="absolute inset-0 z-[1] pointer-events-none"
-         style="background:radial-gradient(ellipse 72% 72% at 50% 50%,transparent 52%,rgba(6,9,15,0.88) 100%)"></div>
+    <!-- ░░ LAYER 0: Canvas Cyber Waterfall ░░ -->
+    <canvas ref="matrixCanvas" class="absolute inset-0 z-0 pointer-events-none opacity-40"></canvas>
+
+    <!-- ░░ LAYER 1: Gradient Vignette ░░ -->
+    <div class="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,transparent_40%,#020408_100%)]"></div>
 
     <!-- ░░ MAIN PANEL ░░ -->
-    <main class="relative z-10 w-full max-w-lg h-[95vh] md:h-[88vh]
-                  bg-[#0c1018]/82 backdrop-blur-md flex flex-col overflow-hidden panel-frame">
+    <main class="relative z-10 w-full max-w-lg h-[95vh] md:h-[88vh] bg-[#05080f]/95 backdrop-blur-2xl
+                  border border-tao-gold/25
+                  shadow-[0_0_60px_rgba(0,0,0,0.9),0_0_120px_rgba(200,170,110,0.06)]
+                  flex flex-col overflow-hidden
+                  cyber-border-frame">
 
-      <!-- TOP CHROME -->
-      <div class="shrink-0 flex items-center justify-between px-4 py-2 border-b border-tao-gold/25 bg-black/50">
-        <span class="font-mono text-tao-gold/65" style="font-size:9px;letter-spacing:0.4em">CYBER·TAO v2.0</span>
+      <!-- ─── TOP CHROME ─── -->
+      <div class="shrink-0 flex items-center justify-between px-4 py-2 border-b border-tao-gold/15 bg-black/30">
+        <span class="text-[8px] font-mono text-tao-gold/40 tracking-[0.4em]">CYBER·TAO v2.0</span>
         <div class="flex gap-1.5">
-          <span class="w-2 h-2 rounded-full" style="background:#8a2a2a;box-shadow:0 0 5px #8a2a2a,0 0 10px #8a2a2a88"></span>
-          <span class="w-2 h-2 rounded-full" style="background:#c8aa6e;box-shadow:0 0 5px #c8aa6e,0 0 10px #c8aa6e88"></span>
-          <span class="w-2 h-2 rounded-full" style="background:#22d3ee;box-shadow:0 0 5px #22d3ee,0 0 10px #22d3ee88"></span>
+          <span class="w-2 h-2 rounded-full bg-tao-red/60 shadow-[0_0_6px_rgba(138,42,42,0.8)]"></span>
+          <span class="w-2 h-2 rounded-full bg-tao-gold/40 shadow-[0_0_6px_rgba(200,170,110,0.6)]"></span>
+          <span class="w-2 h-2 rounded-full bg-cyan-500/50 shadow-[0_0_6px_rgba(6,182,212,0.7)]"></span>
         </div>
-        <div class="flex items-center gap-2">
-          <button v-if="fateHistory.length > 0" @click="showTimeline=!showTimeline"
-            class="font-mono transition-all px-2 py-0.5 border border-transparent hover:border-tao-gold/30"
-            style="font-size:9px;letter-spacing:0.3em"
-            :style="showTimeline ? 'color:#c8aa6e;border-color:rgba(200,170,110,0.4)' : 'color:rgba(200,170,110,0.45)'">
-            ◈ {{ fateHistory.length }}
-          </button>
-          <span class="font-mono text-tao-gold/50" style="font-size:9px;letter-spacing:0.2em">{{ currentTime }}</span>
-        </div>
+        <span class="text-[8px] font-mono text-tao-gold/30 tracking-[0.3em]">{{ currentTime }}</span>
       </div>
 
-      <!-- 命运时间轴抽屉 -->
-      <transition name="timeline-slide">
-        <div v-if="showTimeline"
-             class="absolute top-[37px] inset-x-0 bottom-0 z-30 flex flex-col overflow-hidden"
-             style="background:rgba(5,7,12,0.97);backdrop-filter:blur(20px)">
-          <div class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-tao-gold/20">
-            <span class="font-mono text-tao-gold/70 uppercase" style="font-size:11px;letter-spacing:0.5em">◈ FATE ARCHIVE</span>
-            <button @click="showTimeline=false"
-                    class="font-mono text-white/30 hover:text-white/70 transition-colors"
-                    style="font-size:10px;letter-spacing:0.3em">CLOSE ✕</button>
-          </div>
-          <div class="flex-1 overflow-y-auto custom-scrollbar px-4 py-3 space-y-3">
-            <div v-for="(rec,i) in fateHistoryReversed" :key="rec.id"
-                 class="relative timeline-record border border-tao-gold/15 bg-black/30 p-3"
-                 :class="{' border-tao-gold/35': i===0}">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="font-mono text-tao-gold/35" style="font-size:9px">#{{ String(fateHistory.length-i).padStart(3,'0') }}</span>
-                  <span class="font-mono" style="font-size:10px" :style="{color:getSyncColor(rec.syncRate)}">SYNC {{ rec.syncRate }}%</span>
-                </div>
-                <span class="font-mono text-white/30" style="font-size:9px">{{ formatTime(rec.timestamp) }}</span>
-              </div>
-              <div class="flex items-center gap-3 mb-2">
-                <span class="font-serif text-white/90" style="font-size:28px;line-height:1;text-shadow:0 0 12px rgba(200,170,110,0.4)">{{ rec.nameZh }}</span>
-                <div>
-                  <div class="font-mono text-tao-gold/60" style="font-size:10px">{{ rec.nameEn }}</div>
-                  <div class="font-mono text-white/30" style="font-size:9px">{{ rec.hexCode }}</div>
-                </div>
-              </div>
-              <p class="font-mono text-white/45 leading-relaxed line-clamp-2 border-l-2 border-tao-gold/20 pl-2"
-                 style="font-size:10px">{{ rec.question }}</p>
-              <div v-if="i===0"
-                   class="absolute top-2 right-2 font-mono px-1.5 py-0.5"
-                   style="font-size:8px;color:#22d3ee;border:1px solid rgba(34,211,238,0.3);background:rgba(34,211,238,0.05)">
-                LATEST
-              </div>
-            </div>
-            <button @click="clearHistory"
-                    class="w-full py-2 font-mono text-white/20 hover:text-red-400/60 transition-colors border border-white/5 hover:border-red-500/20"
-                    style="font-size:9px;letter-spacing:0.3em">CLEAR ARCHIVE</button>
-          </div>
-        </div>
-      </transition>
-
       <!-- ─── INTRO ─── -->
-      <section v-if="step==='intro'" class="flex-1 flex flex-col items-center justify-between w-full py-4 px-5 overflow-hidden">
+      <section v-if="step === 'intro'" class="flex-1 flex flex-col items-center justify-between w-full py-5 px-5 overflow-hidden">
 
-        <header class="text-center w-full animate-fade-in shrink-0 flex flex-col items-center">
-          <h1 class="font-serif text-white neon-text-gold" style="font-size:28px;letter-spacing:0.55em;margin-bottom:4px">
+        <header class="text-center w-full animate-fade-in shrink-0">
+          <h1 class="text-2xl md:text-3xl font-serif tracking-[0.5em] text-white
+                      drop-shadow-[0_0_20px_rgba(200,170,110,0.6)]
+                      neon-text-gold">
             CYBER TAO
           </h1>
-          <p class="font-mono text-tao-gold/65 uppercase" style="font-size:10px;letter-spacing:0.4em;margin-bottom:8px">
-            吉凶悔吝 · Fatum et Fluxus
+          <div class="h-px w-12 bg-gradient-to-r from-transparent via-tao-gold/60 to-transparent mx-auto mt-3 mb-3"></div>
+          <p class="text-tao-gold/50 text-[9px] md:text-[10px] tracking-[0.35em] font-mono uppercase">
+            吉凶悔吝 ：Fatum et Fluxus
           </p>
-          <TaijituCore />
         </header>
 
-        <div class="w-full flex-1 flex flex-col justify-center gap-3">
-
-          <!-- 终端输入框 -->
+        <div class="w-full space-y-4 flex-1 flex flex-col justify-center">
+          <!-- Terminal Input -->
           <div class="relative cyber-terminal-box">
             <div class="flex items-start gap-2 p-3">
-              <span class="font-mono mt-1 shrink-0 neon-text-gold" style="font-size:15px;color:rgba(200,170,110,0.9)">&gt;_</span>
+              <span class="text-tao-gold/60 font-mono text-sm mt-1 shrink-0 neon-text-gold">&gt;_</span>
               <textarea
                 v-model="question"
                 placeholder="ENTER THE VOID..."
-                class="flex-1 bg-transparent focus:outline-none text-white resize-none font-mono leading-relaxed"
-                style="font-size:14px"
-                rows="2"
+                class="flex-1 bg-transparent focus:outline-none text-white text-sm md:text-base
+                       placeholder:text-white/15 placeholder:italic resize-none font-mono leading-relaxed"
+                rows="3"
               ></textarea>
             </div>
-            <div class="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-tao-gold/50 to-transparent"></div>
-            <div class="absolute inset-x-0 h-px terminal-scan pointer-events-none" style="background:rgba(200,170,110,0.28)"></div>
-          </div>
-
-          <!-- 问题引导模板（英文为主）-->
-          <div class="flex flex-wrap gap-2">
-            <button v-for="tpl in questionTemplates" :key="tpl.label"
-              @click="applyTemplate(tpl)"
-              class="px-3 py-1.5 font-mono border transition-all duration-200"
-              style="font-size:11px;letter-spacing:0.15em;border-radius:2px"
-              :style="question === tpl.text
-                ? 'border-color:rgba(200,170,110,0.65);color:#c8aa6e;background:rgba(200,170,110,0.12)'
-                : 'border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.45);background:transparent'"
-            >
-              {{ tpl.label }}
-            </button>
+            <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-tao-gold/40 to-transparent"></div>
+            <!-- scanning line -->
+            <div class="absolute inset-x-0 h-px bg-tao-gold/20 terminal-scan pointer-events-none"></div>
           </div>
 
           <SpiritBottle
@@ -125,169 +66,164 @@
           />
         </div>
 
-        <!-- INITIATE 按钮：明显、始终可见 -->
         <button
-          @click="step='ritual'"
-          :disabled="!question.trim() || (!hasSpirit && !isAdmin)"
-          class="shrink-0 w-full border transition-all duration-300 relative cyber-btn-corners"
-          style="padding:14px 0;font-size:13px;font-weight:900;letter-spacing:0.75em;font-family:monospace;text-transform:uppercase"
-          :style="!question.trim() || (!hasSpirit && !isAdmin)
-            ? 'border-color:rgba(200,170,110,0.2);color:rgba(200,170,110,0.25);background:transparent;cursor:not-allowed'
-            : 'border-color:rgba(200,170,110,0.8);color:#c8aa6e;background:rgba(200,170,110,0.12);box-shadow:0 0 28px rgba(200,170,110,0.22),inset 0 0 24px rgba(200,170,110,0.06)'"
+          @click="step = 'ritual'"
+          :disabled="!question || (!hasSpirit && !isAdmin)"
+          class="shrink-0 w-full py-3 md:py-4 bg-transparent border border-tao-gold/40
+                  text-tao-gold hover:bg-tao-gold/8 hover:border-tao-gold/70
+                  disabled:opacity-20 disabled:cursor-not-allowed
+                  transition-all duration-500 text-[10px] md:text-xs font-black tracking-[0.8em] uppercase
+                  shadow-[0_0_20px_rgba(200,170,110,0.1)] hover:shadow-[0_0_30px_rgba(200,170,110,0.2)]
+                  cyber-btn-corners relative"
         >
           INITIATE PROTOCOL
         </button>
 
-        <div class="shrink-0 w-full mt-2">
+        <!-- Status Log -->
+        <div class="shrink-0 w-full mt-3">
           <SystemLog />
         </div>
       </section>
 
       <!-- ─── RITUAL ─── -->
-      <section v-else-if="step==='ritual'" class="flex-1 flex flex-col overflow-hidden">
-        <div class="shrink-0 px-4 py-2.5 border-b border-tao-gold/15 bg-black/20">
-          <p class="font-mono truncate" style="font-size:11px;color:rgba(200,170,110,0.45);letter-spacing:0.1em">
-            <span style="color:rgba(200,170,110,0.25)" class="mr-1">&gt;_</span>{{ question }}
-          </p>
-        </div>
-        <div class="flex-1 flex items-center justify-center px-4">
-          <CoinToss @complete="onRitualComplete" />
-        </div>
+      <section v-else-if="step === 'ritual'" class="flex-1 flex items-center justify-center">
+        <CoinToss @complete="onRitualComplete" />
       </section>
 
       <!-- ─── RESULT ─── -->
-      <section v-else-if="step==='result'" class="flex-1 flex flex-col w-full overflow-hidden">
+      <section v-else-if="step === 'result'" class="flex-1 flex flex-col w-full overflow-hidden">
 
         <!-- Loading -->
-        <div v-if="loading" class="flex-1 flex flex-col items-center justify-center gap-5">
-          <div class="relative w-12 h-12">
-            <div class="absolute inset-0 rounded-full animate-spin" style="border:2px solid rgba(200,170,110,0.2);border-top-color:#c8aa6e"></div>
-            <div class="absolute inset-2 rounded-full animate-spin" style="border:1px solid rgba(34,211,238,0.25);border-bottom-color:#22d3ee;animation-direction:reverse;animation-duration:0.7s"></div>
-            <div class="absolute inset-4 rounded-full animate-pulse" style="background:rgba(200,170,110,0.1)"></div>
+        <div v-if="loading" class="flex-1 flex flex-col items-center justify-center space-y-4">
+          <div class="relative w-10 h-10">
+            <div class="absolute inset-0 border border-tao-gold/20 border-t-tao-gold rounded-full animate-spin"></div>
+            <div class="absolute inset-2 border border-cyan-500/20 border-b-cyan-400 rounded-full animate-spin" style="animation-direction:reverse;animation-duration:0.8s"></div>
           </div>
-          <div class="text-center">
-            <p class="font-mono text-tao-gold/70 animate-pulse uppercase" style="font-size:11px;letter-spacing:0.5em">Consulting the Void...</p>
-            <p class="font-mono text-white/25 mt-1" style="font-size:9px;letter-spacing:0.3em">DEEPSEEK · NEURAL BRIDGE ACTIVE</p>
-          </div>
+          <span class="text-[9px] tracking-[0.5em] text-tao-gold/40 uppercase font-mono animate-pulse">Synchronizing Neural Grid...</span>
         </div>
 
-        <!-- 结果 -->
-        <div v-else class="flex-1 flex flex-col overflow-y-auto custom-scrollbar animate-fade-in-up px-4 pt-3 pb-2 gap-3">
+        <!-- Result Content -->
+        <div v-else class="flex-1 flex flex-col overflow-y-auto custom-scrollbar animate-fade-in-up px-4 pt-4 pb-2 gap-4">
 
-          <!-- 变爻横幅 -->
-          <div v-if="hasChangingLine"
-               class="shrink-0 flex items-center gap-2 px-3 py-2 border"
-               style="border-color:rgba(239,68,68,0.35);background:rgba(239,0,0,0.06);box-shadow:0 0 16px rgba(239,68,68,0.08)">
-            <span style="color:rgba(239,68,68,0.85);text-shadow:0 0 8px rgba(239,68,68,0.5);font-size:16px">◈</span>
-            <div>
-              <p class="font-mono text-red-400/80 uppercase" style="font-size:10px;letter-spacing:0.35em">CHANGING LINES · FATE IN FLUX</p>
-              <p class="font-mono text-white/35 mt-0.5" style="font-size:9px">变爻第 {{ changingLineNumbers }} 爻 · 命运正在转变</p>
-            </div>
-          </div>
-
-          <!-- 卦象标题 -->
+          <!-- Hexagram Header -->
           <div class="text-center shrink-0">
-            <h2 class="font-serif text-white neon-text-white" style="font-size:52px;letter-spacing:0.4em">{{ hexagramData.nameZh }}</h2>
-            <p class="font-mono text-tao-gold/70 uppercase mt-1" style="font-size:11px;letter-spacing:0.7em">{{ hexagramData.nameEn }}</p>
-            <div class="w-12 h-px bg-tao-gold/45 mx-auto my-2.5"></div>
-            <!-- 爻象小图 -->
-            <div class="flex justify-center mb-2">
-              <div class="flex flex-col-reverse gap-1.5">
-                <div v-for="(line, i) in hexagramResult" :key="i" class="flex justify-center gap-1">
-                  <template v-if="line === 1">
-                    <div class="h-2 rounded-sm" style="width:52px" :style="getLineStyle(i)"></div>
-                  </template>
-                  <template v-else>
-                    <div class="h-2 rounded-sm" style="width:22px" :style="getLineStyle(i)"></div>
-                    <div class="h-2 rounded-sm" style="width:22px" :style="getLineStyle(i)"></div>
-                  </template>
-                </div>
-              </div>
-            </div>
-            <p class="font-serif text-white/90 leading-relaxed tracking-widest max-w-xs mx-auto" style="font-size:15px">
+            <h2 class="text-4xl md:text-5xl font-serif text-white tracking-[0.4em] drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] neon-text-white">
+              {{ hexagramData.nameZh }}
+            </h2>
+            <p class="text-[9px] tracking-[0.8em] text-tao-gold/50 uppercase mt-1">{{ hexagramData.nameEn }}</p>
+            <div class="w-8 h-px bg-tao-gold/30 mx-auto my-3"></div>
+            <p class="text-white/80 font-serif text-base md:text-lg leading-relaxed tracking-widest max-w-xs mx-auto">
               {{ hexagramData.poemZh }}
             </p>
           </div>
 
-          <!-- ★ 神谕短句（直接展示，50词内）-->
-          <div class="relative cyber-terminal-box shrink-0">
-            <div class="absolute -top-2.5 left-3 px-2 bg-[#0c1018] font-mono text-tao-gold/75 uppercase z-10"
-                 style="font-size:9px;letter-spacing:0.35em">
+          <!-- Oracle 神谕短句 -->
+          <div v-if="aiOracle" class="relative cyber-terminal-box shrink-0">
+            <div class="absolute -top-2.5 left-3 px-2 bg-[#05080f] text-[8px] text-tao-gold/60 font-mono tracking-widest uppercase z-10">
               ORACLE TRANSMISSION
             </div>
             <div class="p-4">
-              <p class="font-serif text-white/95 leading-relaxed whitespace-pre-wrap text-center" style="font-size:14px;line-height:1.8;text-shadow:0 0 20px rgba(200,170,110,0.2)">
+              <p class="font-serif text-white/95 leading-relaxed text-center"
+                 style="font-size:14px;line-height:1.8;text-shadow:0 0 20px rgba(200,170,110,0.2)">
                 {{ aiOracle }}
               </p>
             </div>
           </div>
 
-          <!-- ★ 完整命运解析（隐藏，付费解锁）-->
+          <!-- Neural Analysis Box -->
           <div class="relative cyber-terminal-box shrink-0">
-            <div class="absolute -top-2.5 left-3 px-2 bg-[#0c1018] font-mono text-tao-gold/75 uppercase z-10"
-                 style="font-size:9px;letter-spacing:0.35em">
+            <div class="absolute -top-2.5 left-3 px-2 bg-[#05080f] text-[8px] text-tao-gold/60 font-mono tracking-widest uppercase z-10">
               NEURAL ANALYSIS // CLASSIFIED
             </div>
             <div class="p-4">
-              <!-- 模糊预览 -->
-              <div class="relative">
+
+              <!-- 前100字摘要 -->
+              <p class="text-gray-300 font-mono text-xs leading-relaxed italic whitespace-pre-wrap">
+                {{ aiResultPreview }}
+              </p>
+
+              <!-- Paywall Blur Zone -->
+              <div v-if="aiResult.length > 100" class="relative mt-3">
+                <!-- 模糊遮罩层 -->
                 <div class="relative overflow-hidden rounded-sm">
-                  <p class="font-mono italic leading-relaxed whitespace-pre-wrap select-none"
-                     style="font-size:12px;color:rgba(200,200,200,0.45);filter:blur(4px);pointer-events:none;user-select:none">
-                    {{ aiResultFullBlurred || aiResult.slice(0, 300) }}
+                  <p class="text-gray-400/50 font-mono text-xs leading-relaxed italic whitespace-pre-wrap select-none"
+                     style="filter: blur(4px); user-select: none; pointer-events: none;">
+                    {{ aiResultFullBlurred }}
                   </p>
-                  <div class="absolute inset-0" style="background:linear-gradient(to bottom,transparent,rgba(12,16,24,0.65),rgba(12,16,24,0.93))"></div>
-                  <div class="absolute inset-0 cyber-grid-visible"></div>
+                  <!-- 渐变遮罩 -->
+                  <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#05080f]/60 to-[#05080f]/90"></div>
+                  <!-- 锁定纹理 -->
+                  <div class="absolute inset-0 cyber-grid opacity-5"></div>
                 </div>
 
+                <!-- Unlock Button -->
                 <div class="flex flex-col items-center mt-3 gap-2">
-                  <div class="flex items-center gap-2 font-mono text-tao-gold/55 uppercase" style="font-size:9px;letter-spacing:0.35em">
-                    <span class="w-8 h-px bg-tao-gold/30"></span>FATE SEAL ACTIVE<span class="w-8 h-px bg-tao-gold/30"></span>
+                  <div class="flex items-center gap-2 text-[8px] font-mono text-tao-gold/40 tracking-widest uppercase">
+                    <span class="w-8 h-px bg-tao-gold/20"></span>
+                    <span>FATE SEAL ACTIVE</span>
+                    <span class="w-8 h-px bg-tao-gold/20"></span>
                   </div>
-                  <button @click="unlockFullAnalysis"
-                    class="w-full border font-mono font-black uppercase transition-all duration-300 cyber-btn-corners relative"
-                    style="padding:10px 0;font-size:11px;letter-spacing:0.45em;border-color:rgba(200,170,110,0.65);color:#c8aa6e;background:linear-gradient(135deg,rgba(200,170,110,0.10),rgba(200,170,110,0.18));box-shadow:0 0 18px rgba(200,170,110,0.22)">
-                    🔓 UNLOCK FULL DESTINY
+                  <button
+                    @click="unlockFullAnalysis"
+                    class="w-full py-2.5 bg-gradient-to-r from-tao-gold/15 to-tao-gold/25
+                            border border-tao-gold/50 text-tao-gold
+                            text-[9px] font-black tracking-[0.5em] uppercase
+                            hover:from-tao-gold/25 hover:to-tao-gold/35 hover:border-tao-gold
+                            transition-all duration-300
+                            shadow-[0_0_20px_rgba(200,170,110,0.2)] hover:shadow-[0_0_30px_rgba(200,170,110,0.4)]
+                            cyber-btn-corners relative"
+                  >
+                    🔓 解锁完整命运解析
                   </button>
-                  <span class="font-mono text-white/30" style="font-size:9px;letter-spacing:0.25em">FULL_DESTINY_MATRIX.decrypt</span>
+                  <span class="text-[7px] text-white/20 font-mono tracking-widest">FULL_DESTINY_MATRIX.decrypt</span>
                 </div>
 
-                <div ref="fullAnalysisContainer"
-                     class="hidden mt-3 p-3 border border-tao-gold/25 bg-black/25 rounded-sm"
-                     data-paywall="full-analysis">
-                  <p class="text-gray-100 font-mono italic leading-relaxed whitespace-pre-wrap" style="font-size:12px">{{ aiResult }}</p>
-                  <div class="mt-3 pt-3 border-t border-tao-gold/15 space-y-1">
-                    <div class="font-mono text-tao-gold/50 uppercase" style="font-size:9px;letter-spacing:0.3em">// Extended Hexagram Matrix</div>
-                    <div class="font-mono" style="font-size:10px;color:rgba(34,211,238,0.7)">{{ hexagramData.nameEn }} · {{ hexagramData.nameZh }}</div>
-                    <div class="font-mono text-white/35" style="font-size:9px">{{ hexagramData.poemZh }}</div>
-                    <div v-if="hasChangingLine" class="font-mono text-red-400/60 mt-1" style="font-size:9px">
-                      ◈ CHANGING: 第 {{ changingLineNumbers }} 爻在动 · 参考之卦以知变化走向
-                    </div>
+                <!-- 隐藏容器：完整分析，待收费接口解锁 -->
+                <div
+                  ref="fullAnalysisContainer"
+                  class="hidden mt-3 p-3 border border-tao-gold/20 bg-black/20 rounded-sm"
+                  data-paywall="full-analysis"
+                >
+                  <p class="text-gray-200 font-mono text-xs leading-relaxed italic whitespace-pre-wrap">
+                    {{ aiResult }}
+                  </p>
+                  <div class="mt-3 pt-3 border-t border-tao-gold/10 flex flex-col gap-1.5">
+                    <div class="text-[7px] font-mono text-tao-gold/40 tracking-widest uppercase">// Extended Hexagram Matrix</div>
+                    <div class="text-[8px] font-mono text-cyan-400/60">{{ hexagramData.nameEn }} · {{ hexagramData.nameZh }}</div>
+                    <div class="text-[8px] font-mono text-white/30">{{ hexagramData.poemZh }}</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
 
-        <!-- 底部按钮 -->
-        <div class="shrink-0 grid grid-cols-2 gap-3 px-4 py-3 border-t border-tao-gold/25">
-          <button @click="sealDestiny"
+        <!-- Action Buttons -->
+        <div class="shrink-0 grid grid-cols-2 gap-3 px-4 py-3 border-t border-tao-gold/10">
+          <button
+            @click="sealDestiny"
             :disabled="sealLoading"
-            class="border font-mono font-black uppercase transition-all cyber-btn-corners relative"
-            style="padding:12px 0;font-size:11px;letter-spacing:0.35em"
+            class="py-3 border font-mono font-black tracking-[0.4em] uppercase
+                    text-[9px] md:text-[10px]
+                    transition-all rounded-sm cyber-btn-corners relative"
             :style="sealLoading
               ? 'border-color:rgba(200,170,110,0.2);color:rgba(200,170,110,0.3);background:transparent;cursor:not-allowed'
-              : 'border-color:rgba(200,170,110,0.8);color:#c8aa6e;background:rgba(200,170,110,0.12);box-shadow:0 0 20px rgba(200,170,110,0.28)'">
+              : 'border-color:rgba(200,170,110,0.8);color:#c8aa6e;background:rgba(200,170,110,0.12);box-shadow:0 0 20px rgba(200,170,110,0.28)'"
+          >
             {{ sealLoading ? 'SEALING...' : '⬡ SEAL DESTINY' }}
           </button>
-          <button @click="reset"
-            class="border font-mono uppercase transition-all"
-            style="padding:12px 0;font-size:11px;letter-spacing:0.4em;border-color:rgba(255,255,255,0.22);color:rgba(255,255,255,0.6)">
+          <button
+            @click="reset"
+            class="py-3 border border-white/10 text-white/40
+                    text-[9px] md:text-[10px] tracking-[0.4em] uppercase
+                    hover:bg-white/5 hover:text-white/60 transition-all rounded-sm"
+          >
             RETURN
           </button>
         </div>
 
+        <!-- Status Log -->
         <div class="shrink-0 px-4 pb-2">
           <SystemLog />
         </div>
@@ -296,7 +232,12 @@
 
     <TalismanCard
       ref="talismanRef"
-      :hexagramData="{ name:hexagramData.nameEn, nameZh:hexagramData.nameZh, poemZh:hexagramData.poemZh, lines:hexagramResult }"
+      :hexagramData="{
+        name: hexagramData.nameEn,
+        nameZh: hexagramData.nameZh,
+        poemZh: hexagramData.poemZh,
+        lines: hexagramResult
+      }"
       :aiPredictionText="aiResult"
     />
   </div>
@@ -310,112 +251,91 @@ import SpiritBottle from './components/SpiritBottle.vue'
 import CoinToss from './components/CoinToss.vue'
 import TalismanCard from './components/TalismanCard.vue'
 import SystemLog from './components/SystemLog.vue'
-import TaijituCore from './components/TaijituCore.vue'
 
+// ── 核心状态 ──
 const step = ref('intro')
 const question = ref('')
 const hexagramResult = ref([])
 const currentChangingLines = ref([])
-const aiOracle = ref('')   // 短句（50词内，直接展示）
 const aiResult = ref('')
+const aiOracle = ref('')
 const loading = ref(false)
 const talismanRef = ref(null)
 const fullAnalysisContainer = ref(null)
 const lastReadingTime = ref(null)
-const hexagramData = ref({ nameZh:'', nameEn:'', poemZh:'' })
+const hexagramData = ref({ nameZh: '', nameEn: '', poemZh: '' })
 const deviceId = ref('')
 const isAdmin = ref(false)
 const shareCount = ref(0)
 const MAX_SHARES_PER_DAY = 3
-const router = useRouter()
-const currentCardId = ref(null)   // 当前占卜生成的 card_id
-const sealLoading = ref(false)    // 封印中
 const matrixCanvas = ref(null)
 const currentTime = ref('')
-const showTimeline = ref(false)
+const sealLoading = ref(false)
+const router = useRouter()
 
-// ── 命运时间轴 ──
-const fateHistory = ref([])
-const loadHistory = () => {
-  try { fateHistory.value = JSON.parse(localStorage.getItem('cyber_tao_history') || '[]') }
-  catch { fateHistory.value = [] }
-}
-const saveHistory = (r) => {
-  const h = [...fateHistory.value, r].slice(-10)
-  fateHistory.value = h
-  localStorage.setItem('cyber_tao_history', JSON.stringify(h))
-}
-const clearHistory = () => { fateHistory.value = []; localStorage.removeItem('cyber_tao_history') }
-const fateHistoryReversed = computed(() => [...fateHistory.value].reverse())
-const formatTime = (ts) => {
-  const d = new Date(ts)
-  return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
-}
-const getSyncColor = (r) => {
-  const v = parseFloat(r)
-  if (v >= 99) return '#ef4444'; if (v >= 95) return '#c8aa6e'; if (v >= 90) return '#22d3ee'
-  return 'rgba(255,255,255,0.4)'
-}
-const calcSyncRate = (id, code) => {
-  const s = `${id}-${Date.now()}-${code}`
-  let h = 0
-  for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0 }
-  const r = 80 + (Math.abs(h) % 200) / 10
-  return (r > 99.9 ? 99.9 : r).toFixed(1)
-}
-
-// ── 问题模板（英文为主，括号辅助中文）──
-const questionTemplates = [
-  { label: 'CAREER',  text: 'What is the outlook for my career path right now?' },
-  { label: 'LOVE',    text: 'What guidance does the oracle offer about my love life?' },
-  { label: 'WEALTH',  text: 'How is my financial fortune? Is this a good time to invest?' },
-  { label: 'CHOICE',  text: 'I face an important decision. What path should I take?' },
-  { label: 'TODAY',   text: 'What should I be mindful of today?' },
-]
-const applyTemplate = (tpl) => { question.value = tpl.text }
-
-// ── 变爻 ──
-const hasChangingLine = computed(() => currentChangingLines.value.some(Boolean))
-const changingLineNumbers = computed(() => {
-  const n = []
-  currentChangingLines.value.forEach((c, i) => { if (c) n.push(i + 1) })
-  return n.join('、')
-})
-const getLineStyle = (i) => {
-  if (currentChangingLines.value[i]) {
-    return { background:'linear-gradient(90deg,#c8aa6e,#ef4444,#c8aa6e)', boxShadow:'0 0 10px rgba(239,68,68,0.6)' }
-  }
-  return { background:'#c8aa6e', boxShadow:'0 0 8px rgba(200,170,110,0.6)' }
-}
-
-// ── Canvas Rain ──
+// ── Canvas Matrix Rain ──
 let animFrameId = null
 const initMatrix = () => {
-  const canvas = matrixCanvas.value; if (!canvas) return
+  const canvas = matrixCanvas.value
+  if (!canvas) return
   const ctx = canvas.getContext('2d')
-  const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
-  resize(); window.addEventListener('resize', resize)
+
+  const resize = () => {
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+  }
+  resize()
+  window.addEventListener('resize', resize)
+
   const chars = '0123456789ABCDEF☯⚡◈⬡乾坤坎离震巽艮兑'.split('')
-  const fs = 13, cols = Math.floor(canvas.width / fs), drops = Array(cols).fill(1)
+  const fontSize = 13
+  const cols = Math.floor(canvas.width / fontSize)
+  const drops = Array(cols).fill(1)
+
   const draw = () => {
-    ctx.fillStyle = 'rgba(6,9,15,0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = 'rgba(2, 4, 8, 0.08)'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
     for (let i = 0; i < drops.length; i++) {
-      const ch = chars[Math.floor(Math.random() * chars.length)], b = Math.random()
-      if      (b > 0.96) { ctx.fillStyle='#e8f4ff'; ctx.shadowColor='#fff'; ctx.shadowBlur=12 }
-      else if (b > 0.82) { ctx.fillStyle='#c8aa6e'; ctx.shadowColor='#c8aa6e'; ctx.shadowBlur=8 }
-      else if (b > 0.5)  { ctx.fillStyle=`rgba(34,197,111,${0.4+b*0.4})`; ctx.shadowBlur=5 }
-      else               { ctx.fillStyle=`rgba(20,160,80,${0.2+b*0.2})`; ctx.shadowBlur=0 }
-      ctx.font=`${fs}px monospace`; ctx.fillText(ch, i*fs, drops[i]*fs); ctx.shadowBlur=0
-      if (drops[i]*fs > canvas.height && Math.random() > 0.975) drops[i] = 0
+      const char = chars[Math.floor(Math.random() * chars.length)]
+      const brightness = Math.random()
+
+      if (brightness > 0.97) {
+        ctx.fillStyle = '#ffffff'
+        ctx.shadowColor = '#ffffff'
+        ctx.shadowBlur = 8
+      } else if (brightness > 0.85) {
+        ctx.fillStyle = '#c8aa6e'
+        ctx.shadowColor = '#c8aa6e'
+        ctx.shadowBlur = 6
+      } else {
+        ctx.fillStyle = `rgba(34, 197, 111, ${0.15 + brightness * 0.25})`
+        ctx.shadowColor = 'rgba(34, 197, 111, 0.3)'
+        ctx.shadowBlur = 4
+      }
+
+      ctx.font = `${fontSize}px monospace`
+      ctx.fillText(char, i * fontSize, drops[i] * fontSize)
+      ctx.shadowBlur = 0
+
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0
+      }
       drops[i]++
     }
     animFrameId = requestAnimationFrame(draw)
-  }; draw()
+  }
+  draw()
 }
 
+// ── 时钟 ──
 let clockInterval = null
-const updateClock = () => { currentTime.value = new Date().toTimeString().slice(0, 8) }
+const updateClock = () => {
+  const now = new Date()
+  currentTime.value = now.toTimeString().slice(0, 8)
+}
 
+// ── 初始化身份 ──
 const initIdentity = async () => {
   let id = localStorage.getItem('cyber_tao_device_id')
   if (!id) {
@@ -424,8 +344,13 @@ const initIdentity = async () => {
     await supabase.from('device_profiles').insert([{ device_id: id }])
   }
   deviceId.value = id
-  const { data } = await supabase.from('device_profiles')
-    .select('is_unlimited,last_reading_at,share_count,last_share_date').eq('device_id', id).single()
+
+  const { data } = await supabase
+    .from('device_profiles')
+    .select('is_unlimited, last_reading_at, share_count, last_share_date')
+    .eq('device_id', id)
+    .single()
+
   if (data) {
     isAdmin.value = data.is_unlimited
     const today = new Date().toISOString().split('T')[0]
@@ -434,32 +359,46 @@ const initIdentity = async () => {
 }
 
 onMounted(() => {
-  initIdentity(); loadHistory()
+  initIdentity()
   lastReadingTime.value = localStorage.getItem('cyber_tao_last_reading')
-  initMatrix(); updateClock()
+  initMatrix()
+  updateClock()
   clockInterval = setInterval(updateClock, 1000)
 })
+
 onUnmounted(() => {
   if (animFrameId) cancelAnimationFrame(animFrameId)
   if (clockInterval) clearInterval(clockInterval)
 })
 
+// ── 灵力状态 ──
 const hasSpirit = computed(() => {
   if (!lastReadingTime.value) return true
-  return (Date.now() - new Date(lastReadingTime.value).getTime()) / 3600000 >= 12
+  const hoursPassed = (Date.now() - new Date(lastReadingTime.value).getTime()) / (1000 * 60 * 60)
+  return hoursPassed >= 12
 })
-const aiResultPreview = computed(() =>
-  !aiResult.value ? '' : aiResult.value.slice(0, 100) + (aiResult.value.length > 100 ? '...' : '')
-)
-const aiResultFullBlurred = computed(() =>
-  !aiResult.value || aiResult.value.length <= 100 ? '' : aiResult.value.slice(100, 400)
-)
+
+// ── AI 结果截取 ──
+const aiResultPreview = computed(() => {
+  if (!aiResult.value) return ''
+  return aiResult.value.slice(0, 100) + (aiResult.value.length > 100 ? '...' : '')
+})
+
+const aiResultFullBlurred = computed(() => {
+  if (!aiResult.value || aiResult.value.length <= 100) return ''
+  return aiResult.value.slice(100, 400)
+})
+
+// ── 解锁逻辑（预留收费接口）──
 const unlockFullAnalysis = () => {
   // TODO: 接入支付验证 API
-  fullAnalysisContainer.value?.classList.toggle('hidden')
+  // 当前为演示：直接展示（后续替换为 payment gate）
+  if (fullAnalysisContainer.value) {
+    fullAnalysisContainer.value.classList.toggle('hidden')
+  }
 }
 
-// ★ 关键：兼容旧数组格式和新对象格式
+// ── 仪式完成 ──
 const onRitualComplete = async (payload) => {
   const lines = Array.isArray(payload) ? payload : payload.lines
   const changingLines = Array.isArray(payload) ? [] : (payload.changingLines || [])
@@ -470,13 +409,18 @@ const onRitualComplete = async (payload) => {
   loading.value = true
 
   const isEnglish = /^[a-zA-Z0-9\s.,?!'"\-]+$/.test(question.value.trim())
+
   try {
     const { data: aiData, error } = await supabase.functions.invoke('cyber-sage', {
       body: { lines, question: question.value, language: isEnglish ? 'en' : 'zh', changingLines }
     })
     if (error) throw error
 
-    hexagramData.value = { nameZh: aiData.hexagramNameZh, nameEn: aiData.hexagramNameEn, poemZh: aiData.poemZh }
+    hexagramData.value = {
+      nameZh: aiData.hexagramNameZh,
+      nameEn: aiData.hexagramNameEn,
+      poemZh: aiData.poemZh
+    }
     aiOracle.value = aiData.oracle || aiData.interpretation.slice(0, 120)
     aiResult.value = aiData.interpretation
 
@@ -484,16 +428,14 @@ const onRitualComplete = async (payload) => {
     const hexCode = lines.join('')
     await supabase.from('device_profiles').update({ last_reading_at: now }).eq('device_id', deviceId.value)
     supabase.from('divination_logs').insert([{
-      device_id: deviceId.value, question: question.value, hexagram_code: hexCode,
-      name_zh: aiData.hexagramNameZh, name_en: aiData.hexagramNameEn, interpretation: aiData.interpretation
+      device_id: deviceId.value,
+      question: question.value,
+      hexagram_code: hexCode,
+      name_zh: aiData.hexagramNameZh,
+      name_en: aiData.hexagramNameEn,
+      interpretation: aiData.interpretation,
+      oracle: aiData.oracle || ''
     }]).then()
-
-    saveHistory({
-      id: Date.now(), timestamp: now, question: question.value, hexCode,
-      nameZh: aiData.hexagramNameZh, nameEn: aiData.hexagramNameEn,
-      syncRate: calcSyncRate(deviceId.value, hexCode),
-      hasChangingLine: changingLines.some(Boolean),
-    })
 
     lastReadingTime.value = now
     localStorage.setItem('cyber_tao_last_reading', now)
@@ -501,26 +443,32 @@ const onRitualComplete = async (payload) => {
     console.error('AI Error:', err)
     aiResult.value = 'SIGNAL INTERRUPTED: The digital void remains silent.'
   } finally {
-    loading.value = false }
+    loading.value = false
+  }
 }
-
+// ── 分享续命 ──
 const handleRefillShare = async () => {
   if (hasSpirit.value || isAdmin.value) return
-  if (shareCount.value >= MAX_SHARES_PER_DAY) { alert('DAILY SYNC LIMIT REACHED.'); return }
+  if (shareCount.value >= MAX_SHARES_PER_DAY) {
+    alert('DAILY SYNC LIMIT REACHED.')
+    return
+  }
   try {
     if (navigator.share) {
       await navigator.share({ title: 'Cyber Tao', url: window.location.href })
       const today = new Date().toISOString().split('T')[0]
-      const nc = shareCount.value + 1
-      await supabase.from('device_profiles').update({ share_count: nc, last_share_date: today }).eq('device_id', deviceId.value)
-      shareCount.value = nc; lastReadingTime.value = null
+      const newCount = shareCount.value + 1
+      await supabase.from('device_profiles').update({ share_count: newCount, last_share_date: today }).eq('device_id', deviceId.value)
+      shareCount.value = newCount
+      lastReadingTime.value = null
       localStorage.removeItem('cyber_tao_last_reading')
     }
-  } catch (e) { console.log('Share canceled') }
+  } catch (err) {
+    console.log('Share canceled or failed')
+  }
 }
 
-
-// ── 封印命运：生成唯一 card_id，写入 Supabase，跳转到专属页 ──
+// ── 封印命运：写库 + 跳转 DestinyView ──
 const sealDestiny = async () => {
   if (sealLoading.value || !hexagramData.value.nameZh) return
   sealLoading.value = true
@@ -528,14 +476,16 @@ const sealDestiny = async () => {
     const hexCode = hexagramResult.value.join('')
     const now = new Date().toISOString()
 
-    // 生成 card_id：CT-XXXX-卦名-hash8
+    // 生成 card_id
     const rawId = `${deviceId.value}-${Date.now()}-${hexCode}`
-    const buf   = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawId))
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawId))
     const fullHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
     const hash8 = fullHash.slice(0, 8).toUpperCase()
 
-    // 版号序列（简单实现：用现有记录数 + 1，后端用 sequence 更准确）
-    const { count } = await supabase.from('divination_logs').select('*', { count:'exact', head:true }).eq('is_sealed', true)
+    const { count } = await supabase
+      .from('divination_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_sealed', true)
     const editionNumber = (count || 0) + 1
 
     const cardId = `CT-${String(editionNumber).padStart(4,'0')}-${hexagramData.value.nameZh}-${hash8}`
@@ -545,7 +495,7 @@ const sealDestiny = async () => {
     const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(hashRaw))
     const verifiedHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('').slice(0, 16)
 
-    // 写入（update 最近一条未封印记录）
+    // 更新最近一条记录
     const { error } = await supabase
       .from('divination_logs')
       .update({
@@ -563,8 +513,6 @@ const sealDestiny = async () => {
 
     if (error) throw error
 
-    currentCardId.value = cardId
-    // 跳转到专属命运页
     router.push(`/destiny/${encodeURIComponent(cardId)}`)
   } catch (err) {
     console.error('Seal error:', err)
@@ -575,70 +523,110 @@ const sealDestiny = async () => {
 }
 
 const reset = () => {
-  step.value = 'intro'; question.value = ''; hexagramResult.value = []
-  currentChangingLines.value = []; aiOracle.value = ''; aiResult.value = ''
-  hexagramData.value = { nameZh:'', nameEn:'', poemZh:'' }; showTimeline.value = false
+  step.value = 'intro'
+  question.value = ''
+  hexagramResult.value = []
+  currentChangingLines.value = []
+  aiOracle.value = ''
+  aiResult.value = ''
+  hexagramData.value = { nameZh: '', nameEn: '', poemZh: '' }
 }
 </script>
 
 <style scoped>
+/* ── 霓虹文字 ── */
 .neon-text-gold {
-  text-shadow: 0 0 8px rgba(200,170,110,0.95), 0 0 20px rgba(200,170,110,0.55), 0 0 45px rgba(200,170,110,0.28);
+  text-shadow: 0 0 10px rgba(200, 170, 110, 0.5), 0 0 30px rgba(200, 170, 110, 0.2);
 }
 .neon-text-white {
-  text-shadow: 0 0 10px rgba(255,255,255,0.65), 0 0 25px rgba(200,170,110,0.38), 0 0 50px rgba(200,170,110,0.18);
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.3), 0 0 40px rgba(200, 170, 110, 0.15);
 }
-.panel-frame {
-  box-shadow: 0 0 0 1px rgba(200,170,110,0.38), 0 0 40px rgba(200,170,110,0.12), 0 0 100px rgba(200,170,110,0.06), inset 0 0 60px rgba(6,9,15,0.5);
-  border-radius: 2px; position: relative;
+
+/* ── 赛博边框框架 ── */
+.cyber-border-frame {
+  clip-path: polygon(
+    0 12px, 12px 0,
+    calc(100% - 12px) 0, 100% 12px,
+    100% calc(100% - 12px), calc(100% - 12px) 100%,
+    12px 100%, 0 calc(100% - 12px)
+  );
 }
-.panel-frame::before {
-  content:''; position:absolute; top:0; left:0; width:18px; height:18px; z-index:20; pointer-events:none;
-  border-top:2px solid rgba(200,170,110,0.88); border-left:2px solid rgba(200,170,110,0.88);
-  box-shadow:-2px -2px 10px rgba(200,170,110,0.45);
-}
-.panel-frame::after {
-  content:''; position:absolute; bottom:0; right:0; width:18px; height:18px; z-index:20; pointer-events:none;
-  border-bottom:2px solid rgba(200,170,110,0.88); border-right:2px solid rgba(200,170,110,0.88);
-  box-shadow:2px 2px 10px rgba(200,170,110,0.45);
-}
+
+/* ── 终端输入框 ── */
 .cyber-terminal-box {
-  background:rgba(0,0,0,0.5); border:1px solid rgba(200,170,110,0.38); border-radius:2px; position:relative;
-  box-shadow:inset 0 0 18px rgba(200,170,110,0.04), 0 0 12px rgba(200,170,110,0.07);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(200, 170, 110, 0.2);
+  border-radius: 2px;
+  position: relative;
 }
 .cyber-terminal-box::before {
-  content:''; position:absolute; top:0; left:0; width:10px; height:10px;
-  border-top:2px solid rgba(200,170,110,0.92); border-left:2px solid rgba(200,170,110,0.92);
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 8px; height: 8px;
+  border-top: 1px solid rgba(200, 170, 110, 0.6);
+  border-left: 1px solid rgba(200, 170, 110, 0.6);
 }
 .cyber-terminal-box::after {
-  content:''; position:absolute; bottom:0; right:0; width:10px; height:10px;
-  border-bottom:2px solid rgba(200,170,110,0.92); border-right:2px solid rgba(200,170,110,0.92);
+  content: '';
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 8px; height: 8px;
+  border-bottom: 1px solid rgba(200, 170, 110, 0.6);
+  border-right: 1px solid rgba(200, 170, 110, 0.6);
 }
+
+/* ── 按钮角装饰 ── */
 .cyber-btn-corners::before {
-  content:''; position:absolute; top:-1px; left:-1px; width:7px; height:7px;
-  border-top:2px solid #c8aa6e; border-left:2px solid #c8aa6e;
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 6px; height: 6px;
+  border-top: 2px solid rgba(200, 170, 110, 0.8);
+  border-left: 2px solid rgba(200, 170, 110, 0.8);
 }
 .cyber-btn-corners::after {
-  content:''; position:absolute; bottom:-1px; right:-1px; width:7px; height:7px;
-  border-bottom:2px solid #c8aa6e; border-right:2px solid #c8aa6e;
+  content: '';
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 6px; height: 6px;
+  border-bottom: 2px solid rgba(200, 170, 110, 0.8);
+  border-right: 2px solid rgba(200, 170, 110, 0.8);
 }
-@keyframes terminal-scan { 0%{top:0;opacity:0} 5%{opacity:0.75} 95%{opacity:0.75} 100%{top:100%;opacity:0} }
-.terminal-scan { animation:terminal-scan 4s linear infinite; position:absolute; height:1px; left:0; right:0; }
-.cyber-grid-visible {
-  background-image: linear-gradient(rgba(200,170,110,0.11) 1px,transparent 1px), linear-gradient(90deg,rgba(200,170,110,0.11) 1px,transparent 1px);
-  background-size:18px 18px;
+
+/* ── 终端扫描线 ── */
+@keyframes terminal-scan {
+  0% { top: 0; opacity: 0; }
+  5% { opacity: 0.6; }
+  95% { opacity: 0.6; }
+  100% { top: 100%; opacity: 0; }
 }
-.timeline-slide-enter-active { transition:transform 0.3s cubic-bezier(0.2,0.8,0.2,1),opacity 0.3s; }
-.timeline-slide-leave-active  { transition:transform 0.25s ease-in,opacity 0.25s; }
-.timeline-slide-enter-from    { transform:translateY(-12px); opacity:0; }
-.timeline-slide-leave-to      { transform:translateY(-8px); opacity:0; }
-.timeline-record { border-radius:2px; transition:border-color 0.2s; }
-.timeline-record:hover { border-color:rgba(200,170,110,0.3) !important; }
-@keyframes fadeIn    { from{opacity:0;transform:translateY(8px)}  to{opacity:1;transform:none} }
-@keyframes fadeInUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
-.animate-fade-in     { animation:fadeIn    1.2s cubic-bezier(0.2,0.8,0.2,1) forwards; }
-.animate-fade-in-up  { animation:fadeInUp  0.8s ease-out forwards; }
-.custom-scrollbar::-webkit-scrollbar       { width:2px; }
-.custom-scrollbar::-webkit-scrollbar-track { background:transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background:rgba(200,170,110,0.35); border-radius:4px; }
+.terminal-scan {
+  animation: terminal-scan 4s linear infinite;
+}
+
+/* ── 渐入动画 ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
+
+/* ── 背景网格 ── */
+.cyber-grid {
+  background-image:
+    linear-gradient(rgba(200, 170, 110, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 170, 110, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ── 滚动条 ── */
+.custom-scrollbar::-webkit-scrollbar { width: 2px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(200, 170, 110, 0.25); border-radius: 4px; }
 </style>
