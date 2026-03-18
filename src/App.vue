@@ -118,7 +118,7 @@
           </div>
 
           <SpiritBottle
-            :dailyReadings="dailyReadings"
+            :spiritPoints="spiritPoints"
             :isUnlimited="isAdmin"
             :shareCount="shareCount"
             @refill="handleRefillShare"
@@ -209,53 +209,111 @@
             </p>
           </div>
 
-          <!-- Neural Analysis -->
+          <!-- ★ ORACLE TRANSMISSION：短句，完整展示，无模糊，无付费 ──>
+          <div class="relative cyber-terminal-box shrink-0" v-if="aiOracle">
+            <div class="absolute -top-2.5 left-3 px-2 bg-[#0c1018] font-mono uppercase z-10"
+                 style="font-size:9px;letter-spacing:0.35em;color:rgba(200,170,110,0.6)">
+              ORACLE TRANSMISSION
+            </div>
+            <div class="p-4 text-center">
+              <!-- 装饰线 -->
+              <div class="flex items-center gap-3 mb-3">
+                <div class="flex-1 h-px" style="background:linear-gradient(to right,transparent,rgba(200,170,110,0.35))"></div>
+                <span style="color:rgba(200,170,110,0.4);font-size:10px">◈</span>
+                <div class="flex-1 h-px" style="background:linear-gradient(to left,transparent,rgba(200,170,110,0.35))"></div>
+              </div>
+              <!-- Oracle 短句：完整、清晰、无任何模糊 -->
+              <p class="font-serif leading-relaxed"
+                 style="font-size:15px;color:rgba(255,255,255,0.92);line-height:1.85;letter-spacing:0.05em;
+                        text-shadow:0 0 20px rgba(200,170,110,0.18)">
+                {{ aiOracle }}
+              </p>
+              <div class="flex items-center gap-3 mt-3">
+                <div class="flex-1 h-px" style="background:linear-gradient(to right,transparent,rgba(200,170,110,0.2))"></div>
+                <span class="font-mono" style="font-size:7px;letter-spacing:0.4em;color:rgba(200,170,110,0.3)">END TRANSMISSION</span>
+                <div class="flex-1 h-px" style="background:linear-gradient(to left,transparent,rgba(200,170,110,0.2))"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ★ NEURAL ANALYSIS：完整长分析，灵力解锁（8点），完全独立 ──>
           <div class="relative cyber-terminal-box shrink-0">
             <div class="absolute -top-2.5 left-3 px-2 bg-[#0c1018] font-mono text-tao-gold/75 uppercase z-10"
                  style="font-size:9px;letter-spacing:0.35em">
               NEURAL ANALYSIS // CLASSIFIED
             </div>
             <div class="p-4">
-              <p class="text-gray-100 font-mono italic leading-relaxed whitespace-pre-wrap" style="font-size:12px">
-                {{ aiResultPreview }}
-              </p>
 
-              <div v-if="aiResult.length > 100" class="relative mt-3">
-                <div class="relative overflow-hidden rounded-sm">
+              <!-- 未解锁状态：全部模糊 + 解锁按钮 -->
+              <div v-if="!fullAnalysisUnlocked" class="relative">
+                <!-- 全部模糊，不露任何内容 -->
+                <div class="relative overflow-hidden rounded-sm" style="min-height:80px">
                   <p class="font-mono italic leading-relaxed whitespace-pre-wrap select-none"
-                     style="font-size:12px;color:rgba(200,200,200,0.45);filter:blur(4px);pointer-events:none;user-select:none">
-                    {{ aiResultFullBlurred }}
+                     style="font-size:12px;color:rgba(200,200,200,0.4);filter:blur(5px);pointer-events:none;user-select:none;line-height:1.7">
+                    {{ aiResult.slice(0, 280) }}
                   </p>
-                  <div class="absolute inset-0" style="background:linear-gradient(to bottom,transparent,rgba(12,16,24,0.65),rgba(12,16,24,0.93))"></div>
+                  <div class="absolute inset-0" style="background:linear-gradient(to bottom,rgba(12,16,24,0.3) 0%,rgba(12,16,24,0.75) 50%,rgba(12,16,24,0.97) 100%)"></div>
                   <div class="absolute inset-0 cyber-grid-visible"></div>
                 </div>
 
+                <!-- 灵力消耗说明 + 解锁按钮 -->
                 <div class="flex flex-col items-center mt-3 gap-2">
-                  <div class="flex items-center gap-2 font-mono text-tao-gold/55 uppercase" style="font-size:9px;letter-spacing:0.35em">
-                    <span class="w-8 h-px bg-tao-gold/30"></span>FATE SEAL ACTIVE<span class="w-8 h-px bg-tao-gold/30"></span>
+                  <div class="flex items-center gap-2 font-mono uppercase" style="font-size:8px;letter-spacing:0.3em;color:rgba(200,170,110,0.5)">
+                    <span class="w-6 h-px bg-tao-gold/30"></span>
+                    <span>REQUIRES 8 ⚡ SPIRIT</span>
+                    <span class="w-6 h-px bg-tao-gold/30"></span>
                   </div>
-                  <button @click="unlockFullAnalysis"
+                  <!-- 当前灵力显示 -->
+                  <div class="font-mono" style="font-size:9px;letter-spacing:0.2em"
+                       :style="spiritPoints >= 8 ? 'color:rgba(34,211,238,0.7)' : 'color:rgba(239,68,68,0.6)'">
+                    YOUR SPIRIT: {{ spiritPoints }} / 24 ⚡
+                  </div>
+                  <!-- 灵力足够：解锁按钮 -->
+                  <button v-if="spiritPoints >= 8 || isAdmin"
+                    @click="unlockFullAnalysis"
+                    :disabled="unlockLoading"
                     class="w-full border font-mono font-black uppercase transition-all duration-300 cyber-btn-corners relative"
-                    style="padding:10px 0;font-size:11px;letter-spacing:0.45em;border-color:rgba(200,170,110,0.65);color:#c8aa6e;background:linear-gradient(135deg,rgba(200,170,110,0.10),rgba(200,170,110,0.18));box-shadow:0 0 18px rgba(200,170,110,0.22)">
-                    🔓 UNLOCK FULL DESTINY
+                    style="padding:10px 0;font-size:11px;letter-spacing:0.4em"
+                    :style="unlockLoading
+                      ? 'border-color:rgba(200,170,110,0.2);color:rgba(200,170,110,0.25);cursor:not-allowed'
+                      : 'border-color:rgba(200,170,110,0.7);color:#c8aa6e;background:linear-gradient(135deg,rgba(200,170,110,0.10),rgba(200,170,110,0.18));box-shadow:0 0 18px rgba(200,170,110,0.22)'">
+                    {{ unlockLoading ? 'DECRYPTING...' : '⚡ UNLOCK · -8 SPIRIT' }}
                   </button>
-                  <span class="font-mono text-white/30" style="font-size:9px;letter-spacing:0.25em">FULL_DESTINY_MATRIX.decrypt</span>
-                </div>
-
-                <div ref="fullAnalysisContainer"
-                     class="hidden mt-3 p-3 border border-tao-gold/25 bg-black/25 rounded-sm"
-                     data-paywall="full-analysis">
-                  <p class="text-gray-100 font-mono italic leading-relaxed whitespace-pre-wrap" style="font-size:12px">{{ aiResult }}</p>
-                  <div class="mt-3 pt-3 border-t border-tao-gold/15 space-y-1">
-                    <div class="font-mono text-tao-gold/50 uppercase" style="font-size:9px;letter-spacing:0.3em">// Extended Hexagram Matrix</div>
-                    <div class="font-mono" style="font-size:10px;color:rgba(34,211,238,0.7)">{{ hexagramData.nameEn }} · {{ hexagramData.nameZh }}</div>
-                    <div class="font-mono text-white/35" style="font-size:9px">{{ hexagramData.poemZh }}</div>
-                    <div v-if="hasChangingLine" class="font-mono text-red-400/60 mt-1" style="font-size:9px">
-                      ◈ CHANGING: 第 {{ changingLineNumbers }} 爻在动 · 参考之卦以知变化走向
-                    </div>
+                  <!-- 灵力不足：购买入口（TODO） -->
+                  <button v-else
+                    @click="showRechargeHint = true"
+                    class="w-full border font-mono font-black uppercase transition-all duration-300 cyber-btn-corners relative"
+                    style="padding:10px 0;font-size:11px;letter-spacing:0.35em;border-color:rgba(239,68,68,0.5);color:rgba(239,68,68,0.8);background:rgba(239,68,68,0.06)">
+                    ⚡ INSUFFICIENT SPIRIT
+                  </button>
+                  <!-- 充能提示 -->
+                  <div v-if="showRechargeHint" class="text-center mt-1">
+                    <p class="font-mono" style="font-size:9px;color:rgba(255,255,255,0.35);line-height:1.6">
+                      SEAL A DESTINY CARD · SHARE TO REFILL +8<br>
+                      <span style="color:rgba(200,170,110,0.4)">PURCHASE SPIRIT COMING SOON</span>
+                    </p>
                   </div>
                 </div>
               </div>
+
+              <!-- 已解锁状态：完整显示 -->
+              <div v-else class="animate-fade-in">
+                <div class="flex items-center gap-2 mb-3">
+                  <span style="color:rgba(34,211,238,0.7);font-size:10px">✓</span>
+                  <span class="font-mono uppercase" style="font-size:8px;letter-spacing:0.3em;color:rgba(34,211,238,0.5)">DECRYPTED · 8 SPIRIT CONSUMED</span>
+                </div>
+                <p class="text-gray-100 font-mono italic leading-relaxed whitespace-pre-wrap" style="font-size:12px">
+                  {{ aiResult }}
+                </p>
+                <div class="mt-3 pt-3 border-t border-tao-gold/15 space-y-1">
+                  <div class="font-mono text-tao-gold/50 uppercase" style="font-size:8px;letter-spacing:0.3em">// Extended Hexagram Matrix</div>
+                  <div class="font-mono" style="font-size:10px;color:rgba(34,211,238,0.7)">{{ hexagramData.nameEn }} · {{ hexagramData.nameZh }}</div>
+                  <div v-if="hasChangingLine" class="font-mono text-red-400/60" style="font-size:9px">
+                    ◈ CHANGING: 第 {{ changingLineNumbers }} 爻在动
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -310,8 +368,17 @@ const aiResult = ref('')
 const loading = ref(false)
 const talismanRef = ref(null)
 const fullAnalysisContainer = ref(null)
-const dailyReadings = ref(0)    // 今日已占卜次数
-const lastReadingTime = ref(null) // 仍保留用于兼容
+// ── 灵力系统：24点上限，8点/次占卜，8点/次解锁，8点/次分享 ──
+const spiritPoints    = ref(24)   // 当前灵力值（从DB读取）
+const MAX_SPIRIT      = 24
+const SPIRIT_PER_READ = 8
+const SPIRIT_PER_UNLOCK = 8
+const SPIRIT_PER_SHARE  = 8
+const dailyReadings   = ref(0)    // 今日已占卜次数（用于UI显示）
+const lastReadingTime = ref(null) // 兼容保留
+const fullAnalysisUnlocked = ref(false)  // 当前占卜是否已解锁完整分析
+const unlockLoading   = ref(false)
+const showRechargeHint = ref(false)
 const hexagramData = ref({ nameZh:'', nameEn:'', poemZh:'' })
 const deviceId = ref('')
 const isAdmin = ref(false)
@@ -417,13 +484,19 @@ const initIdentity = async () => {
   }
   deviceId.value = id
   const { data } = await supabase.from('device_profiles')
-    .select('is_unlimited,last_reading_date,daily_readings,share_count,last_share_date,ip_address').eq('device_id', id).single()
+    .select('is_unlimited,last_reading_date,daily_readings,share_count,last_share_date,ip_address,spirit_points').eq('device_id', id).single()
   if (data) {
     isAdmin.value = data.is_unlimited
     const today = new Date().toISOString().split('T')[0]
-    // 每日计数重置：如果不是今天，归零
     dailyReadings.value = data.last_reading_date === today ? (data.daily_readings || 0) : 0
     shareCount.value = data.last_share_date !== today ? 0 : (data.share_count || 0)
+    // 灵力值（新用户默认24满值）
+    spiritPoints.value = data.spirit_points !== null && data.spirit_points !== undefined
+      ? data.spirit_points
+      : MAX_SPIRIT
+  } else {
+    // 新用户：从未在DB里，初始满值
+    spiritPoints.value = MAX_SPIRIT
   }
 }
 
@@ -440,17 +513,25 @@ onUnmounted(() => {
 
 const hasSpirit = computed(() => {
   if (isAdmin.value) return true
-  return dailyReadings.value < 3
+  return spiritPoints.value >= SPIRIT_PER_READ
 })
-const aiResultPreview = computed(() =>
-  !aiResult.value ? '' : aiResult.value.slice(0, 100) + (aiResult.value.length > 100 ? '...' : '')
-)
-const aiResultFullBlurred = computed(() =>
-  !aiResult.value || aiResult.value.length <= 100 ? '' : aiResult.value.slice(100, 400)
-)
-const unlockFullAnalysis = () => {
-  // TODO: 接入支付验证 API
-  fullAnalysisContainer.value?.classList.toggle('hidden')
+// aiResultPreview/aiResultFullBlurred removed — oracle uses aiOracle, analysis uses aiResult directly
+const unlockFullAnalysis = async () => {
+  if (isAdmin.value) { fullAnalysisUnlocked.value = true; return }
+  if (spiritPoints.value < SPIRIT_PER_UNLOCK) return
+  unlockLoading.value = true
+  try {
+    const newSpirit = Math.max(0, spiritPoints.value - SPIRIT_PER_UNLOCK)
+    await supabase.from('device_profiles')
+      .update({ spirit_points: newSpirit })
+      .eq('device_id', deviceId.value)
+    spiritPoints.value = newSpirit
+    fullAnalysisUnlocked.value = true
+  } catch (e) {
+    console.error('Unlock error:', e)
+  } finally {
+    unlockLoading.value = false
+  }
 }
 
 // ★ 关键：兼容旧数组格式和新对象格式
@@ -481,13 +562,18 @@ const onRitualComplete = async (payload) => {
     const today = now.split('T')[0]
     const newCount = dailyReadings.value + 1
     dailyReadings.value = newCount
+    fullAnalysisUnlocked.value = false   // 每次新占卜重置解锁状态
+    showRechargeHint.value = false
+    const newSpirit = isAdmin.value ? spiritPoints.value : Math.max(0, spiritPoints.value - SPIRIT_PER_READ)
+    spiritPoints.value = newSpirit
     await supabase.from('device_profiles').update({
       last_reading_date: today,
       daily_readings: newCount,
       last_reading_at: now,
+      spirit_points: newSpirit,
       geo_region: aiData.geoRegion || '',
       geo_beast:  aiData.geoBeast  || '',
-      ip_address: aiData.ipHash    || '',  // 存前两段
+      ip_address: aiData.ipHash    || '',
     }).eq('device_id', deviceId.value)
     supabase.from('divination_logs').insert([{
       device_id: deviceId.value, question: question.value, hexagram_code: hexCode,
@@ -520,15 +606,14 @@ const handleRefillShare = async () => {
       await navigator.share({ title: 'Cyber Tao', url: window.location.href })
       const today = new Date().toISOString().split('T')[0]
       const nc = shareCount.value + 1
-      const newReadings = Math.max(0, dailyReadings.value - 1) // 分享补一次
+      const newSpirit = Math.min(MAX_SPIRIT, spiritPoints.value + SPIRIT_PER_SHARE)
       await supabase.from('device_profiles').update({
         share_count: nc,
         last_share_date: today,
-        daily_readings: newReadings,
-        last_reading_date: today,
+        spirit_points: newSpirit,
       }).eq('device_id', deviceId.value)
       shareCount.value = nc
-      dailyReadings.value = newReadings
+      spiritPoints.value = newSpirit
     }
   } catch (e) { console.log('Share canceled') }
 }
@@ -584,7 +669,9 @@ const reset = () => {
   step.value = 'intro'; question.value = ''; hexagramResult.value = []
   currentChangingLines.value = []; aiOracle.value = ''; aiResult.value = ''
   hexagramData.value = { nameZh:'', nameEn:'', poemZh:'' }; showTimeline.value = false
-  // dailyReadings not reset on return - keeps the count
+  fullAnalysisUnlocked.value = false
+  showRechargeHint.value = false
+  // dailyReadings/spiritPoints not reset on return
 }
 </script>
 
