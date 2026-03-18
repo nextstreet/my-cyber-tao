@@ -1,197 +1,185 @@
 <template>
+  <!-- 全屏背景：粒子 Canvas + 暗色遮罩 -->
   <div class="destiny-root">
-    <canvas ref="particleCanvas" class="destiny-canvas"></canvas>
+    <canvas ref="particleCanvas" class="destiny-bg-canvas"></canvas>
+    <div class="destiny-bg-overlay"></div>
 
-    <div v-if="card" class="beast-bg">
-      <img :src="beastImageUrl" class="beast-img" crossorigin="anonymous" ref="beastImgEl" />
-      <div class="beast-vignette"></div>
-    </div>
-
-    <div v-if="loading" class="state-center">
-      <div class="spin-outer"></div>
-      <div class="spin-inner"></div>
-      <p class="state-text">ACCESSING DESTINY MATRIX...</p>
-    </div>
-
-    <div v-else-if="error" class="state-center">
-      <p class="error-glyph">⚠</p>
-      <p class="error-title">SIGNAL LOST</p>
-      <p class="error-body">{{ error }}</p>
-      <button class="btn-ghost" @click="$router.push('/')">← RETURN TO VOID</button>
-    </div>
-
-    <div v-else-if="card" class="content-wrap">
-
-      <header class="top-bar">
-        <div>
-          <div class="brand">CYBER · TAO</div>
-          <div class="edition"># {{ String(card.edition_number || 0).padStart(4,'0') }}</div>
-        </div>
-        <div class="verify-chip" :class="verifyState">
-          <span class="verify-dot"></span>
-          <span>{{ verifyLabel }}</span>
-        </div>
-        <div class="card-date">{{ cardDate }}</div>
-      </header>
-
-      <div class="name-block">
-        <h1 class="gua-name" :style="glowStyle">{{ card.name_zh }}</h1>
-        <div class="gua-meta">
-          <span>{{ card.name_en }}</span>
-          <span class="sep">·</span>
-          <span class="mono">{{ card.hexagram_code }}</span>
-        </div>
+    <!-- 加载态 -->
+    <div v-if="loading" class="destiny-state">
+      <div class="loader-rings">
+        <div class="ring ring-outer"></div>
+        <div class="ring ring-inner"></div>
       </div>
+      <p class="loader-text">ACCESSING DESTINY MATRIX...</p>
+    </div>
 
-      <div class="talisman-wrap">
-        <svg class="talisman-svg" viewBox="0 0 200 200">
-          <circle cx="100" cy="100" r="94" fill="none"
-                  :stroke="accent" stroke-width="0.4"
-                  stroke-dasharray="5 3" opacity="0.3"
-                  style="transform-origin:100px 100px;animation:cw 60s linear infinite"/>
-          <circle cx="100" cy="100" r="78" fill="none"
-                  :stroke="accent" stroke-width="0.3"
-                  stroke-dasharray="3 6" opacity="0.2"
-                  style="transform-origin:100px 100px;animation:ccw 45s linear infinite"/>
-          <g :stroke="accent" stroke-width="0.25" opacity="0.18">
-            <line v-for="a in [0,22.5,45,67.5,90,112.5,135,157.5]" :key="a"
-                  :x1="100+65*Math.cos(a*Math.PI/180)" :y1="100+65*Math.sin(a*Math.PI/180)"
-                  :x2="100-65*Math.cos(a*Math.PI/180)" :y2="100-65*Math.sin(a*Math.PI/180)"/>
-          </g>
-          <g fill="none" :stroke="accent">
-            <path v-for="(p,pi) in tPaths" :key="pi" :d="p"
-                  stroke-width="0.55" opacity="0.6"
-                  class="t-path"
-                  :style="`--delay:${pi*1.1}s;--dur:${3.8+pi*0.7}s`"/>
-          </g>
-          <circle v-for="(n,ni) in tNodes" :key="ni"
-                  :cx="n.x" :cy="n.y" r="1.8"
-                  :fill="accent" class="t-node"
-                  :style="`--delay:${ni*0.55}s`"/>
-          <g :stroke="accent" stroke-width="0.9" fill="none" opacity="0.65">
-            <path d="M4,4 L16,4 L16,8 M4,4 L4,16 L8,16"/>
-            <path d="M196,4 L184,4 L184,8 M196,4 L196,16 L192,16"/>
-            <path d="M4,196 L16,196 L16,192 M4,196 L4,184 L8,184"/>
-            <path d="M196,196 L184,196 L184,192 M196,196 L196,184 L192,184"/>
-          </g>
-          <text x="100" y="108" text-anchor="middle" dominant-baseline="central"
-                font-family="serif" font-size="44" font-weight="900"
-                :fill="accent+'0e'">{{ card.name_zh }}</text>
-          <line x1="6" :y1="scanY*1.88+6" x2="194" :y2="scanY*1.88+6"
-                :stroke="accent" stroke-width="0.45" opacity="0.45"/>
-        </svg>
+    <!-- 错误态 -->
+    <div v-else-if="error" class="destiny-state">
+      <div style="font-size:36px;color:rgba(239,68,68,0.7)">⚠</div>
+      <p style="font-size:13px;letter-spacing:0.4em;color:rgba(239,68,68,0.8);text-transform:uppercase">SIGNAL LOST</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.4);max-width:280px;text-align:center;line-height:1.7">{{ error }}</p>
+      <button class="btn-ghost" @click="$router.push('/')">← RETURN</button>
+    </div>
 
-        <div class="hex-lines">
-          <div v-for="(line, li) in hexLines" :key="li" class="hex-row"
-               :style="`animation-delay:${li * 0.1}s`">
-            <div v-if="line===1" class="yao yang" :style="yaoStyle"></div>
-            <template v-else>
-              <div class="yao yin" :style="yaoStyle"></div>
-              <div class="yao-gap"></div>
-              <div class="yao yin" :style="yaoStyle"></div>
-            </template>
+    <!-- 卡片主体 -->
+    <div v-else-if="card" class="destiny-scroll">
+      <div class="card-wrapper">
+
+        <!-- ★ 真正的卡牌 -->
+        <div class="destiny-card" :style="cardStyle">
+
+          <!-- 外发光层（稀有度颜色） -->
+          <div class="card-glow" :style="glowStyle"></div>
+
+          <!-- 四角切角装饰 -->
+          <div class="corner-tl" :style="cornerStyle"></div>
+          <div class="corner-tr" :style="cornerStyle"></div>
+          <div class="corner-bl" :style="cornerStyle"></div>
+          <div class="corner-br" :style="cornerStyle"></div>
+
+          <!-- 扫描线 -->
+          <div class="scan-line" :style="{ top: scanY + '%', background: accentColor }"></div>
+
+          <!-- ── 卡顶 HUD ── -->
+          <div class="card-top-hud">
+            <span class="hud-mono" :style="hudColor">CYBER·TAO</span>
+            <!-- 验证徽章 -->
+            <div class="verify-badge" :class="verifyState">
+              <span class="verify-dot"></span>
+              <span class="verify-label">{{ verifyLabel }}</span>
+            </div>
+            <span class="hud-mono" :style="hudColor">#{{ editionStr }}</span>
+          </div>
+
+          <!-- ── 神兽图区（卡上半部，占比约40%）── -->
+          <div class="card-art">
+            <img :src="beastImageUrl" class="beast-art-img" />
+            <!-- 渐变遮罩，让图底部融入卡身 -->
+            <div class="art-fade" :style="artFadeStyle"></div>
+            <!-- 稀有度标签 -->
+            <div class="rarity-tag" :style="rarityTagStyle">
+              {{ rarityLabel }}
+            </div>
+            <!-- GODLIKE 标记 -->
+            <div v-if="isGodlike" class="godlike-tag">⚡ GODLIKE</div>
+          </div>
+
+          <!-- ── 卡中：卦象 ── -->
+          <div class="card-hex-section">
+            <h1 class="hex-name" :style="hexNameStyle">{{ card.name_zh }}</h1>
+            <p class="hex-en">{{ card.name_en }}</p>
+            <div class="hex-divider" :style="{ background: accentColor }"></div>
+            <!-- 爻象小图 -->
+            <div class="hex-lines-display">
+              <div v-for="(line, i) in hexLines" :key="i" class="hex-line-row">
+                <template v-if="line === 1">
+                  <div class="hl hl-yang" :style="{ background: accentColor, boxShadow: `0 0 8px ${accentColor}99` }"></div>
+                </template>
+                <template v-else>
+                  <div class="hl hl-yin" :style="{ background: accentColor, boxShadow: `0 0 8px ${accentColor}99` }"></div>
+                  <div class="hl-gap"></div>
+                  <div class="hl hl-yin" :style="{ background: accentColor, boxShadow: `0 0 8px ${accentColor}99` }"></div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 卡下：Oracle 短句 ── -->
+          <div class="card-oracle-section">
+            <div class="oracle-deco-line" :style="{ background: `linear-gradient(to right, transparent, ${accentColor}60, transparent)` }"></div>
+            <p class="oracle-text">{{ card.oracle || card.interpretation?.split('.')[0] || '' }}</p>
+            <div class="oracle-deco-line" :style="{ background: `linear-gradient(to right, transparent, ${accentColor}40, transparent)` }"></div>
+          </div>
+
+          <!-- ── 卡底 HUD ── -->
+          <div class="card-bottom-hud">
+            <div class="hud-cell">
+              <span class="hud-label">SYNC</span>
+              <span class="hud-value" :style="{ color: accentColor }">{{ syncRate }}%</span>
+            </div>
+            <div class="hud-sep"></div>
+            <div class="hud-cell">
+              <span class="hud-label">ENTROPY</span>
+              <span class="hud-value" style="color:rgba(255,255,255,0.6)">{{ entropyLabel }}</span>
+            </div>
+            <div class="hud-sep"></div>
+            <div class="hud-cell">
+              <span class="hud-label">HASH</span>
+              <span class="hud-value" style="color:rgba(255,255,255,0.5);font-size:8px">{{ hashDisplay }}</span>
+            </div>
+          </div>
+
+          <!-- 卡片ID -->
+          <div class="card-id-strip">
+            <span class="hud-mono" style="color:rgba(255,255,255,0.2);font-size:7px;letter-spacing:0.2em">{{ card.card_id }}</span>
+          </div>
+
+        </div>
+        <!-- /card -->
+
+        <!-- ── 操作按钮区 ── -->
+        <div class="card-actions">
+          <button class="btn-primary" :style="primaryBtnStyle" @click="shareCard">
+            ⬡ SHARE THIS DESTINY
+          </button>
+          <div class="btn-row">
+            <button class="btn-ghost" @click="copyLink">{{ copied ? '✓ COPIED' : 'COPY LINK' }}</button>
+            <button class="btn-ghost" @click="$router.push('/')">← NEW ORACLE</button>
           </div>
         </div>
+
       </div>
-
-      <p class="poem">{{ firstLine }}</p>
-
-      <div v-if="card.oracle" class="oracle-wrap">
-        <div class="oracle-rule" :style="{background:`linear-gradient(to right,transparent,${accent}55,transparent)`}"></div>
-        <p class="oracle-text">{{ card.oracle }}</p>
-        <div class="oracle-rule" :style="{background:`linear-gradient(to right,transparent,${accent}55,transparent)`}"></div>
-      </div>
-
-      <div class="hud-bar">
-        <div class="hud-cell">
-          <span class="hud-lbl">SYNC</span>
-          <span class="hud-val" :style="{color:accent}">{{ syncRate }}%</span>
-        </div>
-        <div class="hud-rule"></div>
-        <div class="hud-cell">
-          <span class="hud-lbl">RARITY</span>
-          <span class="hud-val" :style="{color:accent}">{{ rarityLabel }}</span>
-        </div>
-        <div class="hud-rule"></div>
-        <div class="hud-cell">
-          <span class="hud-lbl">ENTROPY</span>
-          <span class="hud-val">{{ entropyLabel }}</span>
-        </div>
-        <div class="hud-rule"></div>
-        <div class="hud-cell">
-          <span class="hud-lbl">HASH</span>
-          <span class="hud-val mono">{{ hashDisplay }}</span>
-        </div>
-      </div>
-
-      <footer class="bottom-bar">
-        <button class="btn-share" :style="shareStyle" @click="shareCard">
-          ⬡ SHARE THIS DESTINY
-        </button>
-        <div class="btn-row">
-          <button class="btn-ghost" @click="copyLink">
-            {{ copied ? '✓ COPIED' : 'COPY LINK' }}
-          </button>
-          <button class="btn-ghost" @click="$router.push('/')">← NEW ORACLE</button>
-        </div>
-        <p class="card-id-lbl">{{ card.card_id }}</p>
-      </footer>
-
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-// @ts-ignore - supabase.js has no declaration file
 import { supabase } from '../lib/supabase'
 
 const route  = useRoute()
 const router = useRouter()
 
 const loading     = ref(true)
-const error       = ref<string | null>(null)
-const card        = ref<any>(null)
-const verifyState = ref<'pending' | 'verified' | 'failed'>('pending')
+const error       = ref(null)
+const card        = ref(null)
+const verifyState = ref('pending')
 const copied      = ref(false)
 const scanY       = ref(5)
 
-const particleCanvas = ref<HTMLCanvasElement | null>(null)
-const beastImgEl     = ref<HTMLImageElement | null>(null)
-let animRaf: number | null = null
-let scanRaf: number | null = null
+const particleCanvas = ref(null)
+let animRaf = null
+let scanRaf = null
 
 // ── 加载卡片 ──
 const loadCard = async () => {
-  const cardId = route.params.cardId as string
+  const cardId = decodeURIComponent(route.params.cardId)
   if (!cardId) { error.value = 'Invalid card ID.'; loading.value = false; return }
-
-  const { data, error: dbErr } = await supabase
-    .from('divination_logs')
-    .select('card_id,edition_number,verified_hash,name_zh,name_en,hexagram_code,interpretation,oracle,device_id,created_at,is_sealed')
-    .eq('card_id', cardId)
-    .eq('is_sealed', true)
-    .single()
-
-  if (dbErr || !data) {
-    error.value = 'CARD NOT FOUND · This destiny does not exist in the matrix.'
+  try {
+    const { data, error: dbErr } = await supabase
+      .from('divination_logs')
+      .select('card_id,edition_number,verified_hash,name_zh,name_en,hexagram_code,interpretation,oracle,device_id,created_at,is_sealed')
+      .eq('card_id', cardId)
+      .eq('is_sealed', true)
+      .single()
+    if (dbErr || !data) { error.value = 'CARD NOT FOUND · This destiny does not exist.'; loading.value = false; return }
+    card.value = data
     loading.value = false
-    return
+    verifyHash(data)
+    requestAnimationFrame(() => { initParticles(); animateScan() })
+  } catch (e) {
+    error.value = 'NETWORK ERROR · The void is unreachable.'
+    loading.value = false
   }
-
-  card.value    = data
-  loading.value = false
-  verifyHash(data)
-  requestAnimationFrame(() => { initPixelParticles(); animateScan() })
 }
 
-// ── 验证 ──
-const verifyHash = async (data: any) => {
+// ── 验证哈希 ──
+const verifyHash = async (data) => {
   try {
     const raw = `${data.card_id}:${data.device_id}:${data.hexagram_code}:${data.created_at}`
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw))
-    const hex = Array.from(new Uint8Array(buf)).map((b: number) => b.toString(16).padStart(2,'0')).join('')
+    const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
     verifyState.value = hex.slice(0,16) === data.verified_hash ? 'verified' : 'failed'
   } catch { verifyState.value = 'failed' }
 }
@@ -201,7 +189,7 @@ const verifyLabel = computed(() => ({
 }[verifyState.value]))
 
 // ── 视觉种子 ──
-const seed = computed((): number => {
+const seed = computed(() => {
   if (!card.value) return 0
   const s = `${card.value.device_id}-${new Date(card.value.created_at).getTime()}-${card.value.hexagram_code}`
   let h = 0
@@ -209,10 +197,13 @@ const seed = computed((): number => {
   return Math.abs(h)
 })
 
-const syncRate = computed((): string => {
+const syncRate = computed(() => {
+  if (!seed.value) return '---'
   const r = 80 + (seed.value % 200) / 10
   return (r > 99.9 ? 99.9 : r).toFixed(1)
 })
+
+const isGodlike = computed(() => parseFloat(syncRate.value) >= 99)
 
 const rarityInfo = computed(() => {
   const r = parseFloat(syncRate.value)
@@ -223,41 +214,80 @@ const rarityInfo = computed(() => {
 })
 
 const rarityLabel  = computed(() => rarityInfo.value.label)
-const accent       = computed(() => rarityInfo.value.accent)
+const accentColor  = computed(() => rarityInfo.value.accent)
 const entropyLabel = computed(() => ['STABLE','NOMINAL','OPTIMAL','CRITICAL'][seed.value % 4])
+const editionStr   = computed(() => card.value?.edition_number?.toString().padStart(4,'0') || '????')
+const hashDisplay  = computed(() => card.value?.verified_hash?.slice(0,8).toUpperCase() || '--------')
 
-const glowStyle  = computed(() => ({
-  color: accent.value,
-  textShadow: `0 0 28px ${accent.value}88,0 0 56px ${accent.value}44,0 0 90px ${accent.value}22`
-}))
-const yaoStyle   = computed(() => ({
-  background: accent.value,
-  boxShadow: `0 0 10px ${accent.value}cc,0 0 20px ${accent.value}55`
-}))
-const shareStyle = computed(() => ({
-  borderColor: accent.value + 'aa',
-  color: accent.value,
-  background: accent.value + '1a',
-  boxShadow: `0 0 22px ${accent.value}30`
+// ── 卡片样式 ──
+const cardStyle = computed(() => ({
+  border: `1px solid ${accentColor.value}55`,
+  background: 'linear-gradient(175deg, #08090f 0%, #04050a 100%)',
 }))
 
-const hexLines   = computed((): number[] =>
-  (card.value?.hexagram_code || '').split('').map(Number)
-)
-const firstLine  = computed((): string => {
-  const interp: string = card.value?.interpretation || ''
-  return interp.split(/[。\n]/)[0] || ''
+// 外发光（关键视觉——不同稀有度完全不同的光晕）
+const glowStyle = computed(() => {
+  const c = accentColor.value
+  const r = parseFloat(syncRate.value)
+  // GODLIKE：强烈红色脉冲，多层
+  if (r >= 99) return {
+    boxShadow: `0 0 0 1px ${c}, 0 0 20px ${c}99, 0 0 50px ${c}55, 0 0 100px ${c}22`,
+    animation: 'godlike-pulse 1.5s ease-in-out infinite',
+  }
+  // ULTRA RARE：金色双层光晕
+  if (r >= 95.1) return {
+    boxShadow: `0 0 0 1px ${c}99, 0 0 16px ${c}66, 0 0 40px ${c}33`,
+    animation: 'rare-breathe 3s ease-in-out infinite',
+  }
+  // RARE：青色柔光
+  if (r >= 90.1) return {
+    boxShadow: `0 0 0 1px ${c}77, 0 0 12px ${c}44, 0 0 28px ${c}22`,
+    animation: 'rare-breathe 4s ease-in-out infinite',
+  }
+  // COMMON：基础蓝光
+  return {
+    boxShadow: `0 0 0 1px ${c}44, 0 0 10px ${c}33`,
+  }
 })
-const cardDate   = computed((): string => {
-  if (!card.value?.created_at) return ''
-  const d = new Date(card.value.created_at)
-  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`
-})
-const hashDisplay = computed((): string =>
-  (card.value?.verified_hash || '').slice(0,8).toUpperCase()
-)
 
-const beastImageUrl = computed((): string => {
+const cornerStyle = computed(() => ({
+  borderColor: accentColor.value + 'cc',
+  boxShadow: `0 0 8px ${accentColor.value}66`,
+}))
+
+const hudColor = computed(() => ({ color: accentColor.value + '88' }))
+
+const hexNameStyle = computed(() => ({
+  color: accentColor.value,
+  textShadow: `0 0 20px ${accentColor.value}99, 0 0 40px ${accentColor.value}44`,
+}))
+
+const artFadeStyle = computed(() => ({
+  background: `linear-gradient(to bottom, transparent 30%, #04050a 100%)`,
+}))
+
+const rarityTagStyle = computed(() => ({
+  color: accentColor.value,
+  border: `1px solid ${accentColor.value}55`,
+  background: `${accentColor.value}18`,
+  textShadow: `0 0 8px ${accentColor.value}66`,
+}))
+
+const primaryBtnStyle = computed(() => ({
+  borderColor: accentColor.value + '99',
+  color: accentColor.value,
+  background: accentColor.value + '18',
+  boxShadow: `0 0 20px ${accentColor.value}28`,
+}))
+
+// ── 爻象 ──
+const hexLines = computed(() => {
+  if (!card.value?.hexagram_code) return []
+  return card.value.hexagram_code.split('').map(Number).reverse()
+})
+
+// ── 神兽 ──
+const beastImageUrl = computed(() => {
   const n = (card.value?.name_en || '').toLowerCase()
   if (n.match(/heaven|sky|thunder|wind|wood/)) return '/guardian-dragon.png'
   if (n.match(/fire|sun|bright|south|clinging/)) return '/guardian-phoenix.png'
@@ -266,225 +296,92 @@ const beastImageUrl = computed((): string => {
   return '/guardian-qilin.png'
 })
 
-// ── 符咒路径 ──
-const tPaths = computed((): string[] => {
-  const s = seed.value
-  return ([
-    `M ${48+(s%18)},${18+(s%24)} Q ${98+(s%32)},${82+(s%18)} 100,${162+(s%18)} T ${162+(s%18)},${178+(s%14)}`,
-    `M 18,${88+(s%28)} L ${68+(s%28)},${98+(s%18)} L ${93+(s%18)},${172+(s%18)}`,
-    `M ${158+(s%22)},18 C ${118+(s%28)},52 ${78+(s%22)},128 ${38+(s%22)},${152+(s%18)}`,
-    `M ${88+(s%8)},14 L ${98+(s%8)},${72+(s%32)} L ${158+(s%22)},${152+(s%18)}`,
-  ] as string[]).slice(0, 3 + (s % 2))
-})
-
-const tNodes = computed((): Array<{x:number;y:number}> => {
-  const s = seed.value
-  return [
-    { x:38+(s%28), y:52+(s%28) },
-    { x:148+(s%22), y:38+(s%22) },
-    { x:100, y:100 },
-    { x:52+(s%18), y:148+(s%18) },
-    { x:152+(s%18), y:138+(s%18) },
-    { x:72+(s%22), y:72+(s%22) },
-  ]
-})
-
+// ── 扫描线 ──
 const animateScan = () => {
   scanY.value = (scanY.value + 0.35) % 100
   scanRaf = requestAnimationFrame(animateScan)
 }
 
-// ══════════════════════════════════════════
-// ★ 像素感知粒子系统
-// ══════════════════════════════════════════
-interface EmitSource { x: number; y: number; brightness: number; r: number; g: number; b: number }
-interface Particle {
-  x: number; y: number; vx: number; vy: number
-  alpha: number; decay: number; size: number; char: string
-  type: 'gold' | 'glow' | 'beast' | 'dim'
-  pr: number; pg: number; pb: number; phase: number
-}
-
-const initPixelParticles = () => {
+// ── 粒子系统（字符型，卦象相关）──
+const initParticles = () => {
   const canvas = particleCanvas.value
   if (!canvas) return
   const ctx = canvas.getContext('2d')
-  if (!ctx) return
-
-  const resize = () => {
+  canvas.width  = window.innerWidth
+  canvas.height = window.innerHeight
+  window.addEventListener('resize', () => {
     canvas.width  = window.innerWidth
     canvas.height = window.innerHeight
-  }
-  resize()
-  window.addEventListener('resize', resize)
+  })
 
-  const hexStr = accent.value.replace('#','')
-  const ar = parseInt(hexStr.slice(0,2), 16)
-  const ag = parseInt(hexStr.slice(2,4), 16)
-  const ab = parseInt(hexStr.slice(4,6), 16)
-
-  const guas = ['乾','坤','坎','离','震','巽','艮','兑']
-  const hexCode: string = card.value?.hexagram_code || '000000'
-  const cardChars: string[] = [
+  const accent = accentColor.value
+  const hexCode = card.value?.hexCode || '000000'
+  const chars = [
     card.value?.name_zh || '命',
-    ...hexCode.split('').map((n: string) => n === '1' ? '阳' : '阴'),
-    ...guas.slice(seed.value % 4, (seed.value % 4) + 4),
-    '◈','⬡','☯','⚡','✦',
-    ...'ABCDEF0123456789'.split('').slice(seed.value % 8, (seed.value % 8) + 6),
+    ...('0123456789ABCDEF'.split('')),
+    '◈', '⬡', '☯', '⚡', '⬡',
+    '乾','坤','坎','离','震','巽','艮','兑'
   ]
 
-  const isGodlike = parseFloat(syncRate.value) >= 99
-  const PARTICLE_N = isGodlike ? 160 : 110
+  const particles = Array.from({ length: 60 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 0.5,
+    vy: -(0.2 + Math.random() * 0.6),
+    alpha: Math.random() * 0.6,
+    size: 9 + Math.floor(Math.random() * 5),
+    char: chars[Math.floor(Math.random() * chars.length)],
+    gold: Math.random() > 0.88,
+    phase: Math.random() * Math.PI * 2,
+  }))
 
-  let emitSources: EmitSource[] = []
-  let particles: Particle[] = []
-
-  const fallbackSources = (): EmitSource[] =>
-    Array.from({ length: 120 }, (): EmitSource => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height * 0.65,
-      brightness: 160 + Math.random() * 80,
-      r: ar, g: ag, b: ab,
-    }))
-
-  const samplePixels = (imgEl: HTMLImageElement): EmitSource[] => {
-    const SW = 100, SH = 100
-    const off = document.createElement('canvas')
-    off.width = SW; off.height = SH
-    const octx = off.getContext('2d')
-    if (!octx) return fallbackSources()
-    octx.drawImage(imgEl, 0, 0, SW, SH)
-
-    let pixels: ImageData
-    try {
-      pixels = octx.getImageData(0, 0, SW, SH)
-    } catch {
-      return fallbackSources()
-    }
-
-    const data = pixels.data
-    const scaleX = canvas.width  / SW
-    const scaleY = canvas.height / SH
-
-    const sources: EmitSource[] = []
-    for (let py = 0; py < SH; py++) {
-      for (let px = 0; px < SW; px++) {
-        const idx = (py * SW + px) * 4
-        const pr = data[idx] as number
-        const pg = data[idx + 1] as number
-        const pb = data[idx + 2] as number
-        const pa = data[idx + 3] as number
-        if (pa < 40) continue
-        const brightness = 0.299 * pr + 0.587 * pg + 0.114 * pb
-        if (brightness > 120) {
-          sources.push({
-            x: px * scaleX + (Math.random() - .5) * scaleX * 2.5,
-            y: py * scaleY + (Math.random() - .5) * scaleY * 2.5,
-            brightness,
-            r: Math.round(pr * 0.6 + ar * 0.4),
-            g: Math.round(pg * 0.6 + ag * 0.4),
-            b: Math.round(pb * 0.6 + ab * 0.4),
-          })
-        }
-      }
-    }
-    sources.sort((a, b) => b.brightness - a.brightness)
-    return sources.slice(0, 250)
-  }
-
-  const makeParticle = (): Particle => {
-    const def: EmitSource = { x: Math.random()*canvas.width, y: Math.random()*canvas.height*0.6, brightness:160, r:ar, g:ag, b:ab }
-    const src: EmitSource = emitSources.length > 0
-      ? (emitSources[Math.floor(Math.random() * emitSources.length)] ?? def)
-      : def
-
-    const roll = Math.random()
-    const type = (roll > 0.94 ? 'gold' : roll > 0.80 ? 'glow' : roll > 0.62 ? 'beast' : 'dim') as Particle['type']
-
-    return {
-      x:     src.x + (Math.random() - .5) * 28,
-      y:     src.y + (Math.random() - .5) * 18,
-      vx:    (Math.random() - .5) * 0.75,
-      vy:    -(0.18 + Math.random() * (isGodlike ? 1.4 : 0.85)),
-      alpha: 0.65 + Math.random() * 0.35,
-      decay: 0.003 + Math.random() * 0.005,
-      size:  8 + Math.floor(Math.random() * (isGodlike ? 10 : 6)),
-      char:  cardChars[Math.floor(Math.random() * cardChars.length)] ?? '◈',
-      type,
-      pr: src.r, pg: src.g, pb: src.b,
-      phase: Math.random() * Math.PI * 2,
-    }
-  }
-
-  const drawLoop = () => {
-    ctx.fillStyle = 'rgba(3,3,10,0.065)'
+  const draw = () => {
+    ctx.fillStyle = 'rgba(4,5,10,0.06)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     const t = Date.now() / 1000
 
-    for (const p of particles) {
-      const breathe = 0.55 + 0.45 * Math.sin(t * 1.0 + p.phase)
-      const a = Math.max(0, p.alpha * breathe)
-      if (a <= 0) continue
-
-      ctx.shadowBlur = 0
-      if (p.type === 'gold') {
-        ctx.fillStyle   = `rgba(200,170,110,${a * 0.95})`
-        ctx.shadowColor = '#c8aa6e'
-        ctx.shadowBlur  = isGodlike ? 14 : 8
-      } else if (p.type === 'glow') {
-        ctx.fillStyle   = `rgba(${ar},${ag},${ab},${a * 0.88})`
-        ctx.shadowColor = accent.value
-        ctx.shadowBlur  = 7
-      } else if (p.type === 'beast') {
-        ctx.fillStyle   = `rgba(${p.pr},${p.pg},${p.pb},${a * 0.78})`
-        ctx.shadowColor = `rgb(${p.pr},${p.pg},${p.pb})`
-        ctx.shadowBlur  = 4
+    particles.forEach(p => {
+      const breathe = 0.5 + 0.5 * Math.sin(t * 0.7 + p.phase)
+      const a = p.alpha * breathe
+      if (p.gold) {
+        ctx.fillStyle = `rgba(200,170,110,${a * 0.85})`
+        ctx.shadowColor = '#c8aa6e'; ctx.shadowBlur = 7
       } else {
-        ctx.fillStyle = `rgba(${ar},${ag},${ab},${a * 0.30})`
+        const r = parseInt(accent.slice(1,3), 16)
+        const g = parseInt(accent.slice(3,5), 16)
+        const b = parseInt(accent.slice(5,7), 16)
+        ctx.fillStyle = `rgba(${r},${g},${b},${a * 0.5})`
+        ctx.shadowBlur = 0
       }
-
       ctx.font = `${p.size}px monospace`
       ctx.fillText(p.char, p.x, p.y)
       ctx.shadowBlur = 0
-
-      p.x    += p.vx
-      p.y    += p.vy
-      p.vy   -= 0.007
-      p.alpha -= p.decay
-
-      if (p.alpha <= 0.02 || p.y < -30) {
-        Object.assign(p, makeParticle())
+      p.x += p.vx; p.y += p.vy; p.alpha -= 0.002
+      if (p.alpha <= 0 || p.y < -20) {
+        p.x = Math.random() * canvas.width
+        p.y = canvas.height + 10
+        p.alpha = 0.4 + Math.random() * 0.4
+        p.vy = -(0.2 + Math.random() * 0.6)
+        p.vx = (Math.random() - 0.5) * 0.5
+        p.char = chars[Math.floor(Math.random() * chars.length)]
+        p.gold = Math.random() > 0.88
       }
-    }
-    animRaf = requestAnimationFrame(drawLoop)
+    })
+    animRaf = requestAnimationFrame(draw)
   }
-
-  const launch = (sources: EmitSource[]) => {
-    emitSources = sources
-    particles   = Array.from({ length: PARTICLE_N }, makeParticle)
-    drawLoop()
-  }
-
-  const tryLoad = () => {
-    const domImg = beastImgEl.value
-    if (domImg && domImg.complete && domImg.naturalWidth > 0) {
-      launch(samplePixels(domImg)); return
-    }
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.src = beastImageUrl.value
-    img.onload  = () => launch(samplePixels(img))
-    img.onerror = () => launch(fallbackSources())
-  }
-  setTimeout(tryLoad, 200)
+  draw()
 }
 
+// ── 分享 / 复制 ──
 const shareCard = async () => {
-  const url  = window.location.href
-  const text: string = card.value?.oracle || '命运已封印，解读正在流动...'
   try {
-    if (navigator.share) await navigator.share({ title:`命运卡·${card.value?.name_zh}·Cyber Tao`, text, url })
-    else await copyLink()
+    if (navigator.share) {
+      await navigator.share({
+        title: `命运卡 · ${card.value?.name_zh} · Cyber Tao`,
+        text: card.value?.oracle || '',
+        url: window.location.href,
+      })
+    } else { copyLink() }
   } catch {}
 }
 
@@ -496,7 +393,7 @@ const copyLink = async () => {
   } catch {}
 }
 
-onMounted(loadCard)
+onMounted(() => loadCard())
 onUnmounted(() => {
   if (animRaf) cancelAnimationFrame(animRaf)
   if (scanRaf) cancelAnimationFrame(scanRaf)
@@ -504,155 +401,270 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* ── 根容器 ── */
 .destiny-root {
-  position: fixed; inset: 0; background: #03030a;
-  overflow: hidden; display: flex; flex-direction: column;
+  position: fixed; inset: 0;
+  background: #03030a;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
   font-family: 'Share Tech Mono', monospace;
 }
-.destiny-canvas {
-  position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.7;
+
+/* ── 背景 ── */
+.destiny-bg-canvas {
+  position: absolute; inset: 0; z-index: 0;
+  pointer-events: none; opacity: 0.55;
 }
-.beast-bg { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.beast-img {
-  width: 100%; height: 100%; object-fit: cover;
-  object-position: center 18%; opacity: 0.35;
+.destiny-bg-overlay {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse 60% 60% at 50% 45%, transparent 30%, rgba(3,3,10,0.8) 100%);
 }
-.beast-vignette {
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 50% 38%, transparent 18%, rgba(3,3,10,0.62) 65%, rgba(3,3,10,0.96) 100%);
+
+/* ── 状态屏 ── */
+.destiny-state {
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
-.state-center {
-  position: relative; z-index: 10; flex: 1;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+.loader-rings {
+  position: relative; width: 44px; height: 44px;
 }
-.spin-outer {
-  width: 42px; height: 42px; border-radius: 50%;
-  border: 2px solid rgba(200,170,110,0.2); border-top-color: #c8aa6e;
-  animation: spin 1s linear infinite;
+.ring {
+  position: absolute; border-radius: 50%; animation: spin 1s linear infinite;
 }
-.spin-inner {
-  width: 26px; height: 26px; border-radius: 50%; position: absolute;
-  border: 1px solid rgba(34,211,238,0.2); border-bottom-color: #22d3ee;
-  animation: spin 0.7s linear infinite reverse;
-}
-.state-text {
+.ring-outer { inset: 0; border: 2px solid rgba(200,170,110,0.2); border-top-color: #c8aa6e; }
+.ring-inner { inset: 8px; border: 1px solid rgba(34,211,238,0.2); border-bottom-color: #22d3ee;
+  animation-direction: reverse; animation-duration: 0.7s; }
+.loader-text {
   font-size: 10px; letter-spacing: 0.4em; color: rgba(200,170,110,0.6);
   text-transform: uppercase; animation: pulse 1.5s ease-in-out infinite;
 }
-.error-glyph { font-size: 40px; color: rgba(239,68,68,0.7); }
-.error-title { font-size: 13px; letter-spacing: 0.5em; color: rgba(239,68,68,0.8); text-transform: uppercase; }
-.error-body  { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 0.2em; text-align: center; padding: 0 28px; line-height: 1.7; }
-.content-wrap {
-  position: relative; z-index: 10; flex: 1;
+
+/* ── 滚动容器 ── */
+.destiny-scroll {
+  position: relative; z-index: 10;
+  width: 100%; height: 100%;
+  overflow-y: auto;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 24px 16px 40px;
+}
+.card-wrapper {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  width: 100%; max-width: 380px;
+}
+
+/* ══════════════════════════════════════
+   ★ 命运卡牌主体 — 固定比例 9:16
+══════════════════════════════════════ */
+.destiny-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  /* 基础阴影：卡片深度感 */
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8), 0 8px 32px rgba(0,0,0,0.6);
+}
+
+/* 外发光层（absolute，不裁剪） */
+.card-glow {
+  position: absolute; inset: -2px;
+  border-radius: 18px;
+  z-index: 0;
+  pointer-events: none;
+  transition: box-shadow 0.5s;
+}
+
+/* 四角切角 */
+.corner-tl, .corner-tr, .corner-bl, .corner-br {
+  position: absolute; width: 20px; height: 20px; z-index: 20; pointer-events: none;
+}
+.corner-tl { top: 0; left: 0;     border-top: 2px solid; border-left: 2px solid;  border-radius: 16px 0 0 0; }
+.corner-tr { top: 0; right: 0;    border-top: 2px solid; border-right: 2px solid; border-radius: 0 16px 0 0; }
+.corner-bl { bottom: 0; left: 0;  border-bottom: 2px solid; border-left: 2px solid;  border-radius: 0 0 0 16px; }
+.corner-br { bottom: 0; right: 0; border-bottom: 2px solid; border-right: 2px solid; border-radius: 0 0 16px 0; }
+
+/* 扫描线 */
+.scan-line {
+  position: absolute; left: 0; right: 0; height: 1px;
+  z-index: 25; pointer-events: none;
+  opacity: 0.45;
+  transition: top 0.05s linear;
+}
+
+/* ── 顶部 HUD ── */
+.card-top-hud {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.3);
+  flex-shrink: 0;
+}
+.hud-mono {
+  font-size: 8px; letter-spacing: 0.3em; font-family: monospace;
+}
+
+/* 验证徽章 */
+.verify-badge {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 2px;
+  font-size: 8px; letter-spacing: 0.2em;
+  transition: all 0.4s;
+}
+.verify-badge.pending  { border: 1px solid rgba(200,170,110,0.2); color: rgba(200,170,110,0.5); }
+.verify-badge.verified { border: 1px solid rgba(34,197,94,0.5); color: rgba(34,197,94,0.9); background: rgba(34,197,94,0.08); box-shadow: 0 0 10px rgba(34,197,94,0.2); }
+.verify-badge.failed   { border: 1px solid rgba(239,68,68,0.4); color: rgba(239,68,68,0.7); }
+.verify-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: currentColor;
+}
+.verify-label { font-size: 8px; letter-spacing: 0.15em; }
+
+/* ── 神兽图区（约38%高度）── */
+.card-art {
+  position: relative;
+  flex: 0 0 38%;
+  overflow: hidden;
+}
+.beast-art-img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center 20%;
+  opacity: 0.85;
+}
+.art-fade {
+  position: absolute; inset: 0;
+}
+.rarity-tag {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 8px; letter-spacing: 0.3em;
+  padding: 3px 8px;
+  font-family: monospace; text-transform: uppercase;
+  z-index: 5;
+}
+.godlike-tag {
+  position: absolute; bottom: 14px; right: 10px;
+  font-size: 8px; letter-spacing: 0.3em;
+  color: #f87171;
+  border: 1px solid rgba(239,68,68,0.45);
+  background: rgba(0,0,0,0.7);
+  padding: 3px 8px; z-index: 5;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ── 卦象区 ── */
+.card-hex-section {
+  position: relative; z-index: 10;
   display: flex; flex-direction: column; align-items: center;
-  padding: 0 18px; overflow-y: auto;
-  max-width: 480px; width: 100%; margin: 0 auto;
+  padding: 14px 16px 10px;
+  flex-shrink: 0;
 }
-.content-wrap::-webkit-scrollbar { width: 2px; }
-.content-wrap::-webkit-scrollbar-thumb { background: rgba(200,170,110,0.3); border-radius: 4px; }
-.top-bar {
-  width: 100%; display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 2px; border-bottom: 1px solid rgba(200,170,110,0.14); flex-shrink: 0;
-}
-.brand   { font-size: 8px; letter-spacing: 0.5em; color: rgba(200,170,110,0.5); text-transform: uppercase; }
-.edition { font-size: 11px; color: rgba(255,255,255,0.65); letter-spacing: 0.2em; }
-.card-date { font-size: 9px; color: rgba(255,255,255,0.28); letter-spacing: 0.2em; }
-.verify-chip {
-  display: flex; align-items: center; gap: 5px;
-  padding: 4px 10px; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
-  border: 1px solid; transition: all 0.5s;
-}
-.verify-chip.pending  { border-color: rgba(200,170,110,0.2); color: rgba(200,170,110,0.45); }
-.verify-chip.verified { border-color: rgba(34,197,94,0.5);   color: rgba(34,197,94,0.9);   box-shadow: 0 0 12px rgba(34,197,94,0.2); }
-.verify-chip.failed   { border-color: rgba(239,68,68,0.4);   color: rgba(239,68,68,0.7); }
-.verify-dot { width: 5px; height: 5px; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
-.verify-chip.pending  .verify-dot { background: rgba(200,170,110,0.5); }
-.verify-chip.verified .verify-dot { background: rgba(34,197,94,0.9);  animation: none; }
-.verify-chip.failed   .verify-dot { background: rgba(239,68,68,0.7);  animation: none; }
-.name-block  { text-align: center; padding: 14px 0 8px; }
-.gua-name {
+.hex-name {
   font-family: 'Noto Serif SC', serif;
-  font-size: clamp(60px, 17vw, 96px); font-weight: 900;
-  line-height: 1; letter-spacing: 0.05em;
-  animation: breathe 4s ease-in-out infinite;
+  font-size: clamp(42px, 14vw, 58px);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  margin-bottom: 4px;
 }
-.gua-meta {
-  display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 6px;
-  font-size: 11px; letter-spacing: 0.35em; color: rgba(255,255,255,0.5); text-transform: uppercase;
+.hex-en {
+  font-size: 10px; letter-spacing: 0.45em;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+  margin-bottom: 10px;
 }
-.sep  { color: rgba(255,255,255,0.2); }
-.mono { font-family: monospace; font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.2em; }
-.talisman-wrap {
-  position: relative; width: min(210px, 52vw); height: min(210px, 52vw);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; margin: 4px 0;
+.hex-divider {
+  width: 40px; height: 1px; margin-bottom: 10px; opacity: 0.6;
 }
-.talisman-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.hex-lines { position: absolute; z-index: 2; display: flex; flex-direction: column-reverse; gap: 6px; }
-.hex-row   { display: flex; align-items: center; gap: 4px; animation: line-in 0.4s ease-out backwards; }
-.yao     { height: 5px; border-radius: 2px; }
-.yang    { width: 54px; }
-.yin     { width: 22px; }
-.yao-gap { width: 10px; }
-.poem {
-  font-family: 'Noto Serif SC', serif;
-  font-size: 13px; letter-spacing: 0.35em; line-height: 1.9;
-  color: rgba(255,255,255,0.72); text-align: center; max-width: 300px; padding: 2px 0 4px;
+/* 爻象显示 */
+.hex-lines-display {
+  display: flex; flex-direction: column; gap: 4px;
 }
-.oracle-wrap {
-  display: flex; flex-direction: column; align-items: center; gap: 9px;
-  width: 100%; max-width: 330px; padding: 2px 0 4px;
+.hex-line-row {
+  display: flex; align-items: center; justify-content: center; gap: 3px;
 }
-.oracle-rule { width: 100%; height: 1px; }
+.hl { height: 4px; border-radius: 2px; }
+.hl-yang { width: 44px; }
+.hl-yin  { width: 18px; }
+.hl-gap  { width: 8px; }
+
+/* ── Oracle 短句区 ── */
+.card-oracle-section {
+  position: relative; z-index: 10;
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 8px 20px;
+  gap: 8px;
+}
+.oracle-deco-line {
+  width: 100%; height: 1px;
+}
 .oracle-text {
   font-family: 'Noto Serif SC', serif;
-  font-size: 13px; line-height: 1.85; letter-spacing: 0.04em;
-  color: rgba(255,255,255,0.82); text-align: center; font-style: italic;
+  font-size: 12px;
+  line-height: 1.85;
+  color: rgba(255,255,255,0.82);
+  text-align: center;
+  letter-spacing: 0.03em;
+  font-style: italic;
 }
-.hud-bar {
-  width: 100%; display: flex; align-items: center; justify-content: center;
-  padding: 8px 0; flex-shrink: 0;
-  border-top: 1px solid rgba(200,170,110,0.1); border-bottom: 1px solid rgba(200,170,110,0.1);
-  margin: 4px 0;
+
+/* ── 底部 HUD ── */
+.card-bottom-hud {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  gap: 0;
+  padding: 8px 0 4px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.3);
+  flex-shrink: 0;
 }
-.hud-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0 12px; }
-.hud-lbl  { font-size: 7px; letter-spacing: 0.3em; color: rgba(255,255,255,0.28); text-transform: uppercase; }
-.hud-val  { font-size: 11px; letter-spacing: 0.15em; color: rgba(255,255,255,0.65); }
-.hud-rule { width: 1px; height: 26px; background: rgba(255,255,255,0.1); }
-.bottom-bar {
-  width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px;
-  padding: 12px 0 20px; flex-shrink: 0;
+.hud-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 0 14px; }
+.hud-label { font-size: 7px; letter-spacing: 0.25em; color: rgba(255,255,255,0.25); text-transform: uppercase; }
+.hud-value { font-size: 11px; letter-spacing: 0.1em; font-family: monospace; }
+.hud-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.08); }
+
+/* 卡片 ID 条 */
+.card-id-strip {
+  position: relative; z-index: 10;
+  text-align: center; padding: 4px 0 8px;
+  background: rgba(0,0,0,0.3);
+  flex-shrink: 0;
 }
-.btn-share {
-  width: 100%; padding: 13px 0; font-family: monospace; font-size: 12px; font-weight: 900;
-  letter-spacing: 0.55em; text-transform: uppercase; border: 1px solid; cursor: pointer; transition: filter 0.2s;
+
+/* ── 操作按钮 ── */
+.card-actions {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%;
 }
-.btn-share:hover { filter: brightness(1.25); }
-.btn-row  { display: flex; gap: 12px; }
+.btn-primary {
+  width: 100%; padding: 13px 0;
+  font-family: monospace; font-size: 12px; font-weight: 900;
+  letter-spacing: 0.55em; text-transform: uppercase;
+  border: 1px solid; border-radius: 2px;
+  cursor: pointer; transition: all 0.3s;
+}
+.btn-primary:hover { filter: brightness(1.2); }
+.btn-row { display: flex; gap: 10px; width: 100%; }
 .btn-ghost {
+  flex: 1; padding: 8px 0;
   font-family: monospace; font-size: 10px; letter-spacing: 0.3em;
-  color: rgba(255,255,255,0.38); background: transparent;
-  border: 1px solid rgba(255,255,255,0.14); padding: 7px 18px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 2px;
   cursor: pointer; transition: all 0.2s;
 }
 .btn-ghost:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.3); }
-.card-id-lbl { font-size: 8px; letter-spacing: 0.18em; color: rgba(200,170,110,0.28); font-family: monospace; }
-@keyframes spin    { to { transform: rotate(360deg); } }
-@keyframes pulse   { 0%,100%{opacity:0.45} 50%{opacity:1} }
-@keyframes breathe { 0%,100%{filter:brightness(0.88)} 50%{filter:brightness(1.15)} }
-@keyframes line-in { from{opacity:0;transform:scaleX(0.35);filter:blur(5px)} to{opacity:1;transform:scaleX(1);filter:blur(0)} }
-@keyframes cw      { to { transform: rotate(360deg);  } }
-@keyframes ccw     { to { transform: rotate(-360deg); } }
-@keyframes t-path-flow {
-  0%   { stroke-dashoffset: 280; opacity: 0.15; }
-  25%  { opacity: 0.75; }
-  75%  { opacity: 0.75; }
-  100% { stroke-dashoffset: 0;   opacity: 0.15; }
+
+/* ── 动画 ── */
+@keyframes spin  { from { transform: rotate(0) }   to { transform: rotate(360deg) } }
+@keyframes pulse { 0%,100% { opacity: 0.5 } 50% { opacity: 1 } }
+@keyframes godlike-pulse {
+  0%,100% { box-shadow: 0 0 0 1px #ef4444, 0 0 20px #ef444499, 0 0 50px #ef444455; }
+  50%      { box-shadow: 0 0 0 2px #ef4444, 0 0 35px #ef4444bb, 0 0 80px #ef444477; }
 }
-.t-path {
-  stroke-dasharray: 38 14;
-  animation: t-path-flow var(--dur, 4s) var(--delay, 0s) linear infinite;
+@keyframes rare-breathe {
+  0%,100% { opacity: 0.8; }
+  50%      { opacity: 1; }
 }
-@keyframes t-node-pulse { 0%,100%{opacity:0.28} 50%{opacity:1} }
-.t-node { animation: t-node-pulse 2.5s var(--delay,0s) ease-in-out infinite; }
 </style>
