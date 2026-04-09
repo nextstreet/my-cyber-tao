@@ -1,177 +1,361 @@
 <template>
-  <!-- 全屏背景：粒子 Canvas + 暗色遮罩 -->
   <div class="destiny-root">
-    <canvas ref="particleCanvas" class="destiny-bg-canvas"></canvas>
-    <div class="destiny-bg-overlay"></div>
+
+    <!-- Layer 0: 粒子 Canvas（全程存在）-->
+    <canvas ref="particleCanvas" class="particle-canvas"></canvas>
 
     <!-- 加载态 -->
-    <div v-if="loading" class="destiny-state">
-      <div class="loader-rings">
-        <div class="ring ring-outer"></div>
-        <div class="ring ring-inner"></div>
-      </div>
+    <div v-if="phase === 'loading'" class="center-state">
+      <div class="loader-ring"></div>
+      <div class="loader-ring loader-ring-inner"></div>
       <p class="loader-text">ACCESSING DESTINY MATRIX...</p>
     </div>
 
     <!-- 错误态 -->
-    <div v-else-if="error" class="destiny-state">
-      <div style="font-size:36px;color:rgba(239,68,68,0.7)">⚠</div>
-      <p style="font-size:13px;letter-spacing:0.4em;color:rgba(239,68,68,0.8);text-transform:uppercase">SIGNAL LOST</p>
-      <p style="font-size:11px;color:rgba(255,255,255,0.4);max-width:280px;text-align:center;line-height:1.7">{{ error }}</p>
+    <div v-else-if="phase === 'error'" class="center-state">
+      <p style="font-size:32px;color:rgba(239,68,68,0.7)">⚠</p>
+      <p style="font-size:11px;letter-spacing:0.4em;color:rgba(239,68,68,0.8);text-transform:uppercase">SIGNAL LOST</p>
+      <p style="font-size:10px;color:rgba(255,255,255,0.4);max-width:260px;text-align:center;line-height:1.8">{{ errorMsg }}</p>
       <button class="btn-ghost" @click="$router.push('/')">← RETURN</button>
     </div>
 
-    <!-- 卡片主体 -->
-    <div v-else-if="card" class="destiny-scroll">
-      <div class="card-wrapper">
+    <!-- 主内容（加载成功后） -->
+    <template v-else-if="card">
 
-        <!-- ★ 真正的卡牌 -->
-        <div class="destiny-card" :style="cardStyle">
+      <!-- ═══ Phase 1: SVG 入场动画（全屏遮罩） ═══ -->
+      <div class="seal-stage" :class="{ 'seal-stage-exit': phase !== 'seal' }">
+        <!-- 动态SVG：根据神兽类型切换 -->
+        <svg class="seal-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="glow-filter">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
 
-          <!-- 外发光层（稀有度颜色） -->
-          <div class="card-glow" :style="glowStyle"></div>
+          <!-- 外旋转环 -->
+          <circle cx="200" cy="200" r="160" fill="none"
+            :stroke="accentColor" stroke-width="0.6" stroke-dasharray="8 4" opacity="0.4"
+            style="transform-origin:200px 200px;animation:orbit-cw 8s linear infinite"/>
+          <circle cx="200" cy="200" r="135" fill="none"
+            :stroke="accentColor" stroke-width="0.4" stroke-dasharray="4 8" opacity="0.25"
+            style="transform-origin:200px 200px;animation:orbit-ccw 12s linear infinite"/>
 
-          <!-- 四角切角装饰 -->
-          <div class="corner-tl" :style="cornerStyle"></div>
-          <div class="corner-tr" :style="cornerStyle"></div>
-          <div class="corner-bl" :style="cornerStyle"></div>
-          <div class="corner-br" :style="cornerStyle"></div>
+          <!-- 八卦方位射线 -->
+          <g :stroke="accentColor" stroke-width="0.5" opacity="0.3">
+            <line v-for="(a,i) in [0,45,90,135,180,225,270,315]" :key="i"
+              :x1="200 + 80*Math.cos(a*Math.PI/180)"
+              :y1="200 + 80*Math.sin(a*Math.PI/180)"
+              :x2="200 + 155*Math.cos(a*Math.PI/180)"
+              :y2="200 + 155*Math.sin(a*Math.PI/180)"
+              :style="`animation:ray-pulse 2s ease-in-out ${i*0.25}s infinite`"/>
+          </g>
 
-          <!-- 扫描线 -->
-          <div class="scan-line" :style="{ top: scanY + '%', background: accentColor }"></div>
+          <!-- 神兽专属路径动画 -->
+          <!-- DRAGON：蜿蜒收拢弧线 -->
+          <g v-if="beastKey==='dragon'" fill="none" :stroke="accentColor" filter="url(#glow-filter)">
+            <path d="M 60,200 Q 110,80 200,100 Q 290,120 340,200 Q 290,280 200,300 Q 110,320 60,200"
+              stroke-width="1.5" stroke-dasharray="400" stroke-dashoffset="400" opacity="0.85"
+              style="animation:draw-path 2.2s ease-out 0.3s forwards"/>
+            <path d="M 200,40 Q 320,120 310,200 Q 300,280 200,360 Q 100,280 90,200 Q 80,120 200,40"
+              stroke-width="1" stroke-dasharray="500" stroke-dashoffset="500" opacity="0.55"
+              style="animation:draw-path 2.8s ease-out 0.6s forwards"/>
+            <!-- 龙珠收拢粒子点 -->
+            <circle v-for="(p,i) in dragonPoints" :key="i" :cx="p.x" :cy="p.y" r="2"
+              :fill="accentColor" :style="`animation:converge-point ${1.5+i*0.1}s ease-in ${0.3+i*0.08}s forwards`"/>
+          </g>
 
-          <!-- ── 卡顶 HUD ── -->
-          <div class="card-top-hud">
-            <span class="hud-mono" :style="hudColor">CYBER·TAO</span>
-            <!-- 验证徽章 -->
-            <div class="verify-badge" :class="verifyState">
-              <span class="verify-dot"></span>
-              <span class="verify-label">{{ verifyLabel }}</span>
+          <!-- PHOENIX：展翅放射再收缩 -->
+          <g v-else-if="beastKey==='phoenix'" fill="none" :stroke="accentColor" filter="url(#glow-filter)">
+            <!-- 左翼 -->
+            <path d="M 200,200 Q 140,150 80,120 Q 120,160 130,200 Q 120,240 80,280 Q 140,250 200,200"
+              stroke-width="1.5" stroke-dasharray="400" stroke-dashoffset="400" opacity="0.85"
+              style="animation:draw-path 1.8s ease-out 0.2s forwards"/>
+            <!-- 右翼 -->
+            <path d="M 200,200 Q 260,150 320,120 Q 280,160 270,200 Q 280,240 320,280 Q 260,250 200,200"
+              stroke-width="1.5" stroke-dasharray="400" stroke-dashoffset="400" opacity="0.85"
+              style="animation:draw-path 1.8s ease-out 0.4s forwards"/>
+            <!-- 尾羽 -->
+            <path d="M 200,200 L 170,320 M 200,200 L 200,340 M 200,200 L 230,320"
+              stroke-width="1" stroke-dasharray="200" stroke-dashoffset="200" opacity="0.6"
+              style="animation:draw-path 1.5s ease-out 1.2s forwards"/>
+            <!-- 中心火焰圈 -->
+            <circle cx="200" cy="200" r="0" :fill="accentColor+'33'" stroke-width="2"
+              style="animation:expand-ring 0.8s ease-out 1.8s forwards"/>
+          </g>
+
+          <!-- TURTLE：六边形龟甲层叠 -->
+          <g v-else-if="beastKey==='turtle'" fill="none" :stroke="accentColor" filter="url(#glow-filter)">
+            <polygon v-for="(r,i) in [40,65,90,115,140,160]" :key="i"
+              :points="hexPoints(200,200,r)"
+              stroke-width="0.8" :opacity="0.2+i*0.12"
+              :style="`stroke-dasharray:${r*6.3};stroke-dashoffset:${r*6.3};animation:draw-path ${1.2+i*0.3}s ease-out ${i*0.25}s forwards`"/>
+            <!-- 连接线 -->
+            <line v-for="(a,i) in [30,90,150,210,270,330]" :key="'l'+i"
+              :x1="200 + 40*Math.cos(a*Math.PI/180)"
+              :y1="200 + 40*Math.sin(a*Math.PI/180)"
+              :x2="200 + 160*Math.cos(a*Math.PI/180)"
+              :y2="200 + 160*Math.sin(a*Math.PI/180)"
+              stroke-width="0.5" opacity="0.35"
+              :style="`animation:ray-pulse 2s ease-in-out ${i*0.2}s infinite`"/>
+          </g>
+
+          <!-- TIGER：斜向扫描切割线 -->
+          <g v-else-if="beastKey==='tiger'" fill="none" :stroke="accentColor" filter="url(#glow-filter)">
+            <!-- 三道斜线 -->
+            <line x1="50" y1="100" x2="350" y2="180" stroke-width="2"
+              stroke-dasharray="350" stroke-dashoffset="350" opacity="0.9"
+              style="animation:draw-path 0.8s ease-out 0.1s forwards"/>
+            <line x1="50" y1="200" x2="350" y2="200" stroke-width="2.5"
+              stroke-dasharray="300" stroke-dashoffset="300" opacity="0.9"
+              style="animation:draw-path 0.7s ease-out 0.35s forwards"/>
+            <line x1="50" y1="300" x2="350" y2="220" stroke-width="2"
+              stroke-dasharray="350" stroke-dashoffset="350" opacity="0.9"
+              style="animation:draw-path 0.8s ease-out 0.6s forwards"/>
+            <!-- 收束圆 -->
+            <circle cx="200" cy="200" r="50" stroke-width="1.5"
+              stroke-dasharray="315" stroke-dashoffset="315" opacity="0.7"
+              style="animation:draw-path 1.2s ease-out 1.0s forwards"/>
+            <circle cx="200" cy="200" r="25" stroke-width="2"
+              stroke-dasharray="157" stroke-dashoffset="157" opacity="0.9"
+              style="animation:draw-path 0.8s ease-out 1.8s forwards"/>
+          </g>
+
+          <!-- QILIN（default）：螺旋旋入 -->
+          <g v-else fill="none" :stroke="accentColor" filter="url(#glow-filter)">
+            <path :d="spiralPath(200,200,160,5)"
+              stroke-width="1.2" stroke-dasharray="1200" stroke-dashoffset="1200" opacity="0.8"
+              style="animation:draw-path 3s ease-out 0.2s forwards"/>
+            <!-- 独角光束 -->
+            <line x1="200" y1="200" x2="200" y2="30" stroke-width="3"
+              stroke-dasharray="170" stroke-dashoffset="170" opacity="0.95"
+              style="animation:draw-path 0.6s ease-out 2.8s forwards;filter:url(#glow-filter)"/>
+          </g>
+
+          <!-- 中心封印圆（所有神兽共有，最后出现） -->
+          <circle cx="200" cy="200" r="35" fill="none"
+            :stroke="accentColor" stroke-width="2"
+            stroke-dasharray="220" stroke-dashoffset="220" opacity="0.9"
+            style="animation:draw-path 0.8s ease-out 2.4s forwards"/>
+          <circle cx="200" cy="200" r="8" :fill="accentColor" opacity="0"
+            style="animation:dot-appear 0.4s ease-out 3.0s forwards;filter:url(#glow-filter)"/>
+
+          <!-- 四角封印符文 -->
+          <g :fill="accentColor" opacity="0" font-family="serif" font-size="14"
+             style="animation:rune-appear 0.6s ease-out 2.6s forwards">
+            <text x="30"  y="45"  text-anchor="middle">乾</text>
+            <text x="370" y="45"  text-anchor="middle">坤</text>
+            <text x="30"  y="375" text-anchor="middle">离</text>
+            <text x="370" y="375" text-anchor="middle">坎</text>
+          </g>
+        </svg>
+
+        <!-- 封印文字 -->
+        <div class="seal-text" :style="{ color: accentColor }">
+          <p class="seal-title">{{ card.name_zh }}</p>
+          <p class="seal-sub">DESTINY SEALED · {{ rarityLabel }}</p>
+        </div>
+      </div>
+
+      <!-- ═══ Phase 2+3: 卡片主体 ═══ -->
+      <div class="card-scene" :class="{ 'card-visible': phase === 'card' || phase === 'converge' }">
+        <div class="card-wrapper">
+
+          <!-- 命运卡牌 -->
+          <div class="destiny-card" :style="cardBodyStyle">
+
+            <!-- 外发光（稀有度驱动） -->
+            <div class="card-outer-glow" :style="glowStyle"></div>
+
+            <!-- 四角装饰 -->
+            <div class="corner corner-tl" :style="cornerStyle"></div>
+            <div class="corner corner-tr" :style="cornerStyle"></div>
+            <div class="corner corner-bl" :style="cornerStyle"></div>
+            <div class="corner corner-br" :style="cornerStyle"></div>
+
+            <!-- 扫描线 -->
+            <div class="card-scanline" :style="{ top: scanY + '%', background: accentColor }"></div>
+
+            <!-- 顶部 HUD -->
+            <div class="card-hud-top">
+              <span class="hud-mono" :style="hudStyle">CYBER·TAO</span>
+              <div class="verify-badge" :class="verifyState">
+                <span class="verify-dot"></span>
+                <span>{{ verifyLabel }}</span>
+              </div>
+              <span class="hud-mono" :style="hudStyle">#{{ editionStr }}</span>
             </div>
-            <span class="hud-mono" :style="hudColor">#{{ editionStr }}</span>
-          </div>
 
-          <!-- ── 神兽图区（卡上半部，占比约40%）── -->
-          <div class="card-art">
-            <img :src="beastImageUrl" class="beast-art-img" />
-            <!-- 渐变遮罩，让图底部融入卡身 -->
-            <div class="art-fade" :style="artFadeStyle"></div>
-            <!-- 稀有度标签 -->
-            <div class="rarity-tag" :style="rarityTagStyle">
-              {{ rarityLabel }}
+            <!-- 神兽视频区（卡片上半约40%） -->
+            <div class="card-video-wrap">
+              <video ref="beastVideo"
+                :src="`/beast-${beastKey}.mp4`"
+                autoplay loop muted playsinline
+                class="beast-video"
+                :style="{ opacity: videoOpacity }">
+              </video>
+              <!-- Phase 2 粒子聚合时的遮罩 -->
+              <div class="video-converge-mask" :style="{ opacity: maskOpacity }"></div>
+              <!-- 稀有度渐变底部融合 -->
+              <div class="video-fade-bottom" :style="videoFadeStyle"></div>
+              <!-- 稀有度标签 -->
+              <div class="rarity-tag" :style="rarityTagStyle">{{ rarityLabel }}</div>
+              <div v-if="isGodlike" class="godlike-tag">⚡ GODLIKE</div>
             </div>
-            <!-- GODLIKE 标记 -->
-            <div v-if="isGodlike" class="godlike-tag">⚡ GODLIKE</div>
-          </div>
 
-          <!-- ── 卡中：卦象 ── -->
-          <div class="card-hex-section">
-            <h1 class="hex-name" :style="hexNameStyle">{{ card.name_zh }}</h1>
-            <p class="hex-en">{{ card.name_en }}</p>
-            <div class="hex-divider" :style="{ background: accentColor }"></div>
-            <!-- 爻象小图 -->
-            <div class="hex-lines-display">
-              <div v-for="(line, i) in hexLines" :key="i" class="hex-line-row">
-                <template v-if="line === 1">
-                  <div class="hl hl-yang" :style="{ background: accentColor, boxShadow: `0 0 8px ${accentColor}99` }"></div>
-                </template>
-                <template v-else>
-                  <div class="hl hl-yin" :style="{ background: accentColor, boxShadow: `0 0 8px ${accentColor}99` }"></div>
-                  <div class="hl-gap"></div>
-                  <div class="hl hl-yin" :style="{ background: accentColor, boxShadow: `0 0 8px ${accentColor}99` }"></div>
-                </template>
+            <!-- 卦象区 -->
+            <div class="card-hex">
+              <h1 class="hex-name" :style="hexNameStyle">{{ card.name_zh }}</h1>
+              <p class="hex-en-name">{{ card.name_en }}</p>
+              <div class="hex-rule" :style="{ background: accentColor }"></div>
+              <!-- 爻象 -->
+              <div class="hex-lines">
+                <div v-for="(line, i) in hexLines" :key="i" class="hex-row">
+                  <template v-if="line === 1">
+                    <div class="hl hl-yang" :style="hlStyle"></div>
+                  </template>
+                  <template v-else>
+                    <div class="hl hl-yin" :style="hlStyle"></div>
+                    <div class="hl-gap"></div>
+                    <div class="hl hl-yin" :style="hlStyle"></div>
+                  </template>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- ── 卡下：Oracle 短句 ── -->
-          <div class="card-oracle-section">
-            <div class="oracle-deco-line" :style="{ background: `linear-gradient(to right, transparent, ${accentColor}60, transparent)` }"></div>
-            <p class="oracle-text">{{ card.oracle || card.interpretation?.split('.')[0] || '' }}</p>
-            <div class="oracle-deco-line" :style="{ background: `linear-gradient(to right, transparent, ${accentColor}40, transparent)` }"></div>
-          </div>
-
-          <!-- ── 卡底 HUD ── -->
-          <div class="card-bottom-hud">
-            <div class="hud-cell">
-              <span class="hud-label">SYNC</span>
-              <span class="hud-value" :style="{ color: accentColor }">{{ syncRate }}%</span>
+            <!-- Oracle 短句（50词内） -->
+            <div class="card-oracle">
+              <div class="oracle-line" :style="oracleLineStyle"></div>
+              <p class="oracle-text">{{ oracleShort }}</p>
+              <div class="oracle-line" :style="oracleLineStyle"></div>
             </div>
-            <div class="hud-sep"></div>
-            <div class="hud-cell">
-              <span class="hud-label">ENTROPY</span>
-              <span class="hud-value" style="color:rgba(255,255,255,0.6)">{{ entropyLabel }}</span>
+
+            <!-- 底部 HUD -->
+            <div class="card-hud-bottom">
+              <div class="hud-cell">
+                <span class="hud-label">SYNC</span>
+                <span class="hud-val" :style="{ color: accentColor }">{{ syncRate }}%</span>
+              </div>
+              <div class="hud-sep"></div>
+              <div class="hud-cell">
+                <span class="hud-label">ENTROPY</span>
+                <span class="hud-val">{{ entropyLabel }}</span>
+              </div>
+              <div class="hud-sep"></div>
+              <div class="hud-cell">
+                <span class="hud-label">HASH</span>
+                <span class="hud-val" style="font-size:8px">{{ hashDisplay }}</span>
+              </div>
             </div>
-            <div class="hud-sep"></div>
-            <div class="hud-cell">
-              <span class="hud-label">HASH</span>
-              <span class="hud-value" style="color:rgba(255,255,255,0.5);font-size:8px">{{ hashDisplay }}</span>
+
+            <div class="card-id-bar">
+              <span style="font-size:7px;letter-spacing:0.2em;color:rgba(255,255,255,0.18)">{{ card.card_id }}</span>
             </div>
           </div>
 
-          <!-- 卡片ID -->
-          <div class="card-id-strip">
-            <span class="hud-mono" style="color:rgba(255,255,255,0.2);font-size:7px;letter-spacing:0.2em">{{ card.card_id }}</span>
-          </div>
-
-        </div>
-        <!-- /card -->
-
-        <!-- ── 操作按钮区 ── -->
-        <div class="card-actions">
-          <button class="btn-primary" :style="primaryBtnStyle" @click="shareCard">
-            ⬡ SHARE THIS DESTINY
-          </button>
-          <div class="btn-row">
-            <button class="btn-ghost" @click="copyLink">{{ copied ? '✓ COPIED' : 'COPY LINK' }}</button>
-            <button class="btn-ghost" @click="$router.push('/')">← NEW ORACLE</button>
+          <!-- 操作按钮 -->
+          <div class="card-actions">
+            <button class="btn-primary" :style="primaryBtnStyle" @click="shareCard">
+              ⬡ SHARE THIS DESTINY
+            </button>
+            <div class="btn-row">
+              <button class="btn-ghost" @click="copyLink">{{ copied ? '✓ COPIED' : 'COPY LINK' }}</button>
+              <button class="btn-ghost" @click="$router.push('/')">← NEW ORACLE</button>
+            </div>
           </div>
         </div>
-
       </div>
-    </div>
+
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 
 const route  = useRoute()
 const router = useRouter()
 
-const loading     = ref(true)
-const error       = ref(null)
-const card        = ref(null)
+// ── 状态机 ──
+// loading → seal（SVG动画，3.5s）→ converge（粒子聚合，2s）→ card（展示）
+const phase      = ref('loading')
+const errorMsg   = ref('')
+const card       = ref(null)
 const verifyState = ref('pending')
-const copied      = ref(false)
-const scanY       = ref(5)
+const copied     = ref(false)
 
+// ── Canvas & 扫描线 ──
 const particleCanvas = ref(null)
-let animRaf = null
-let scanRaf = null
+const beastVideo     = ref(null)
+const scanY          = ref(5)
+let animRaf  = null
+let scanRaf  = null
+let phaseTimer = null
+
+// ── 粒子系统状态 ──
+// mode: 'float' | 'converge' | 'fade'
+const particleMode = ref('float')
+const videoOpacity = ref(0)   // 视频从0淡入
+const maskOpacity  = ref(1)   // 遮罩从1淡出
 
 // ── 加载卡片 ──
 const loadCard = async () => {
   const cardId = decodeURIComponent(route.params.cardId)
-  if (!cardId) { error.value = 'Invalid card ID.'; loading.value = false; return }
+  if (!cardId) { phase.value = 'error'; errorMsg.value = 'Invalid card ID.'; return }
   try {
-    const { data, error: dbErr } = await supabase
+    const { data, error } = await supabase
       .from('divination_logs')
       .select('card_id,edition_number,verified_hash,name_zh,name_en,hexagram_code,interpretation,oracle,device_id,created_at,is_sealed')
-      .eq('card_id', cardId)
-      .eq('is_sealed', true)
-      .single()
-    if (dbErr || !data) { error.value = 'CARD NOT FOUND · This destiny does not exist.'; loading.value = false; return }
+      .eq('card_id', cardId).eq('is_sealed', true).single()
+
+    if (error || !data) {
+      phase.value = 'error'
+      errorMsg.value = 'CARD NOT FOUND · This destiny does not exist in the matrix.'
+      return
+    }
     card.value = data
-    loading.value = false
+    // 卡片加载成功 → 初始化粒子 → 开始封印动画
+    phase.value = 'seal'
+    requestAnimationFrame(() => initParticles())
+    animateScan()
     verifyHash(data)
-    requestAnimationFrame(() => { initParticles(); animateScan() })
+    scheduleSealExit()
   } catch (e) {
-    error.value = 'NETWORK ERROR · The void is unreachable.'
-    loading.value = false
+    phase.value = 'error'
+    errorMsg.value = 'NETWORK ERROR · The void is unreachable.'
   }
+}
+
+// ── 阶段调度 ──
+const scheduleSealExit = () => {
+  // SVG动画持续约3.5s，然后进入 converge
+  phaseTimer = setTimeout(() => {
+    phase.value = 'converge'
+    particleMode.value = 'converge'
+    // converge 持续 2s，粒子向中心聚合，遮罩淡出，视频淡入
+    animateConverge()
+    phaseTimer = setTimeout(() => {
+      phase.value = 'card'
+      particleMode.value = 'fade'
+      videoOpacity.value = 1
+      maskOpacity.value = 0
+    }, 2000)
+  }, 3500)
+}
+
+// ── Converge 动画：遮罩淡出 + 视频淡入 ──
+const animateConverge = () => {
+  const duration = 2000
+  const start = Date.now()
+  const tick = () => {
+    const t = Math.min(1, (Date.now() - start) / duration)
+    maskOpacity.value = 1 - t
+    videoOpacity.value = t
+    if (t < 1) requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
 }
 
 // ── 验证哈希 ──
@@ -180,7 +364,7 @@ const verifyHash = async (data) => {
     const raw = `${data.card_id}:${data.device_id}:${data.hexagram_code}:${data.created_at}`
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw))
     const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
-    verifyState.value = hex.slice(0,16) === data.verified_hash ? 'verified' : 'failed'
+    verifyState.value = hex.slice(0, 16) === data.verified_hash ? 'verified' : 'failed'
   } catch { verifyState.value = 'failed' }
 }
 
@@ -188,7 +372,7 @@ const verifyLabel = computed(() => ({
   pending: 'VERIFYING...', verified: '✓ VERIFIED', failed: '✗ UNVERIFIED'
 }[verifyState.value]))
 
-// ── 视觉种子 ──
+// ── 视觉种子 & 稀有度 ──
 const seed = computed(() => {
   if (!card.value) return 0
   const s = `${card.value.device_id}-${new Date(card.value.created_at).getTime()}-${card.value.hexagram_code}`
@@ -198,87 +382,43 @@ const seed = computed(() => {
 })
 
 const syncRate = computed(() => {
-  if (!seed.value) return '---'
   const r = 80 + (seed.value % 200) / 10
   return (r > 99.9 ? 99.9 : r).toFixed(1)
 })
 
 const isGodlike = computed(() => parseFloat(syncRate.value) >= 99)
 
-const rarityInfo = computed(() => {
+const rarity = computed(() => {
   const r = parseFloat(syncRate.value)
-  if (r >= 99)   return { label: 'GODLIKE',    accent: '#ef4444' }
-  if (r >= 95.1) return { label: 'ULTRA RARE', accent: '#c8aa6e' }
-  if (r >= 90.1) return { label: 'RARE',       accent: '#67e8f9' }
-  return               { label: 'COMMON',     accent: '#22d3ee' }
+  if (r >= 99)   return { label: 'GODLIKE',    accent: '#ef4444', glow: 'rgba(239,68,68,{a})' }
+  if (r >= 95.1) return { label: 'ULTRA RARE', accent: '#c8aa6e', glow: 'rgba(200,170,110,{a})' }
+  if (r >= 90.1) return { label: 'RARE',       accent: '#67e8f9', glow: 'rgba(103,232,249,{a})' }
+  return               { label: 'COMMON',     accent: '#22d3ee', glow: 'rgba(34,211,238,{a})' }
 })
 
-const rarityLabel  = computed(() => rarityInfo.value.label)
-const accentColor  = computed(() => rarityInfo.value.accent)
+const rarityLabel  = computed(() => rarity.value.label)
+const accentColor  = computed(() => rarity.value.accent)
 const entropyLabel = computed(() => ['STABLE','NOMINAL','OPTIMAL','CRITICAL'][seed.value % 4])
 const editionStr   = computed(() => card.value?.edition_number?.toString().padStart(4,'0') || '????')
 const hashDisplay  = computed(() => card.value?.verified_hash?.slice(0,8).toUpperCase() || '--------')
 
-// ── 卡片样式 ──
-const cardStyle = computed(() => ({
-  border: `1px solid ${accentColor.value}55`,
-  background: 'linear-gradient(175deg, #08090f 0%, #04050a 100%)',
-}))
-
-// 外发光（关键视觉——不同稀有度完全不同的光晕）
-const glowStyle = computed(() => {
-  const c = accentColor.value
-  const r = parseFloat(syncRate.value)
-  // GODLIKE：强烈红色脉冲，多层
-  if (r >= 99) return {
-    boxShadow: `0 0 0 1px ${c}, 0 0 20px ${c}99, 0 0 50px ${c}55, 0 0 100px ${c}22`,
-    animation: 'godlike-pulse 1.5s ease-in-out infinite',
-  }
-  // ULTRA RARE：金色双层光晕
-  if (r >= 95.1) return {
-    boxShadow: `0 0 0 1px ${c}99, 0 0 16px ${c}66, 0 0 40px ${c}33`,
-    animation: 'rare-breathe 3s ease-in-out infinite',
-  }
-  // RARE：青色柔光
-  if (r >= 90.1) return {
-    boxShadow: `0 0 0 1px ${c}77, 0 0 12px ${c}44, 0 0 28px ${c}22`,
-    animation: 'rare-breathe 4s ease-in-out infinite',
-  }
-  // COMMON：基础蓝光
-  return {
-    boxShadow: `0 0 0 1px ${c}44, 0 0 10px ${c}33`,
-  }
+// ── Oracle 截取（最多50词）──
+const oracleShort = computed(() => {
+  const text = card.value?.oracle || ''
+  if (!text) return ''
+  const words = text.split(/\s+/)
+  return words.length > 50 ? words.slice(0,50).join(' ') + '...' : text
 })
 
-const cornerStyle = computed(() => ({
-  borderColor: accentColor.value + 'cc',
-  boxShadow: `0 0 8px ${accentColor.value}66`,
-}))
-
-const hudColor = computed(() => ({ color: accentColor.value + '88' }))
-
-const hexNameStyle = computed(() => ({
-  color: accentColor.value,
-  textShadow: `0 0 20px ${accentColor.value}99, 0 0 40px ${accentColor.value}44`,
-}))
-
-const artFadeStyle = computed(() => ({
-  background: `linear-gradient(to bottom, transparent 30%, #04050a 100%)`,
-}))
-
-const rarityTagStyle = computed(() => ({
-  color: accentColor.value,
-  border: `1px solid ${accentColor.value}55`,
-  background: `${accentColor.value}18`,
-  textShadow: `0 0 8px ${accentColor.value}66`,
-}))
-
-const primaryBtnStyle = computed(() => ({
-  borderColor: accentColor.value + '99',
-  color: accentColor.value,
-  background: accentColor.value + '18',
-  boxShadow: `0 0 20px ${accentColor.value}28`,
-}))
+// ── 神兽key ──
+const beastKey = computed(() => {
+  const n = (card.value?.name_en || '').toLowerCase()
+  if (n.match(/heaven|thunder|wind|wood/)) return 'dragon'
+  if (n.match(/fire|sun|bright|clinging/)) return 'phoenix'
+  if (n.match(/lake|mountain|metal/))      return 'tiger'
+  if (n.match(/water|rain|moon|abyss/))    return 'turtle'
+  return 'qilin'
+})
 
 // ── 爻象 ──
 const hexLines = computed(() => {
@@ -286,89 +426,167 @@ const hexLines = computed(() => {
   return card.value.hexagram_code.split('').map(Number).reverse()
 })
 
-// ── 神兽 ──
-const beastImageUrl = computed(() => {
-  const n = (card.value?.name_en || '').toLowerCase()
-  if (n.match(/heaven|sky|thunder|wind|wood/)) return '/guardian-dragon.png'
-  if (n.match(/fire|sun|bright|south|clinging/)) return '/guardian-phoenix.png'
-  if (n.match(/lake|mountain|metal|gold/)) return '/guardian-tiger.png'
-  if (n.match(/water|rain|moon|north|abyss/)) return '/guardian-turtle.png'
-  return '/guardian-qilin.png'
+// ── 样式计算 ──
+const glowStyle = computed(() => {
+  const c = accentColor.value
+  const r = parseFloat(syncRate.value)
+  if (r >= 99) return { boxShadow: `0 0 0 1px ${c}, 0 0 24px ${c}aa, 0 0 60px ${c}55, 0 0 120px ${c}22`, animation: 'glow-godlike 1.5s ease-in-out infinite' }
+  if (r >= 95.1) return { boxShadow: `0 0 0 1px ${c}aa, 0 0 18px ${c}66, 0 0 45px ${c}33`, animation: 'glow-breathe 3s ease-in-out infinite' }
+  if (r >= 90.1) return { boxShadow: `0 0 0 1px ${c}77, 0 0 14px ${c}44, 0 0 32px ${c}22`, animation: 'glow-breathe 4s ease-in-out infinite' }
+  return { boxShadow: `0 0 0 1px ${c}44, 0 0 12px ${c}33` }
+})
+
+const cardBodyStyle = computed(() => ({
+  border: `1px solid ${accentColor.value}44`,
+  background: 'linear-gradient(175deg, #08090f 0%, #04050a 60%, #060810 100%)',
+}))
+
+const cornerStyle  = computed(() => ({ borderColor: accentColor.value + 'cc', boxShadow: `0 0 8px ${accentColor.value}55` }))
+const hudStyle     = computed(() => ({ color: accentColor.value + '88' }))
+const hexNameStyle = computed(() => ({ color: accentColor.value, textShadow: `0 0 18px ${accentColor.value}88, 0 0 40px ${accentColor.value}44` }))
+const hlStyle      = computed(() => ({ background: accentColor.value, boxShadow: `0 0 7px ${accentColor.value}aa` }))
+const rarityTagStyle = computed(() => ({ color: accentColor.value, border: `1px solid ${accentColor.value}55`, background: accentColor.value + '18' }))
+const oracleLineStyle = computed(() => ({ background: `linear-gradient(to right, transparent, ${accentColor.value}50, transparent)` }))
+const videoFadeStyle  = computed(() => ({ background: `linear-gradient(to bottom, transparent 30%, #04050a 100%)` }))
+const primaryBtnStyle = computed(() => ({ borderColor: accentColor.value + '99', color: accentColor.value, background: accentColor.value + '15', boxShadow: `0 0 20px ${accentColor.value}25` }))
+
+// SVG seal阶段退出
+const sealStageStyle = computed(() => ({
+  opacity: phase.value === 'seal' ? 1 : 0,
+  pointerEvents: phase.value === 'seal' ? 'all' : 'none',
+}))
+
+// ── SVG 辅助函数 ──
+const hexPoints = (cx, cy, r) => {
+  return Array.from({length:6}, (_,i) => {
+    const a = (i*60 - 30) * Math.PI/180
+    return `${cx + r*Math.cos(a)},${cy + r*Math.sin(a)}`
+  }).join(' ')
+}
+
+const spiralPath = (cx, cy, maxR, turns) => {
+  let d = `M ${cx} ${cy}`
+  const steps = turns * 36
+  for (let i = 1; i <= steps; i++) {
+    const angle = (i / steps) * turns * 2 * Math.PI
+    const r = (i / steps) * maxR
+    d += ` L ${cx + r*Math.cos(angle - Math.PI/2)} ${cy + r*Math.sin(angle - Math.PI/2)}`
+  }
+  return d
+}
+
+const dragonPoints = computed(() => {
+  return Array.from({length: 16}, (_, i) => {
+    const a = (i / 16) * Math.PI * 2
+    const r = 80 + Math.sin(a * 3) * 30
+    return { x: 200 + r * Math.cos(a), y: 200 + r * Math.sin(a) }
+  })
 })
 
 // ── 扫描线 ──
 const animateScan = () => {
-  scanY.value = (scanY.value + 0.35) % 100
+  scanY.value = (scanY.value + 0.3) % 100
   scanRaf = requestAnimationFrame(animateScan)
 }
 
-// ── 粒子系统（字符型，卦象相关）──
+// ── 粒子系统 ──
 const initParticles = () => {
   const canvas = particleCanvas.value
   if (!canvas) return
   const ctx = canvas.getContext('2d')
-  canvas.width  = window.innerWidth
-  canvas.height = window.innerHeight
-  window.addEventListener('resize', () => {
+
+  const resize = () => {
     canvas.width  = window.innerWidth
     canvas.height = window.innerHeight
-  })
+  }
+  resize()
+  window.addEventListener('resize', resize)
 
   const accent = accentColor.value
-  const hexCode = card.value?.hexCode || '000000'
+  const CX = window.innerWidth / 2
+  const CY = window.innerHeight / 2
+
+  // I Ching chars + hex code chars + accent symbols
+  const hexCode = card.value?.hexagram_code || '000000'
   const chars = [
     card.value?.name_zh || '命',
-    ...('0123456789ABCDEF'.split('')),
-    '◈', '⬡', '☯', '⚡', '⬡',
-    '乾','坤','坎','离','震','巽','艮','兑'
+    ...hexCode.split('').map(n => n === '1' ? '阳' : '阴'),
+    '◈','⬡','☯','⚡','乾','坤','坎','离','震','巽','艮','兑',
+    ...'0123456789ABCDEF'.split('').slice(0,6),
   ]
 
-  const particles = Array.from({ length: 60 }, () => ({
+  const COUNT = 70
+  const particles = Array.from({ length: COUNT }, () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    vx: (Math.random() - 0.5) * 0.5,
-    vy: -(0.2 + Math.random() * 0.6),
-    alpha: Math.random() * 0.6,
-    size: 9 + Math.floor(Math.random() * 5),
+    vx: (Math.random() - 0.5) * 0.7,
+    vy: -(0.15 + Math.random() * 0.5),
+    alpha: 0.2 + Math.random() * 0.5,
+    size: 8 + Math.floor(Math.random() * 6),
     char: chars[Math.floor(Math.random() * chars.length)],
     gold: Math.random() > 0.88,
     phase: Math.random() * Math.PI * 2,
+    // for converge mode
+    homeAngle: Math.random() * Math.PI * 2,
+    homeDist: 20 + Math.random() * 80,
   }))
 
   const draw = () => {
-    ctx.fillStyle = 'rgba(4,5,10,0.06)'
+    ctx.fillStyle = 'rgba(3,3,10,0.055)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
+
     const t = Date.now() / 1000
+    const mode = particleMode.value
 
     particles.forEach(p => {
       const breathe = 0.5 + 0.5 * Math.sin(t * 0.7 + p.phase)
-      const a = p.alpha * breathe
+      let a = p.alpha * breathe
+
+      // mode: fade → 粒子逐渐变淡消散（卡片展示后保持但非常淡）
+      if (mode === 'fade') a *= 0.35
+
       if (p.gold) {
-        ctx.fillStyle = `rgba(200,170,110,${a * 0.85})`
-        ctx.shadowColor = '#c8aa6e'; ctx.shadowBlur = 7
+        ctx.fillStyle = `rgba(200,170,110,${a * 0.8})`
+        ctx.shadowColor = '#c8aa6e'; ctx.shadowBlur = 6
       } else {
-        const r = parseInt(accent.slice(1,3), 16)
-        const g = parseInt(accent.slice(3,5), 16)
-        const b = parseInt(accent.slice(5,7), 16)
-        ctx.fillStyle = `rgba(${r},${g},${b},${a * 0.5})`
+        const r = parseInt(accent.slice(1,3)||'22',16)
+        const g = parseInt(accent.slice(3,5)||'d3',16)
+        const b = parseInt(accent.slice(5,7)||'ee',16)
+        ctx.fillStyle = `rgba(${r},${g},${b},${a * 0.45})`
         ctx.shadowBlur = 0
       }
+
       ctx.font = `${p.size}px monospace`
       ctx.fillText(p.char, p.x, p.y)
       ctx.shadowBlur = 0
-      p.x += p.vx; p.y += p.vy; p.alpha -= 0.002
-      if (p.alpha <= 0 || p.y < -20) {
-        p.x = Math.random() * canvas.width
-        p.y = canvas.height + 10
-        p.alpha = 0.4 + Math.random() * 0.4
-        p.vy = -(0.2 + Math.random() * 0.6)
-        p.vx = (Math.random() - 0.5) * 0.5
-        p.char = chars[Math.floor(Math.random() * chars.length)]
-        p.gold = Math.random() > 0.88
+
+      if (mode === 'float' || mode === 'fade') {
+        // 正常漂浮
+        p.x += p.vx; p.y += p.vy; p.alpha -= 0.002
+        if (p.alpha <= 0 || p.y < -20) {
+          p.x = Math.random() * canvas.width
+          p.y = canvas.height + 10
+          p.alpha = 0.3 + Math.random() * 0.4
+          p.vy = -(0.15 + Math.random() * 0.5)
+          p.vx = (Math.random() - 0.5) * 0.7
+          p.char = chars[Math.floor(Math.random() * chars.length)]
+          p.gold = Math.random() > 0.88
+        }
+      } else if (mode === 'converge') {
+        // 向卡片中心聚合
+        const tx = CX + p.homeDist * Math.cos(p.homeAngle)
+        const ty = CY + p.homeDist * Math.sin(p.homeAngle)
+        p.vx += (tx - p.x) * 0.03
+        p.vy += (ty - p.y) * 0.03
+        p.vx *= 0.9; p.vy *= 0.9
+        p.x += p.vx; p.y += p.vy
+        p.alpha = Math.min(0.8, p.alpha + 0.01)
       }
     })
+
     animRaf = requestAnimationFrame(draw)
   }
+
   draw()
 }
 
@@ -376,11 +594,7 @@ const initParticles = () => {
 const shareCard = async () => {
   try {
     if (navigator.share) {
-      await navigator.share({
-        title: `命运卡 · ${card.value?.name_zh} · Cyber Tao`,
-        text: card.value?.oracle || '',
-        url: window.location.href,
-      })
+      await navigator.share({ title: `命运卡 · ${card.value?.name_zh} · Cyber Tao`, text: oracleShort.value, url: window.location.href })
     } else { copyLink() }
   } catch {}
 }
@@ -395,276 +609,268 @@ const copyLink = async () => {
 
 onMounted(() => loadCard())
 onUnmounted(() => {
-  if (animRaf) cancelAnimationFrame(animRaf)
-  if (scanRaf) cancelAnimationFrame(scanRaf)
+  if (animRaf)    cancelAnimationFrame(animRaf)
+  if (scanRaf)    cancelAnimationFrame(scanRaf)
+  if (phaseTimer) clearTimeout(phaseTimer)
 })
 </script>
 
 <style scoped>
-/* ── 根容器 ── */
 .destiny-root {
-  position: fixed; inset: 0;
-  background: #03030a;
-  overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; background: #03030a;
   font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
 }
 
-/* ── 背景 ── */
-.destiny-bg-canvas {
-  position: absolute; inset: 0; z-index: 0;
-  pointer-events: none; opacity: 0.55;
-}
-.destiny-bg-overlay {
-  position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: radial-gradient(ellipse 60% 60% at 50% 45%, transparent 30%, rgba(3,3,10,0.8) 100%);
+/* 粒子层 */
+.particle-canvas {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
 }
 
-/* ── 状态屏 ── */
-.destiny-state {
-  position: relative; z-index: 10;
-  display: flex; flex-direction: column; align-items: center; gap: 16px;
+/* 中心状态（加载/错误） */
+.center-state {
+  position: absolute; inset: 0; z-index: 20;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
 }
-.loader-rings {
-  position: relative; width: 44px; height: 44px;
+.loader-ring {
+  position: absolute; width: 44px; height: 44px; border-radius: 50%;
+  border: 2px solid rgba(200,170,110,0.2); border-top-color: #c8aa6e;
+  animation: spin 1s linear infinite;
 }
-.ring {
-  position: absolute; border-radius: 50%; animation: spin 1s linear infinite;
+.loader-ring-inner {
+  width: 28px; height: 28px; inset: 8px;
+  border-color: rgba(34,211,238,0.2) transparent; border-bottom-color: #22d3ee;
+  animation-direction: reverse; animation-duration: 0.7s;
 }
-.ring-outer { inset: 0; border: 2px solid rgba(200,170,110,0.2); border-top-color: #c8aa6e; }
-.ring-inner { inset: 8px; border: 1px solid rgba(34,211,238,0.2); border-bottom-color: #22d3ee;
-  animation-direction: reverse; animation-duration: 0.7s; }
 .loader-text {
+  position: relative; top: 36px;
   font-size: 10px; letter-spacing: 0.4em; color: rgba(200,170,110,0.6);
   text-transform: uppercase; animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* ── 滚动容器 ── */
-.destiny-scroll {
-  position: relative; z-index: 10;
-  width: 100%; height: 100%;
-  overflow-y: auto;
-  display: flex; align-items: flex-start; justify-content: center;
-  padding: 24px 16px 40px;
+/* ═══ Phase 1: 封印舞台 ═══ */
+.seal-stage {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(3,3,10,0.92);
+  transition: opacity 0.8s ease-out;
 }
+.seal-stage-exit {
+  opacity: 0; pointer-events: none;
+}
+.seal-svg {
+  width: min(380px, 90vw); height: min(380px, 90vw);
+}
+.seal-text {
+  text-align: center; margin-top: 16px;
+}
+.seal-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(32px, 10vw, 52px);
+  font-weight: 900; letter-spacing: 0.1em; line-height: 1;
+  animation: pulse 2s ease-in-out infinite;
+}
+.seal-sub {
+  font-size: 10px; letter-spacing: 0.5em; margin-top: 8px;
+  text-transform: uppercase; opacity: 0.6;
+  animation: fade-in-up 0.6s ease-out 2.8s both;
+}
+
+/* ═══ Phase 2+3: 卡片场景 ═══ */
+.card-scene {
+  position: absolute; inset: 0; z-index: 5;
+  display: flex; align-items: flex-start; justify-content: center;
+  overflow-y: auto;
+  padding: 24px 16px 40px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.8s ease-in;
+}
+.card-visible { opacity: 1; pointer-events: all; }
 .card-wrapper {
   display: flex; flex-direction: column; align-items: center; gap: 20px;
   width: 100%; max-width: 380px;
 }
 
-/* ══════════════════════════════════════
-   ★ 命运卡牌主体 — 固定比例 9:16
-══════════════════════════════════════ */
+/* ═══ 卡牌本体（9:16比例，真正的卡片形状）═══ */
 .destiny-card {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 9 / 16;
-  border-radius: 16px;
-  overflow: hidden;
+  position: relative; width: 100%; aspect-ratio: 9/16;
+  border-radius: 16px; overflow: hidden;
   display: flex; flex-direction: column;
-  /* 基础阴影：卡片深度感 */
-  box-shadow: 0 24px 80px rgba(0,0,0,0.8), 0 8px 32px rgba(0,0,0,0.6);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.85), 0 8px 32px rgba(0,0,0,0.6);
 }
 
-/* 外发光层（absolute，不裁剪） */
-.card-glow {
-  position: absolute; inset: -2px;
-  border-radius: 18px;
-  z-index: 0;
-  pointer-events: none;
-  transition: box-shadow 0.5s;
+/* 外发光（absolute，不被裁剪） */
+.card-outer-glow {
+  position: absolute; inset: -1px; border-radius: 17px;
+  z-index: 0; pointer-events: none;
 }
 
-/* 四角切角 */
-.corner-tl, .corner-tr, .corner-bl, .corner-br {
-  position: absolute; width: 20px; height: 20px; z-index: 20; pointer-events: none;
-}
-.corner-tl { top: 0; left: 0;     border-top: 2px solid; border-left: 2px solid;  border-radius: 16px 0 0 0; }
-.corner-tr { top: 0; right: 0;    border-top: 2px solid; border-right: 2px solid; border-radius: 0 16px 0 0; }
-.corner-bl { bottom: 0; left: 0;  border-bottom: 2px solid; border-left: 2px solid;  border-radius: 0 0 0 16px; }
-.corner-br { bottom: 0; right: 0; border-bottom: 2px solid; border-right: 2px solid; border-radius: 0 0 16px 0; }
+/* 四角装饰 */
+.corner { position: absolute; width: 18px; height: 18px; z-index: 30; pointer-events: none; }
+.corner-tl { top:0; left:0;    border-top: 2px solid; border-left: 2px solid;   border-radius: 16px 0 0 0; }
+.corner-tr { top:0; right:0;   border-top: 2px solid; border-right: 2px solid;  border-radius: 0 16px 0 0; }
+.corner-bl { bottom:0; left:0; border-bottom: 2px solid; border-left: 2px solid; border-radius: 0 0 0 16px; }
+.corner-br { bottom:0; right:0;border-bottom: 2px solid; border-right: 2px solid;border-radius: 0 0 16px 0; }
 
 /* 扫描线 */
-.scan-line {
-  position: absolute; left: 0; right: 0; height: 1px;
-  z-index: 25; pointer-events: none;
-  opacity: 0.45;
-  transition: top 0.05s linear;
+.card-scanline {
+  position: absolute; left:0; right:0; height:1px; z-index:25;
+  pointer-events:none; opacity:0.4; transition: top 0.05s linear;
 }
 
-/* ── 顶部 HUD ── */
-.card-top-hud {
-  position: relative; z-index: 10;
+/* 顶部 HUD */
+.card-hud-top {
+  position: relative; z-index: 10; flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  background: rgba(0,0,0,0.3);
-  flex-shrink: 0;
+  padding: 9px 12px 7px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: rgba(0,0,0,0.35);
 }
-.hud-mono {
-  font-size: 8px; letter-spacing: 0.3em; font-family: monospace;
-}
+.hud-mono { font-size: 8px; letter-spacing: 0.28em; }
 
 /* 验证徽章 */
 .verify-badge {
-  display: flex; align-items: center; gap: 4px;
-  padding: 3px 8px; border-radius: 2px;
-  font-size: 8px; letter-spacing: 0.2em;
-  transition: all 0.4s;
+  display: flex; align-items: center; gap: 4px; padding: 2px 7px;
+  font-size: 8px; letter-spacing: 0.15em; border-radius: 2px; transition: all 0.4s;
 }
 .verify-badge.pending  { border: 1px solid rgba(200,170,110,0.2); color: rgba(200,170,110,0.5); }
-.verify-badge.verified { border: 1px solid rgba(34,197,94,0.5); color: rgba(34,197,94,0.9); background: rgba(34,197,94,0.08); box-shadow: 0 0 10px rgba(34,197,94,0.2); }
+.verify-badge.verified { border: 1px solid rgba(34,197,94,0.5); color: rgba(34,197,94,0.9); background: rgba(34,197,94,0.08); box-shadow: 0 0 8px rgba(34,197,94,0.2); }
 .verify-badge.failed   { border: 1px solid rgba(239,68,68,0.4); color: rgba(239,68,68,0.7); }
-.verify-dot {
-  width: 4px; height: 4px; border-radius: 50%;
-  background: currentColor;
-}
-.verify-label { font-size: 8px; letter-spacing: 0.15em; }
+.verify-dot { width:4px; height:4px; border-radius:50%; background:currentColor; }
 
-/* ── 神兽图区（约38%高度）── */
-.card-art {
-  position: relative;
-  flex: 0 0 38%;
-  overflow: hidden;
+/* 视频区 */
+.card-video-wrap {
+  position: relative; flex: 0 0 38%; overflow: hidden;
 }
-.beast-art-img {
+.beast-video {
   width: 100%; height: 100%;
   object-fit: cover; object-position: center 20%;
-  opacity: 0.85;
+  transition: opacity 0.5s ease-in;
 }
-.art-fade {
+.video-converge-mask {
   position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(3,3,10,0.95) 0%, rgba(3,3,10,0.7) 60%, transparent 100%);
+  transition: opacity 0.3s;
 }
+.video-fade-bottom { position: absolute; inset: 0; }
 .rarity-tag {
-  position: absolute; top: 10px; right: 10px;
-  font-size: 8px; letter-spacing: 0.3em;
-  padding: 3px 8px;
+  position: absolute; top: 9px; right: 9px; z-index: 5;
+  font-size: 8px; letter-spacing: 0.28em; padding: 3px 8px;
   font-family: monospace; text-transform: uppercase;
-  z-index: 5;
 }
 .godlike-tag {
-  position: absolute; bottom: 14px; right: 10px;
-  font-size: 8px; letter-spacing: 0.3em;
-  color: #f87171;
-  border: 1px solid rgba(239,68,68,0.45);
-  background: rgba(0,0,0,0.7);
-  padding: 3px 8px; z-index: 5;
+  position: absolute; bottom: 12px; right: 9px; z-index: 5;
+  font-size: 8px; letter-spacing: 0.25em;
+  color: #f87171; border: 1px solid rgba(239,68,68,0.4);
+  background: rgba(0,0,0,0.75); padding: 3px 8px;
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* ── 卦象区 ── */
-.card-hex-section {
-  position: relative; z-index: 10;
+/* 卦象区 */
+.card-hex {
+  position: relative; z-index: 10; flex-shrink: 0;
   display: flex; flex-direction: column; align-items: center;
-  padding: 14px 16px 10px;
-  flex-shrink: 0;
+  padding: 12px 14px 8px;
 }
 .hex-name {
   font-family: 'Noto Serif SC', serif;
-  font-size: clamp(42px, 14vw, 58px);
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  line-height: 1;
-  margin-bottom: 4px;
+  font-size: clamp(38px, 12vw, 52px);
+  font-weight: 900; letter-spacing: 0.06em; line-height: 1; margin-bottom: 3px;
 }
-.hex-en {
-  font-size: 10px; letter-spacing: 0.45em;
-  color: rgba(255,255,255,0.45);
-  text-transform: uppercase;
-  margin-bottom: 10px;
+.hex-en-name {
+  font-size: 9px; letter-spacing: 0.4em; color: rgba(255,255,255,0.4);
+  text-transform: uppercase; margin-bottom: 8px;
 }
-.hex-divider {
-  width: 40px; height: 1px; margin-bottom: 10px; opacity: 0.6;
-}
-/* 爻象显示 */
-.hex-lines-display {
-  display: flex; flex-direction: column; gap: 4px;
-}
-.hex-line-row {
-  display: flex; align-items: center; justify-content: center; gap: 3px;
-}
+.hex-rule { width: 36px; height: 1px; margin-bottom: 8px; opacity: 0.6; }
+.hex-lines { display: flex; flex-direction: column; gap: 4px; }
+.hex-row { display: flex; align-items: center; justify-content: center; gap: 3px; }
 .hl { height: 4px; border-radius: 2px; }
-.hl-yang { width: 44px; }
-.hl-yin  { width: 18px; }
-.hl-gap  { width: 8px; }
+.hl-yang { width: 40px; } .hl-yin { width: 16px; } .hl-gap { width: 8px; }
 
-/* ── Oracle 短句区 ── */
-.card-oracle-section {
-  position: relative; z-index: 10;
-  flex: 1;
+/* Oracle 区 */
+.card-oracle {
+  position: relative; z-index: 10; flex: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 8px 20px;
-  gap: 8px;
+  padding: 6px 18px; gap: 7px;
 }
-.oracle-deco-line {
-  width: 100%; height: 1px;
-}
+.oracle-line { width: 100%; height: 1px; }
 .oracle-text {
-  font-family: 'Noto Serif SC', serif;
-  font-size: 12px;
-  line-height: 1.85;
-  color: rgba(255,255,255,0.82);
-  text-align: center;
-  letter-spacing: 0.03em;
-  font-style: italic;
+  font-family: 'Noto Serif SC', serif; font-size: 11px; line-height: 1.9;
+  color: rgba(255,255,255,0.8); text-align: center; font-style: italic; letter-spacing: 0.03em;
 }
 
-/* ── 底部 HUD ── */
-.card-bottom-hud {
-  position: relative; z-index: 10;
+/* 底部 HUD */
+.card-hud-bottom {
+  position: relative; z-index: 10; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  gap: 0;
-  padding: 8px 0 4px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 6px 0 3px;
+  border-top: 1px solid rgba(255,255,255,0.05);
   background: rgba(0,0,0,0.3);
-  flex-shrink: 0;
 }
-.hud-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 0 14px; }
-.hud-label { font-size: 7px; letter-spacing: 0.25em; color: rgba(255,255,255,0.25); text-transform: uppercase; }
-.hud-value { font-size: 11px; letter-spacing: 0.1em; font-family: monospace; }
-.hud-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.08); }
+.hud-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 0 12px; }
+.hud-label { font-size: 7px; letter-spacing: 0.22em; color: rgba(255,255,255,0.22); text-transform: uppercase; }
+.hud-val { font-size: 10px; letter-spacing: 0.08em; color: rgba(255,255,255,0.6); font-family: monospace; }
+.hud-sep { width: 1px; height: 22px; background: rgba(255,255,255,0.07); }
 
-/* 卡片 ID 条 */
-.card-id-strip {
-  position: relative; z-index: 10;
-  text-align: center; padding: 4px 0 8px;
-  background: rgba(0,0,0,0.3);
-  flex-shrink: 0;
+.card-id-bar {
+  position: relative; z-index: 10; flex-shrink: 0;
+  text-align: center; padding: 3px 0 7px; background: rgba(0,0,0,0.3);
 }
 
-/* ── 操作按钮 ── */
-.card-actions {
-  display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%;
-}
+/* 操作按钮 */
+.card-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
 .btn-primary {
-  width: 100%; padding: 13px 0;
+  width: 100%; padding: 12px 0;
   font-family: monospace; font-size: 12px; font-weight: 900;
-  letter-spacing: 0.55em; text-transform: uppercase;
-  border: 1px solid; border-radius: 2px;
-  cursor: pointer; transition: all 0.3s;
+  letter-spacing: 0.5em; text-transform: uppercase;
+  border: 1px solid; border-radius: 2px; cursor: pointer; transition: all 0.25s;
 }
 .btn-primary:hover { filter: brightness(1.2); }
 .btn-row { display: flex; gap: 10px; width: 100%; }
 .btn-ghost {
   flex: 1; padding: 8px 0;
-  font-family: monospace; font-size: 10px; letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.15); border-radius: 2px;
-  cursor: pointer; transition: all 0.2s;
+  font-family: monospace; font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+  color: rgba(255,255,255,0.4); background: transparent;
+  border: 1px solid rgba(255,255,255,0.14); border-radius: 2px; cursor: pointer; transition: all 0.2s;
 }
 .btn-ghost:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.3); }
 
-/* ── 动画 ── */
-@keyframes spin  { from { transform: rotate(0) }   to { transform: rotate(360deg) } }
-@keyframes pulse { 0%,100% { opacity: 0.5 } 50% { opacity: 1 } }
-@keyframes godlike-pulse {
-  0%,100% { box-shadow: 0 0 0 1px #ef4444, 0 0 20px #ef444499, 0 0 50px #ef444455; }
-  50%      { box-shadow: 0 0 0 2px #ef4444, 0 0 35px #ef4444bb, 0 0 80px #ef444477; }
+/* ═══ 动画定义 ═══ */
+@keyframes spin  { to { transform: rotate(360deg) } }
+@keyframes pulse { 0%,100%{opacity:0.55} 50%{opacity:1} }
+@keyframes fade-in-up { from{opacity:0;transform:translateY(8px)} to{opacity:0.6;transform:none} }
+
+/* SVG路径绘制 */
+@keyframes draw-path { to { stroke-dashoffset: 0 } }
+
+/* 射线脉冲 */
+@keyframes ray-pulse { 0%,100%{opacity:0.1} 50%{opacity:0.45} }
+
+/* 轨道旋转 */
+@keyframes orbit-cw  { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes orbit-ccw { from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
+
+/* 中心点出现 */
+@keyframes dot-appear { from{opacity:0;r:2} to{opacity:1;r:8} }
+
+/* 符文出现 */
+@keyframes rune-appear { from{opacity:0} to{opacity:0.6} }
+
+/* 圆圈扩张（凤凰） */
+@keyframes expand-ring { from{r:0;opacity:0.8} to{r:60;opacity:0} }
+
+/* 收束（粒子聚合） */
+@keyframes converge-point {
+  from { transform: translate(0,0) }
+  to   { transform: translate(calc(200px - var(--px)), calc(200px - var(--py))); opacity:0 }
 }
-@keyframes rare-breathe {
-  0%,100% { opacity: 0.8; }
-  50%      { opacity: 1; }
+
+/* 卡片发光 */
+@keyframes glow-godlike {
+  0%,100%{ box-shadow: 0 0 0 1px #ef4444, 0 0 24px #ef4444aa, 0 0 60px #ef444455 }
+  50%    { box-shadow: 0 0 0 2px #ef4444, 0 0 40px #ef4444cc, 0 0 90px #ef444477 }
+}
+@keyframes glow-breathe {
+  0%,100%{ opacity:0.85 } 50%{ opacity:1 }
 }
 </style>
