@@ -60,26 +60,21 @@
             <path d="M 200,40 Q 320,120 310,200 Q 300,280 200,360 Q 100,280 90,200 Q 80,120 200,40"
               stroke-width="1" stroke-dasharray="500" stroke-dashoffset="500" opacity="0.55"
               style="animation:draw-path 2.8s ease-out 0.6s forwards"/>
-            <!-- 龙珠收拢粒子点 -->
             <circle v-for="(p,i) in dragonPoints" :key="i" :cx="p.x" :cy="p.y" r="2"
               :fill="accentColor" :style="`animation:converge-point ${1.5+i*0.1}s ease-in ${0.3+i*0.08}s forwards`"/>
           </g>
 
           <!-- PHOENIX：展翅放射再收缩 -->
           <g v-else-if="beastKey==='phoenix'" fill="none" :stroke="accentColor" filter="url(#glow-filter)">
-            <!-- 左翼 -->
             <path d="M 200,200 Q 140,150 80,120 Q 120,160 130,200 Q 120,240 80,280 Q 140,250 200,200"
               stroke-width="1.5" stroke-dasharray="400" stroke-dashoffset="400" opacity="0.85"
               style="animation:draw-path 1.8s ease-out 0.2s forwards"/>
-            <!-- 右翼 -->
             <path d="M 200,200 Q 260,150 320,120 Q 280,160 270,200 Q 280,240 320,280 Q 260,250 200,200"
               stroke-width="1.5" stroke-dasharray="400" stroke-dashoffset="400" opacity="0.85"
               style="animation:draw-path 1.8s ease-out 0.4s forwards"/>
-            <!-- 尾羽 -->
             <path d="M 200,200 L 170,320 M 200,200 L 200,340 M 200,200 L 230,320"
               stroke-width="1" stroke-dasharray="200" stroke-dashoffset="200" opacity="0.6"
               style="animation:draw-path 1.5s ease-out 1.2s forwards"/>
-            <!-- 中心火焰圈 -->
             <circle cx="200" cy="200" r="0" :fill="accentColor+'33'" stroke-width="2"
               style="animation:expand-ring 0.8s ease-out 1.8s forwards"/>
           </g>
@@ -90,7 +85,6 @@
               :points="hexPoints(200,200,r)"
               stroke-width="0.8" :opacity="0.2+i*0.12"
               :style="`stroke-dasharray:${r*6.3};stroke-dashoffset:${r*6.3};animation:draw-path ${1.2+i*0.3}s ease-out ${i*0.25}s forwards`"/>
-            <!-- 连接线 -->
             <line v-for="(a,i) in [30,90,150,210,270,330]" :key="'l'+i"
               :x1="200 + 40*Math.cos(a*Math.PI/180)"
               :y1="200 + 40*Math.sin(a*Math.PI/180)"
@@ -102,7 +96,6 @@
 
           <!-- TIGER：斜向扫描切割线 -->
           <g v-else-if="beastKey==='tiger'" fill="none" :stroke="accentColor" filter="url(#glow-filter)">
-            <!-- 三道斜线 -->
             <line x1="50" y1="100" x2="350" y2="180" stroke-width="2"
               stroke-dasharray="350" stroke-dashoffset="350" opacity="0.9"
               style="animation:draw-path 0.8s ease-out 0.1s forwards"/>
@@ -112,7 +105,6 @@
             <line x1="50" y1="300" x2="350" y2="220" stroke-width="2"
               stroke-dasharray="350" stroke-dashoffset="350" opacity="0.9"
               style="animation:draw-path 0.8s ease-out 0.6s forwards"/>
-            <!-- 收束圆 -->
             <circle cx="200" cy="200" r="50" stroke-width="1.5"
               stroke-dasharray="315" stroke-dashoffset="315" opacity="0.7"
               style="animation:draw-path 1.2s ease-out 1.0s forwards"/>
@@ -126,7 +118,6 @@
             <path :d="spiralPath(200,200,160,5)"
               stroke-width="1.2" stroke-dasharray="1200" stroke-dashoffset="1200" opacity="0.8"
               style="animation:draw-path 3s ease-out 0.2s forwards"/>
-            <!-- 独角光束 -->
             <line x1="200" y1="200" x2="200" y2="30" stroke-width="3"
               stroke-dasharray="170" stroke-dashoffset="170" opacity="0.95"
               style="animation:draw-path 0.6s ease-out 2.8s forwards;filter:url(#glow-filter)"/>
@@ -223,11 +214,39 @@
               </div>
             </div>
 
-            <!-- Oracle 短句（50词内） -->
-            <div class="card-oracle">
+            <!-- ═══ Oracle 短句区（分级展示，核心改造部分）═══ -->
+            <div class="card-oracle" :class="`oracle-${rarityTier}`">
+
+              <!-- GODLIKE / EPIC：先显示古典引用，再显示主短句 -->
+              <template v-if="(rarityTier === 'godlike' || rarityTier === 'ultra') && classicalQuote">
+                <div class="oracle-classical-wrap">
+                  <span class="oracle-classical-glyph" :style="{ color: accentColor }">「</span>
+                  <p class="oracle-classical-text" :style="{ color: accentColor + 'cc' }">
+                    {{ classicalQuote }}
+                  </p>
+                  <span class="oracle-classical-glyph" :style="{ color: accentColor }">」</span>
+                </div>
+                <div class="oracle-divider" :style="oracleDividerStyle"></div>
+              </template>
+
+              <!-- 主短句 ── 所有稀有度都有，字号和样式随稀有度变化 -->
               <div class="oracle-line" :style="oracleLineStyle"></div>
-              <p class="oracle-text">{{ oracleShort }}</p>
+              <p class="oracle-text" :class="`oracle-text-${rarityTier}`" :style="oracleTextStyle">
+                {{ oracleDisplayText }}
+              </p>
               <div class="oracle-line" :style="oracleLineStyle"></div>
+
+              <!-- GODLIKE 专属：稀有度符文角标 -->
+              <div v-if="rarityTier === 'godlike'" class="oracle-rune-row">
+                <span v-for="r in ['☯','◈','⚡','◈','☯']" :key="r"
+                  class="oracle-rune" :style="{ color: accentColor + '66' }">{{ r }}</span>
+              </div>
+
+              <!-- EPIC 专属：信号标签 -->
+              <div v-else-if="rarityTier === 'ultra'" class="oracle-signal-tag" :style="{ borderColor: accentColor + '44', color: accentColor + '99' }">
+                SIGNAL · {{ oracleSignalCode }}
+              </div>
+
             </div>
 
             <!-- 底部 HUD -->
@@ -271,7 +290,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 
@@ -279,26 +298,24 @@ const route  = useRoute()
 const router = useRouter()
 
 // ── 状态机 ──
-// loading → seal（SVG动画，3.5s）→ converge（粒子聚合，2s）→ card（展示）
-const phase      = ref('loading')
-const errorMsg   = ref('')
-const card       = ref(null)
+const phase       = ref('loading')
+const errorMsg    = ref('')
+const card        = ref(null)
 const verifyState = ref('pending')
-const copied     = ref(false)
+const copied      = ref(false)
 
 // ── Canvas & 扫描线 ──
 const particleCanvas = ref(null)
 const beastVideo     = ref(null)
 const scanY          = ref(5)
-let animRaf  = null
-let scanRaf  = null
+let animRaf    = null
+let scanRaf    = null
 let phaseTimer = null
 
 // ── 粒子系统状态 ──
-// mode: 'float' | 'converge' | 'fade'
 const particleMode = ref('float')
-const videoOpacity = ref(0)   // 视频从0淡入
-const maskOpacity  = ref(1)   // 遮罩从1淡出
+const videoOpacity = ref(0)
+const maskOpacity  = ref(1)
 
 // ── 加载卡片 ──
 const loadCard = async () => {
@@ -307,8 +324,17 @@ const loadCard = async () => {
   try {
     const { data, error } = await supabase
       .from('divination_logs')
-      .select('card_id,edition_number,verified_hash,name_zh,name_en,hexagram_code,interpretation,oracle,device_id,created_at,is_sealed')
-      .eq('card_id', cardId).eq('is_sealed', true).single()
+      .select(`
+        card_id, edition_number, verified_hash,
+        name_zh, name_en, hexagram_code,
+        interpretation, oracle,
+        oracle_short_sentence, classical_quote,
+        fortune_scores, resonance, rarity,
+        device_id, created_at, is_sealed
+      `)
+      .eq('card_id', cardId)
+      .eq('is_sealed', true)
+      .single()
 
     if (error || !data) {
       phase.value = 'error'
@@ -316,7 +342,6 @@ const loadCard = async () => {
       return
     }
     card.value = data
-    // 卡片加载成功 → 初始化粒子 → 开始封印动画
     phase.value = 'seal'
     requestAnimationFrame(() => initParticles())
     animateScan()
@@ -330,11 +355,9 @@ const loadCard = async () => {
 
 // ── 阶段调度 ──
 const scheduleSealExit = () => {
-  // SVG动画持续约3.5s，然后进入 converge
   phaseTimer = setTimeout(() => {
     phase.value = 'converge'
     particleMode.value = 'converge'
-    // converge 持续 2s，粒子向中心聚合，遮罩淡出，视频淡入
     animateConverge()
     phaseTimer = setTimeout(() => {
       phase.value = 'card'
@@ -345,7 +368,6 @@ const scheduleSealExit = () => {
   }, 3500)
 }
 
-// ── Converge 动画：遮罩淡出 + 视频淡入 ──
 const animateConverge = () => {
   const duration = 2000
   const start = Date.now()
@@ -388,12 +410,30 @@ const syncRate = computed(() => {
 
 const isGodlike = computed(() => parseFloat(syncRate.value) >= 99)
 
-const rarity = computed(() => {
+// ── 稀有度分层（扩展：优先使用后端字段 rarity，fallback 到 syncRate）──
+const rarityTier = computed(() => {
+  // 后端新字段优先
+  const backendRarity = card.value?.rarity?.toUpperCase()
+  if (backendRarity === 'GODLIKE') return 'godlike'
+  if (backendRarity === 'EPIC')    return 'ultra'
+  if (backendRarity === 'RARE')    return 'rare'
+  if (backendRarity === 'COMMON')  return 'common'
+  // fallback: syncRate 计算
   const r = parseFloat(syncRate.value)
-  if (r >= 99)   return { label: 'GODLIKE',    accent: '#ef4444', glow: 'rgba(239,68,68,{a})' }
-  if (r >= 95.1) return { label: 'ULTRA RARE', accent: '#c8aa6e', glow: 'rgba(200,170,110,{a})' }
-  if (r >= 90.1) return { label: 'RARE',       accent: '#67e8f9', glow: 'rgba(103,232,249,{a})' }
-  return               { label: 'COMMON',     accent: '#22d3ee', glow: 'rgba(34,211,238,{a})' }
+  if (r >= 99)   return 'godlike'
+  if (r >= 95.1) return 'ultra'
+  if (r >= 90.1) return 'rare'
+  return 'common'
+})
+
+const rarity = computed(() => {
+  const map = {
+    godlike: { label: 'GODLIKE',    accent: '#ef4444' },
+    ultra:   { label: 'ULTRA RARE', accent: '#c8aa6e' },
+    rare:    { label: 'RARE',       accent: '#67e8f9' },
+    common:  { label: 'COMMON',     accent: '#22d3ee' },
+  }
+  return map[rarityTier.value]
 })
 
 const rarityLabel  = computed(() => rarity.value.label)
@@ -402,12 +442,29 @@ const entropyLabel = computed(() => ['STABLE','NOMINAL','OPTIMAL','CRITICAL'][se
 const editionStr   = computed(() => card.value?.edition_number?.toString().padStart(4,'0') || '????')
 const hashDisplay  = computed(() => card.value?.verified_hash?.slice(0,8).toUpperCase() || '--------')
 
-// ── Oracle 截取（最多50词）──
-const oracleShort = computed(() => {
-  const text = card.value?.oracle || ''
-  if (!text) return ''
-  const words = text.split(/\s+/)
-  return words.length > 50 ? words.slice(0,50).join(' ') + '...' : text
+// ── Oracle 短句分级逻辑 ──────────────────────────────────────────────
+
+// 1. 主短句：优先后端新字段 oracle_short_sentence，fallback 截取 oracle 前 20 字
+const oracleDisplayText = computed(() => {
+  const shortSentence = card.value?.oracle_short_sentence
+  if (shortSentence) return shortSentence
+
+  // fallback: 从完整 oracle 截取，取第一个句号/逗号前的内容，或前 20 字
+  const fullText = card.value?.oracle || ''
+  if (!fullText) return ''
+  const firstPunct = fullText.search(/[。，；！？,.;!?]/)
+  if (firstPunct > 0 && firstPunct <= 30) return fullText.slice(0, firstPunct + 1)
+  return fullText.slice(0, 20) + (fullText.length > 20 ? '…' : '')
+})
+
+// 2. 古典引用：后端新字段 classical_quote（仅 GODLIKE/EPIC 有）
+const classicalQuote = computed(() => card.value?.classical_quote || null)
+
+// 3. 信号码（EPIC 专属装饰）：由 hexagram_code + seed 生成，无需后端
+const oracleSignalCode = computed(() => {
+  const code = card.value?.hexagram_code || '000000'
+  const hex  = (seed.value % 0xFFFF).toString(16).toUpperCase().padStart(4, '0')
+  return `${code}-${hex}`
 })
 
 // ── 神兽key ──
@@ -429,40 +486,80 @@ const hexLines = computed(() => {
 // ── 样式计算 ──
 const glowStyle = computed(() => {
   const c = accentColor.value
-  const r = parseFloat(syncRate.value)
-  if (r >= 99) return { boxShadow: `0 0 0 1px ${c}, 0 0 24px ${c}aa, 0 0 60px ${c}55, 0 0 120px ${c}22`, animation: 'glow-godlike 1.5s ease-in-out infinite' }
-  if (r >= 95.1) return { boxShadow: `0 0 0 1px ${c}aa, 0 0 18px ${c}66, 0 0 45px ${c}33`, animation: 'glow-breathe 3s ease-in-out infinite' }
-  if (r >= 90.1) return { boxShadow: `0 0 0 1px ${c}77, 0 0 14px ${c}44, 0 0 32px ${c}22`, animation: 'glow-breathe 4s ease-in-out infinite' }
+  const tier = rarityTier.value
+  if (tier === 'godlike') return {
+    boxShadow: `0 0 0 1px ${c}, 0 0 24px ${c}aa, 0 0 60px ${c}55, 0 0 120px ${c}22`,
+    animation: 'glow-godlike 1.5s ease-in-out infinite'
+  }
+  if (tier === 'ultra') return {
+    boxShadow: `0 0 0 1px ${c}aa, 0 0 18px ${c}66, 0 0 45px ${c}33`,
+    animation: 'glow-breathe 3s ease-in-out infinite'
+  }
+  if (tier === 'rare') return {
+    boxShadow: `0 0 0 1px ${c}77, 0 0 14px ${c}44, 0 0 32px ${c}22`,
+    animation: 'glow-breathe 4s ease-in-out infinite'
+  }
   return { boxShadow: `0 0 0 1px ${c}44, 0 0 12px ${c}33` }
 })
 
-const cardBodyStyle = computed(() => ({
+const cardBodyStyle    = computed(() => ({
   border: `1px solid ${accentColor.value}44`,
   background: 'linear-gradient(175deg, #08090f 0%, #04050a 60%, #060810 100%)',
 }))
+const cornerStyle      = computed(() => ({ borderColor: accentColor.value + 'cc', boxShadow: `0 0 8px ${accentColor.value}55` }))
+const hudStyle         = computed(() => ({ color: accentColor.value + '88' }))
+const hexNameStyle     = computed(() => ({ color: accentColor.value, textShadow: `0 0 18px ${accentColor.value}88, 0 0 40px ${accentColor.value}44` }))
+const hlStyle          = computed(() => ({ background: accentColor.value, boxShadow: `0 0 7px ${accentColor.value}aa` }))
+const rarityTagStyle   = computed(() => ({ color: accentColor.value, border: `1px solid ${accentColor.value}55`, background: accentColor.value + '18' }))
+const videoFadeStyle   = computed(() => ({ background: `linear-gradient(to bottom, transparent 30%, #04050a 100%)` }))
+const primaryBtnStyle  = computed(() => ({ borderColor: accentColor.value + '99', color: accentColor.value, background: accentColor.value + '15', boxShadow: `0 0 20px ${accentColor.value}25` }))
 
-const cornerStyle  = computed(() => ({ borderColor: accentColor.value + 'cc', boxShadow: `0 0 8px ${accentColor.value}55` }))
-const hudStyle     = computed(() => ({ color: accentColor.value + '88' }))
-const hexNameStyle = computed(() => ({ color: accentColor.value, textShadow: `0 0 18px ${accentColor.value}88, 0 0 40px ${accentColor.value}44` }))
-const hlStyle      = computed(() => ({ background: accentColor.value, boxShadow: `0 0 7px ${accentColor.value}aa` }))
-const rarityTagStyle = computed(() => ({ color: accentColor.value, border: `1px solid ${accentColor.value}55`, background: accentColor.value + '18' }))
-const oracleLineStyle = computed(() => ({ background: `linear-gradient(to right, transparent, ${accentColor.value}50, transparent)` }))
-const videoFadeStyle  = computed(() => ({ background: `linear-gradient(to bottom, transparent 30%, #04050a 100%)` }))
-const primaryBtnStyle = computed(() => ({ borderColor: accentColor.value + '99', color: accentColor.value, background: accentColor.value + '15', boxShadow: `0 0 20px ${accentColor.value}25` }))
-
-// SVG seal阶段退出
-const sealStageStyle = computed(() => ({
-  opacity: phase.value === 'seal' ? 1 : 0,
-  pointerEvents: phase.value === 'seal' ? 'all' : 'none',
+// Oracle 区样式（根据稀有度变化）
+const oracleLineStyle = computed(() => ({
+  background: `linear-gradient(to right, transparent, ${accentColor.value}50, transparent)`
+}))
+const oracleDividerStyle = computed(() => ({
+  background: `linear-gradient(to right, transparent, ${accentColor.value}30, transparent)`,
+  margin: '4px 0'
 }))
 
+// 主短句文字样式（稀有度驱动字号和颜色）
+const oracleTextStyle = computed(() => {
+  const tier = rarityTier.value
+  const c = accentColor.value
+  if (tier === 'godlike') return {
+    fontSize: '13px',
+    background: `linear-gradient(135deg, ${c}, ${c}bb, ${c}dd)`,
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    filter: `drop-shadow(0 0 6px ${c}66)`,
+    letterSpacing: '0.08em',
+  }
+  if (tier === 'ultra') return {
+    fontSize: '12px',
+    color: `${c}ee`,
+    filter: `drop-shadow(0 0 4px ${c}44)`,
+    letterSpacing: '0.05em',
+  }
+  if (tier === 'rare') return {
+    fontSize: '11.5px',
+    color: 'rgba(220,210,255,0.88)',
+    letterSpacing: '0.03em',
+  }
+  return {
+    fontSize: '11px',
+    color: 'rgba(200,190,240,0.78)',
+    letterSpacing: '0.02em',
+  }
+})
+
 // ── SVG 辅助函数 ──
-const hexPoints = (cx, cy, r) => {
-  return Array.from({length:6}, (_,i) => {
+const hexPoints = (cx, cy, r) =>
+  Array.from({length:6}, (_,i) => {
     const a = (i*60 - 30) * Math.PI/180
     return `${cx + r*Math.cos(a)},${cy + r*Math.sin(a)}`
   }).join(' ')
-}
 
 const spiralPath = (cx, cy, maxR, turns) => {
   let d = `M ${cx} ${cy}`
@@ -475,13 +572,13 @@ const spiralPath = (cx, cy, maxR, turns) => {
   return d
 }
 
-const dragonPoints = computed(() => {
-  return Array.from({length: 16}, (_, i) => {
+const dragonPoints = computed(() =>
+  Array.from({length: 16}, (_, i) => {
     const a = (i / 16) * Math.PI * 2
     const r = 80 + Math.sin(a * 3) * 30
     return { x: 200 + r * Math.cos(a), y: 200 + r * Math.sin(a) }
   })
-})
+)
 
 // ── 扫描线 ──
 const animateScan = () => {
@@ -489,7 +586,7 @@ const animateScan = () => {
   scanRaf = requestAnimationFrame(animateScan)
 }
 
-// ── 粒子系统 ──
+// ── 粒子系统（分级：粒子数量、字符集、颜色强度随稀有度变化）──
 const initParticles = () => {
   const canvas = particleCanvas.value
   if (!canvas) return
@@ -503,19 +600,28 @@ const initParticles = () => {
   window.addEventListener('resize', resize)
 
   const accent = accentColor.value
+  const tier   = rarityTier.value
   const CX = window.innerWidth / 2
   const CY = window.innerHeight / 2
 
-  // I Ching chars + hex code chars + accent symbols
-  const hexCode = card.value?.hexagram_code || '000000'
-  const chars = [
-    card.value?.name_zh || '命',
-    ...hexCode.split('').map(n => n === '1' ? '阳' : '阴'),
-    '◈','⬡','☯','⚡','乾','坤','坎','离','震','巽','艮','兑',
-    ...'0123456789ABCDEF'.split('').slice(0,6),
-  ]
+  // 按稀有度定义粒子字符集
+  const baseChars = ['◈','⬡','☯','乾','坤','坎','离','震','巽','艮','兑', '0','1','A','F']
+  const hexCode   = card.value?.hexagram_code || '000000'
+  const nameChar  = card.value?.name_zh?.[0] || '命'
 
-  const COUNT = 70
+  // GODLIKE: 加入古典卦辞字符；EPIC: 加入更多易学符号；RARE/COMMON: 基础集
+  const tierChars = {
+    godlike: [...baseChars, nameChar, '元','亨','利','贞','吉','凶','悔','吝','无','咎','⚡','✦','✧'],
+    ultra:   [...baseChars, nameChar, '⚡','✦','▲','◉','⊕', ...hexCode.split('').map(n=>n==='1'?'阳':'阴')],
+    rare:    [...baseChars, nameChar, ...hexCode.split('').map(n=>n==='1'?'阳':'阴')],
+    common:  [...baseChars, nameChar],
+  }
+  const chars = tierChars[tier]
+
+  // 按稀有度定义粒子数量
+  const countMap = { godlike: 90, ultra: 65, rare: 40, common: 25 }
+  const COUNT = countMap[tier]
+
   const particles = Array.from({ length: COUNT }, () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
@@ -524,15 +630,19 @@ const initParticles = () => {
     alpha: 0.2 + Math.random() * 0.5,
     size: 8 + Math.floor(Math.random() * 6),
     char: chars[Math.floor(Math.random() * chars.length)],
-    gold: Math.random() > 0.88,
+    // GODLIKE/EPIC 有更高概率出现金色粒子
+    gold: Math.random() > (tier === 'godlike' ? 0.75 : tier === 'ultra' ? 0.82 : 0.92),
     phase: Math.random() * Math.PI * 2,
-    // for converge mode
     homeAngle: Math.random() * Math.PI * 2,
     homeDist: 20 + Math.random() * 80,
   }))
 
+  // 按稀有度定义背景叠加密度（GODLIKE最浓）
+  const bgAlphaMap = { godlike: 0.04, ultra: 0.05, rare: 0.055, common: 0.065 }
+  const bgAlpha = bgAlphaMap[tier]
+
   const draw = () => {
-    ctx.fillStyle = 'rgba(3,3,10,0.055)'
+    ctx.fillStyle = `rgba(3,3,10,${bgAlpha})`
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     const t = Date.now() / 1000
@@ -542,17 +652,21 @@ const initParticles = () => {
       const breathe = 0.5 + 0.5 * Math.sin(t * 0.7 + p.phase)
       let a = p.alpha * breathe
 
-      // mode: fade → 粒子逐渐变淡消散（卡片展示后保持但非常淡）
-      if (mode === 'fade') a *= 0.35
+      if (mode === 'fade') a *= 0.3
 
       if (p.gold) {
-        ctx.fillStyle = `rgba(200,170,110,${a * 0.8})`
-        ctx.shadowColor = '#c8aa6e'; ctx.shadowBlur = 6
+        // 金色粒子：GODLIKE 用红金，其他用标准金
+        const goldColor = tier === 'godlike' ? '239,100,80' : '200,170,110'
+        ctx.fillStyle = `rgba(${goldColor},${a * 0.9})`
+        ctx.shadowColor = tier === 'godlike' ? '#ef4444' : '#c8aa6e'
+        ctx.shadowBlur  = tier === 'godlike' ? 8 : 5
       } else {
         const r = parseInt(accent.slice(1,3)||'22',16)
         const g = parseInt(accent.slice(3,5)||'d3',16)
         const b = parseInt(accent.slice(5,7)||'ee',16)
-        ctx.fillStyle = `rgba(${r},${g},${b},${a * 0.45})`
+        // GODLIKE/EPIC 粒子透明度更高，更显眼
+        const alphaMulti = tier === 'godlike' ? 0.65 : tier === 'ultra' ? 0.55 : 0.42
+        ctx.fillStyle = `rgba(${r},${g},${b},${a * alphaMulti})`
         ctx.shadowBlur = 0
       }
 
@@ -561,7 +675,6 @@ const initParticles = () => {
       ctx.shadowBlur = 0
 
       if (mode === 'float' || mode === 'fade') {
-        // 正常漂浮
         p.x += p.vx; p.y += p.vy; p.alpha -= 0.002
         if (p.alpha <= 0 || p.y < -20) {
           p.x = Math.random() * canvas.width
@@ -570,10 +683,9 @@ const initParticles = () => {
           p.vy = -(0.15 + Math.random() * 0.5)
           p.vx = (Math.random() - 0.5) * 0.7
           p.char = chars[Math.floor(Math.random() * chars.length)]
-          p.gold = Math.random() > 0.88
+          p.gold = Math.random() > (tier === 'godlike' ? 0.75 : tier === 'ultra' ? 0.82 : 0.92)
         }
       } else if (mode === 'converge') {
-        // 向卡片中心聚合
         const tx = CX + p.homeDist * Math.cos(p.homeAngle)
         const ty = CY + p.homeDist * Math.sin(p.homeAngle)
         p.vx += (tx - p.x) * 0.03
@@ -594,7 +706,11 @@ const initParticles = () => {
 const shareCard = async () => {
   try {
     if (navigator.share) {
-      await navigator.share({ title: `命运卡 · ${card.value?.name_zh} · Cyber Tao`, text: oracleShort.value, url: window.location.href })
+      await navigator.share({
+        title: `命运卡 · ${card.value?.name_zh} · Cyber Tao`,
+        text: card.value?.oracle_short_sentence || oracleDisplayText.value,
+        url: window.location.href
+      })
     } else { copyLink() }
   } catch {}
 }
@@ -691,7 +807,7 @@ onUnmounted(() => {
   width: 100%; max-width: 380px;
 }
 
-/* ═══ 卡牌本体（9:16比例，真正的卡片形状）═══ */
+/* ═══ 卡牌本体（9:16比例）═══ */
 .destiny-card {
   position: relative; width: 100%; aspect-ratio: 9/16;
   border-radius: 16px; overflow: hidden;
@@ -699,7 +815,7 @@ onUnmounted(() => {
   box-shadow: 0 24px 80px rgba(0,0,0,0.85), 0 8px 32px rgba(0,0,0,0.6);
 }
 
-/* 外发光（absolute，不被裁剪） */
+/* 外发光 */
 .card-outer-glow {
   position: absolute; inset: -1px; border-radius: 17px;
   z-index: 0; pointer-events: none;
@@ -785,18 +901,94 @@ onUnmounted(() => {
 .hex-lines { display: flex; flex-direction: column; gap: 4px; }
 .hex-row { display: flex; align-items: center; justify-content: center; gap: 3px; }
 .hl { height: 4px; border-radius: 2px; }
-.hl-yang { width: 40px; } .hl-yin { width: 16px; } .hl-gap { width: 8px; }
+.hl-yang { width: 40px; }
+.hl-yin  { width: 16px; }
+.hl-gap  { width: 8px; }
 
-/* Oracle 区 */
+/* ═══ Oracle 区（核心改造）═══ */
 .card-oracle {
   position: relative; z-index: 10; flex: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 6px 18px; gap: 7px;
+  padding: 6px 18px; gap: 6px;
 }
+
+/* GODLIKE 背景：径向红金光晕 */
+.oracle-godlike::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(239,68,68,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  animation: oracle-godlike-pulse 2.5s ease-in-out infinite;
+}
+
+/* EPIC 背景：斜向金色微光 */
+.oracle-ultra::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(200,170,110,0.06) 0%, transparent 50%, rgba(200,170,110,0.04) 100%);
+  pointer-events: none;
+}
+
+/* 古典引用（GODLIKE / EPIC 专属） */
+.oracle-classical-wrap {
+  display: flex; align-items: center; gap: 4px;
+  width: 100%; justify-content: center;
+}
+.oracle-classical-glyph {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px; line-height: 1;
+  opacity: 0.7;
+}
+.oracle-classical-text {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 10px; letter-spacing: 0.12em; line-height: 1.7;
+  text-align: center; font-style: italic;
+}
+.oracle-divider {
+  width: 80%; height: 1px;
+}
+
+/* 分割线 */
 .oracle-line { width: 100%; height: 1px; }
+
+/* 主短句（所有稀有度共用基础样式，通过 JS style binding 覆盖） */
 .oracle-text {
-  font-family: 'Noto Serif SC', serif; font-size: 11px; line-height: 1.9;
-  color: rgba(255,255,255,0.8); text-align: center; font-style: italic; letter-spacing: 0.03em;
+  font-family: 'Noto Serif SC', serif;
+  line-height: 1.85; text-align: center;
+  /* 基础颜色由 oracleTextStyle computed 注入 */
+}
+
+/* GODLIKE 文字动画 */
+.oracle-text-godlike {
+  animation: oracle-text-shimmer 3s ease-in-out infinite;
+}
+
+/* EPIC 文字动画 */
+.oracle-text-ultra {
+  animation: oracle-text-glow 2.5s ease-in-out infinite;
+}
+
+/* GODLIKE 符文行 */
+.oracle-rune-row {
+  display: flex; gap: 10px; align-items: center;
+  animation: fade-in-up 0.5s ease-out 0.3s both;
+}
+.oracle-rune {
+  font-size: 9px; letter-spacing: 0.05em;
+  animation: pulse 2s ease-in-out infinite;
+}
+.oracle-rune:nth-child(1) { animation-delay: 0s; }
+.oracle-rune:nth-child(2) { animation-delay: 0.3s; }
+.oracle-rune:nth-child(3) { animation-delay: 0.6s; }
+.oracle-rune:nth-child(4) { animation-delay: 0.9s; }
+.oracle-rune:nth-child(5) { animation-delay: 1.2s; }
+
+/* EPIC 信号标签 */
+.oracle-signal-tag {
+  font-size: 7px; letter-spacing: 0.25em;
+  padding: 2px 8px; border: 1px solid; border-radius: 1px;
+  font-family: monospace;
+  animation: fade-in-up 0.5s ease-out 0.3s both;
 }
 
 /* 底部 HUD */
@@ -809,8 +1001,8 @@ onUnmounted(() => {
 }
 .hud-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 0 12px; }
 .hud-label { font-size: 7px; letter-spacing: 0.22em; color: rgba(255,255,255,0.22); text-transform: uppercase; }
-.hud-val { font-size: 10px; letter-spacing: 0.08em; color: rgba(255,255,255,0.6); font-family: monospace; }
-.hud-sep { width: 1px; height: 22px; background: rgba(255,255,255,0.07); }
+.hud-val   { font-size: 10px; letter-spacing: 0.08em; color: rgba(255,255,255,0.6); font-family: monospace; }
+.hud-sep   { width: 1px; height: 22px; background: rgba(255,255,255,0.07); }
 
 .card-id-bar {
   position: relative; z-index: 10; flex-shrink: 0;
@@ -836,41 +1028,40 @@ onUnmounted(() => {
 .btn-ghost:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.3); }
 
 /* ═══ 动画定义 ═══ */
-@keyframes spin  { to { transform: rotate(360deg) } }
-@keyframes pulse { 0%,100%{opacity:0.55} 50%{opacity:1} }
+@keyframes spin      { to { transform: rotate(360deg) } }
+@keyframes pulse     { 0%,100%{opacity:0.55} 50%{opacity:1} }
 @keyframes fade-in-up { from{opacity:0;transform:translateY(8px)} to{opacity:0.6;transform:none} }
 
-/* SVG路径绘制 */
-@keyframes draw-path { to { stroke-dashoffset: 0 } }
-
-/* 射线脉冲 */
-@keyframes ray-pulse { 0%,100%{opacity:0.1} 50%{opacity:0.45} }
-
-/* 轨道旋转 */
-@keyframes orbit-cw  { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-@keyframes orbit-ccw { from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
-
-/* 中心点出现 */
-@keyframes dot-appear { from{opacity:0;r:2} to{opacity:1;r:8} }
-
-/* 符文出现 */
+@keyframes draw-path   { to { stroke-dashoffset: 0 } }
+@keyframes ray-pulse   { 0%,100%{opacity:0.1} 50%{opacity:0.45} }
+@keyframes orbit-cw    { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes orbit-ccw   { from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
+@keyframes dot-appear  { from{opacity:0;r:2} to{opacity:1;r:8} }
 @keyframes rune-appear { from{opacity:0} to{opacity:0.6} }
-
-/* 圆圈扩张（凤凰） */
 @keyframes expand-ring { from{r:0;opacity:0.8} to{r:60;opacity:0} }
 
-/* 收束（粒子聚合） */
 @keyframes converge-point {
   from { transform: translate(0,0) }
   to   { transform: translate(calc(200px - var(--px)), calc(200px - var(--py))); opacity:0 }
 }
 
-/* 卡片发光 */
 @keyframes glow-godlike {
   0%,100%{ box-shadow: 0 0 0 1px #ef4444, 0 0 24px #ef4444aa, 0 0 60px #ef444455 }
   50%    { box-shadow: 0 0 0 2px #ef4444, 0 0 40px #ef4444cc, 0 0 90px #ef444477 }
 }
-@keyframes glow-breathe {
-  0%,100%{ opacity:0.85 } 50%{ opacity:1 }
+@keyframes glow-breathe { 0%,100%{ opacity:0.85 } 50%{ opacity:1 } }
+
+/* Oracle 区专属动画 */
+@keyframes oracle-godlike-pulse {
+  0%,100% { opacity: 0.6 }
+  50%     { opacity: 1   }
+}
+@keyframes oracle-text-shimmer {
+  0%,100% { filter: drop-shadow(0 0 4px rgba(239,68,68,0.4)) }
+  50%     { filter: drop-shadow(0 0 10px rgba(239,68,68,0.8)) }
+}
+@keyframes oracle-text-glow {
+  0%,100% { filter: drop-shadow(0 0 3px rgba(200,170,110,0.3)) }
+  50%     { filter: drop-shadow(0 0 8px rgba(200,170,110,0.7)) }
 }
 </style>
