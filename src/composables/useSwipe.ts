@@ -3,12 +3,17 @@ export function useSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
   const THRESHOLD = 50
 
   function onTouchStart(e: TouchEvent) {
-    startX = e.touches[0].clientX
+    const touch = e.touches[0]
+    if (touch) startX = touch.clientX
   }
+
   function onTouchEnd(e: TouchEvent) {
-    const delta = e.changedTouches[0].clientX - startX
+    const touch = e.changedTouches[0]
+    if (!touch) return
+    const delta = touch.clientX - startX
     if (delta < -THRESHOLD) onSwipeLeft()
     else if (delta > THRESHOLD) onSwipeRight()
   }
+
   return { onTouchStart, onTouchEnd }
 }
