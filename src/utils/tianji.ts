@@ -167,7 +167,7 @@ function calcWuxingEnergy(pillars: {
   const count: Record<string, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 }
   allChars.forEach(c => {
     const wx = WUXING_TIANGAN[c] ?? WUXING_DIZHI[c]
-    if (wx !== undefined && wx in count) count[wx]++
+    if (wx !== undefined && wx in count) count[wx] = (count[wx] ?? 0) + 1
   })
   return Object.fromEntries(
     Object.entries(count).map(([k, v]) => [k, Math.round((v / 8) * 100)])
