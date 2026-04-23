@@ -12,10 +12,14 @@
       <section class="data-section">
         <div class="section-label">时空坐标 · TIME_SPACE_COORD</div>
         <div class="pillars-grid">
-          <div v-for="(val, key) in data.pillars" :key="key" class="pillar-item">
+          <div
+            v-for="key in PILLAR_KEYS"
+            :key="key"
+            class="pillar-item"
+          >
             <span class="pillar-label">{{ PILLAR_LABELS[key] }}</span>
-            <span class="pillar-value">{{ val }}</span>
-            <span class="pillar-hint">{{ getPillarWuxing(val) }}</span>
+            <span class="pillar-value">{{ data.pillars[key] }}</span>
+            <span class="pillar-hint">{{ getPillarWuxing(data.pillars[key]) }}</span>
           </div>
         </div>
         <div class="location-tag">{{ data.locationLabel }}</div>
@@ -26,12 +30,20 @@
       <section class="data-section">
         <div class="section-label">五行能量 · WUXING_MATRIX</div>
         <div class="wuxing-bars">
-          <div v-for="(val, name) in data.wuxingEnergy" :key="name" class="wuxing-row">
-            <span class="wx-name">{{ name }}</span>
+          <div
+            v-for="el in WUXING_ORDER"
+            :key="el"
+            class="wuxing-row"
+          >
+            <span class="wx-name">{{ el }}</span>
             <div class="wx-bar-track">
-              <div class="wx-bar-fill" :style="{ width: val + '%' }" :data-element="name"></div>
+              <div
+                class="wx-bar-fill"
+                :style="{ width: (data.wuxingEnergy[el] ?? 0) + '%' }"
+                :data-element="el"
+              ></div>
             </div>
-            <span class="wx-val">{{ val }}</span>
+            <span class="wx-val">{{ data.wuxingEnergy[el] ?? 0 }}</span>
           </div>
         </div>
       </section>
@@ -42,7 +54,8 @@
         <div class="mansion-display">
           <span class="mansion-name">{{ data.mansion.name }}</span>
           <span class="mansion-alias">{{ data.mansion.alias }}</span>
-          <span class="mansion-signal">SIGNAL: {{ data.mansion.signal }}</span>
+          <span class="mansion-element">元素 · {{ data.mansion.element }}</span>
+          <span class="signal-tag">SIGNAL: {{ data.mansion.signal }}</span>
         </div>
       </section>
 
@@ -50,7 +63,11 @@
       <section class="data-section yiji-section">
         <div class="yiji-col">
           <div class="section-label yi">宜 · PERMITTED</div>
-          <div v-for="item in data.yiji.yi" :key="item.traditional" class="yiji-item yi">
+          <div
+            v-for="item in data.yiji.yi"
+            :key="item.traditional"
+            class="yiji-item yi"
+          >
             <span class="yiji-trad">{{ item.traditional }}</span>
             <span class="yiji-cyber">{{ item.cyber }}</span>
           </div>
@@ -58,7 +75,11 @@
         <div class="yiji-divider"></div>
         <div class="yiji-col">
           <div class="section-label ji">忌 · RESTRICTED</div>
-          <div v-for="item in data.yiji.ji" :key="item.traditional" class="yiji-item ji">
+          <div
+            v-for="item in data.yiji.ji"
+            :key="item.traditional"
+            class="yiji-item ji"
+          >
             <span class="yiji-trad">{{ item.traditional }}</span>
             <span class="yiji-cyber">{{ item.cyber }}</span>
           </div>
@@ -74,25 +95,45 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ data: any; loading: boolean }>()
+import type { TianjiData } from '../utils/tianji'
 
-const PILLAR_LABELS: Record<string, string> = {
-  year: '年柱', month: '月柱', day: '日柱', hour: '时柱'
+defineProps<{
+  data: TianjiData | null
+  loading: boolean
+}>()
+
+// 使用固定的 key 数组替代 v-for 直接遍历对象（避免 key: string|symbol 类型问题）
+const PILLAR_KEYS = ['year', 'month', 'day', 'hour'] as const
+type PillarKey = typeof PILLAR_KEYS[number]
+
+const PILLAR_LABELS: Record<PillarKey, string> = {
+  year:  '年柱',
+  month: '月柱',
+  day:   '日柱',
+  hour:  '时柱',
 }
+
+const WUXING_ORDER = ['木', '火', '土', '金', '水'] as const
 
 const WUXING_MAP: Record<string, string> = {
-  '甲':'木','乙':'木','丙':'火','丁':'火','戊':'土',
-  '己':'土','庚':'金','辛':'金','壬':'水','癸':'水'
+  甲:'木', 乙:'木', 丙:'火', 丁:'火', 戊:'土',
+  己:'土', 庚:'金', 辛:'金', 壬:'水', 癸:'水',
 }
 
-function getPillarWuxing(pillar: string) {
+function getPillarWuxing(pillar: string | undefined): string {
+  if (!pillar) return ''
   const gan = pillar[0]
-  return WUXING_MAP[gan] ? `[${WUXING_MAP[gan]}]` : ''
+  if (!gan) return ''
+  const wx = WUXING_MAP[gan]
+  return wx ? `[${wx}]` : ''
 }
 </script>
 
 <style scoped>
-.tianji-panel { color: rgba(200, 180, 255, 0.9); font-family: 'Courier New', monospace; }
+.tianji-panel {
+  color: rgba(200, 180, 255, 0.9);
+  font-family: 'Courier New', monospace;
+}
 
 .panel-header {
   display: flex;
@@ -102,9 +143,12 @@ function getPillarWuxing(pillar: string) {
   padding-bottom: 0.75rem;
   border-bottom: 1px solid rgba(120, 80, 255, 0.3);
 }
-.header-tag { color: rgba(120, 80, 255, 0.7); font-size: 0.75rem; }
-.scan-status { font-size: 0.7rem; color: rgba(100, 255, 160, 0.5); }
-.scan-status.active { color: rgba(100, 255, 160, 0.9); text-shadow: 0 0 8px rgba(100,255,160,0.5); }
+.header-tag   { color: rgba(120, 80, 255, 0.7); font-size: 0.75rem; }
+.scan-status  { font-size: 0.7rem; color: rgba(100, 255, 160, 0.5); }
+.scan-status.active {
+  color: rgba(100, 255, 160, 0.9);
+  text-shadow: 0 0 8px rgba(100, 255, 160, 0.5);
+}
 
 .data-section { margin-bottom: 1.5rem; }
 .section-label {
@@ -135,14 +179,19 @@ function getPillarWuxing(pillar: string) {
 }
 .pillar-label { font-size: 0.6rem; color: rgba(160, 140, 220, 0.6); }
 .pillar-value { font-size: 1.1rem; color: rgba(220, 200, 255, 0.95); font-weight: bold; }
-.pillar-hint { font-size: 0.6rem; color: rgba(120, 200, 160, 0.7); }
-.location-tag, .lunar-tag { font-size: 0.65rem; color: rgba(160, 140, 200, 0.6); margin-top: 0.3rem; }
+.pillar-hint  { font-size: 0.6rem; color: rgba(120, 200, 160, 0.7); }
+.location-tag, .lunar-tag {
+  font-size: 0.65rem;
+  color: rgba(160, 140, 200, 0.6);
+  margin-top: 0.3rem;
+}
 
 .wuxing-bars { display: flex; flex-direction: column; gap: 6px; }
-.wuxing-row { display: flex; align-items: center; gap: 8px; }
-.wx-name { width: 1.5rem; font-size: 0.8rem; color: rgba(200, 180, 255, 0.8); }
+.wuxing-row  { display: flex; align-items: center; gap: 8px; }
+.wx-name     { width: 1.5rem; font-size: 0.8rem; color: rgba(200, 180, 255, 0.8); }
 .wx-bar-track {
-  flex: 1; height: 6px;
+  flex: 1;
+  height: 6px;
   background: rgba(120, 80, 255, 0.1);
   border-radius: 3px;
   overflow: hidden;
@@ -157,7 +206,12 @@ function getPillarWuxing(pillar: string) {
 .wx-bar-fill[data-element='土'] { background: linear-gradient(90deg, #d97706, #fbbf24); }
 .wx-bar-fill[data-element='金'] { background: linear-gradient(90deg, #9ca3af, #e5e7eb); }
 .wx-bar-fill[data-element='水'] { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
-.wx-val { width: 2rem; font-size: 0.65rem; color: rgba(160, 140, 200, 0.6); text-align: right; }
+.wx-val {
+  width: 2rem;
+  font-size: 0.65rem;
+  color: rgba(160, 140, 200, 0.6);
+  text-align: right;
+}
 
 .mansion-display {
   display: flex;
@@ -167,16 +221,17 @@ function getPillarWuxing(pillar: string) {
   background: rgba(120, 80, 255, 0.07);
   border-left: 2px solid rgba(120, 80, 255, 0.4);
 }
-.mansion-name { font-size: 1.2rem; color: rgba(220, 200, 255, 0.95); }
-.mansion-alias { font-size: 0.75rem; color: rgba(160, 140, 200, 0.7); }
-.mansion-signal { font-size: 0.6rem; color: rgba(100, 200, 255, 0.6); letter-spacing: 0.1em; }
+.mansion-name    { font-size: 1.2rem; color: rgba(220, 200, 255, 0.95); }
+.mansion-alias   { font-size: 0.75rem; color: rgba(160, 140, 200, 0.7); }
+.mansion-element { font-size: 0.65rem; color: rgba(120, 200, 160, 0.8); font-family: monospace; }
+.signal-tag      { font-size: 0.6rem; color: rgba(100, 200, 255, 0.6); letter-spacing: 0.1em; }
 
 .yiji-section { display: flex; gap: 0.75rem; }
-.yiji-col { flex: 1; }
+.yiji-col     { flex: 1; }
 .yiji-divider { width: 1px; background: rgba(120, 80, 255, 0.2); }
-.yiji-item { display: flex; flex-direction: column; gap: 1px; margin-bottom: 0.5rem; }
-.yiji-trad { font-size: 0.75rem; color: rgba(200, 180, 255, 0.8); }
-.yiji-cyber { font-size: 0.6rem; letter-spacing: 0.03em; }
+.yiji-item    { display: flex; flex-direction: column; gap: 1px; margin-bottom: 0.5rem; }
+.yiji-trad    { font-size: 0.75rem; color: rgba(200, 180, 255, 0.8); }
+.yiji-cyber   { font-size: 0.6rem; letter-spacing: 0.03em; }
 .yiji-item.yi .yiji-cyber { color: rgba(100, 220, 160, 0.7); }
 .yiji-item.ji .yiji-cyber { color: rgba(255, 120, 100, 0.7); }
 
