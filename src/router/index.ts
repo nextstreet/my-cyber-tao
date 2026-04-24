@@ -10,10 +10,14 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      // 命运卡片页：原始路由，保持与 DestinyView 一致
       path: '/destiny/:cardId',
       name: 'destiny',
       component: () => import('../views/DestinyView.vue'),
+    },
+    {
+      path: '/result/:sessionId',
+      name: 'result',
+      component: () => import('../views/ResultView.vue'),
     },
   ],
 })

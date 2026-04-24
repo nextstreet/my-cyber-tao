@@ -1,6 +1,12 @@
 <template>
   <div class="home-container" :class="{ mobile: isMobile }">
 
+    <!-- 背景装饰层：八卦阵暗纹 -->
+    <div class="bg-bagua-array" aria-hidden="true"></div>
+
+    <!-- 背景装饰层：CSS 极光光晕 -->
+    <div class="bg-aurora" aria-hidden="true"></div>
+
     <!-- 桌面：书页双栏 -->
     <div v-if="!isMobile" class="book-spread">
       <div class="book-page left-page">
@@ -45,6 +51,11 @@
       </div>
     </div>
 
+    <!-- 底部系统日志 -->
+    <div class="home-syslog">
+      <SystemLog />
+    </div>
+
     <!-- 全局错误提示 -->
     <div v-if="errorMsg" class="error-toast">{{ errorMsg }}</div>
 
@@ -57,10 +68,11 @@ import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import TianjiPanel from '../components/TianjiPanel.vue'
 import DivinationInput from '../components/DivinationInput.vue'
+import SystemLog from '../components/SystemLog.vue'
 import { getTianjiData, type TianjiData } from '../utils/tianji'
 
 // ─── 常量 ────────────────────────────────────────────────────────────────────
-const EDGE_FN_URL = 'https://uojcjpffbmygsffaqcux.supabase.co/functions/v1/cyber-sage'
+const EDGE_FN_URL = import.meta.env.VITE_EDGE_FN_URL || 'https://uojcjpffbmygsffaqcux.supabase.co/functions/v1/cyber-sage'
 
 // ─── 状态 ────────────────────────────────────────────────────────────────────
 const router       = useRouter()
@@ -210,6 +222,38 @@ function getDeviceId(): string {
   justify-content: center;
   background: #050510;
   overflow: hidden;
+  position: relative;
+}
+
+/* ── 背景装饰：八卦阵暗纹 ── */
+.bg-bagua-array {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url('/bagua-array.svg');
+  background-size: min(90vmin, 700px);
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: bg-rotate 120s linear infinite;
+  will-change: transform;
+}
+@keyframes bg-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── 背景装饰：CSS 极光光晕 ── */
+.bg-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 15% 80%, rgba(120, 80, 255, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 20%, rgba(200, 170, 110, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.03) 0%, transparent 60%);
 }
 
 /* ── 桌面书页 ── */
@@ -218,6 +262,8 @@ function getDeviceId(): string {
   width: min(1200px, 95vw);
   height: min(760px, 90vh);
   box-shadow: 0 0 80px rgba(100, 60, 220, 0.3);
+  position: relative;
+  z-index: 1;
 }
 .book-page {
   flex: 1;
@@ -225,6 +271,7 @@ function getDeviceId(): string {
   border: 1px solid rgba(120, 80, 255, 0.2);
   padding: 2.5rem;
   overflow-y: auto;
+  position: relative;
 }
 .left-page {
   border-right: none;
@@ -235,6 +282,40 @@ function getDeviceId(): string {
   border-left: none;
   border-radius: 0 4px 4px 0;
 }
+
+/* ── 书页四角装饰 ── */
+.book-page::before,
+.book-page::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: rgba(120, 80, 255, 0.25);
+  border-style: solid;
+  pointer-events: none;
+  transition: border-color 0.5s;
+}
+.book-page:hover::before,
+.book-page:hover::after {
+  border-color: rgba(120, 80, 255, 0.5);
+}
+.left-page::before {
+  top: 8px; left: 8px;
+  border-width: 1px 0 0 1px;
+}
+.left-page::after {
+  bottom: 8px; left: 8px;
+  border-width: 0 0 1px 1px;
+}
+.right-page::before {
+  top: 8px; right: 8px;
+  border-width: 1px 1px 0 0;
+}
+.right-page::after {
+  bottom: 8px; right: 8px;
+  border-width: 0 1px 1px 0;
+}
+
 .book-spine {
   width: 12px;
   background: linear-gradient(180deg,
@@ -258,6 +339,7 @@ function getDeviceId(): string {
   height: 100vh;
   overflow: hidden;
   position: relative;
+  z-index: 1;
 }
 .page-wrapper {
   display: flex;
@@ -274,7 +356,7 @@ function getDeviceId(): string {
 }
 .page-dots {
   position: fixed;
-  bottom: 1.5rem;
+  bottom: 4rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -294,10 +376,22 @@ function getDeviceId(): string {
   box-shadow: 0 0 8px rgba(120, 80, 255, 0.8);
 }
 
+/* ── 底部系统日志 ── */
+.home-syslog {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: rgba(5, 5, 16, 0.85);
+  backdrop-filter: blur(4px);
+  padding: 0 1rem;
+}
+
 /* ── 错误提示 ── */
 .error-toast {
   position: fixed;
-  bottom: 2rem;
+  bottom: 3.5rem;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(239, 68, 68, 0.15);

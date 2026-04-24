@@ -629,28 +629,43 @@
 </template>
 
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { toPng } from 'html-to-image'
 
-const props = defineProps(['hexagramData', 'aiPredictionText', 'userData'])
+interface HexagramData {
+  lines?: number[]
+  nameZh?: string
+  nameEn?: string
+  name?: string
+  element?: string
+  number?: number
+  subtitle?: string
+  statement?: string
+  poemZh?: string
+}
+
+const props = defineProps<{
+  hexagramData: HexagramData
+  aiPredictionText?: string
+  userData?: { id?: string; name?: string }
+}>()
 
 const showModal      = ref(false)
 const isFlipped      = ref(false)
 const godlikeTriggered = ref(false)
-const posterRef      = ref(null)
-const squareRef      = ref(null)
+const posterRef      = ref<HTMLElement | null>(null)
+const squareRef      = ref<HTMLElement | null>(null)
 const generateTime   = ref(Date.now())
 const scanY          = ref(10)
 
-// 扫描线动画
-let scanRaf = null
+let scanRaf: number | null = null
 const animScan = () => {
   scanY.value = (scanY.value + 0.25) % 100
   scanRaf = requestAnimationFrame(animScan)
 }
 onMounted(() => { scanRaf = requestAnimationFrame(animScan) })
-onUnmounted(() => { if (scanRaf) cancelAnimationFrame(scanRaf) })
+onUnmounted(() => { if (scanRaf !== null) cancelAnimationFrame(scanRaf) })
 
 // ── 视觉种子 ──
 const seed = computed(() => {
@@ -711,13 +726,13 @@ const gridOffsetStyle = computed(() => ({
 }))
 
 // 四角装饰
-const cornerDecor = (pos) => {
+const cornerDecor = (pos: string) => {
   const c = rarityAccent.value, s = '16px'
-  const base = { position:'absolute', width:s, height:s }
-  if (pos === 'tl') return { ...base, top:0,    left:0,  borderTop:`2px solid ${c}cc`,    borderLeft:`2px solid ${c}cc`  }
-  if (pos === 'tr') return { ...base, top:0,    right:0, borderTop:`2px solid ${c}cc`,    borderRight:`2px solid ${c}cc` }
-  if (pos === 'bl') return { ...base, bottom:0, left:0,  borderBottom:`2px solid ${c}cc`, borderLeft:`2px solid ${c}cc`  }
-  return                   { ...base, bottom:0, right:0, borderBottom:`2px solid ${c}cc`, borderRight:`2px solid ${c}cc` }
+  const base: Record<string, string> = { position:'absolute', width:s, height:s }
+  if (pos === 'tl') return { ...base, top:'0',    left:'0',  borderTop:`2px solid ${c}cc`,    borderLeft:`2px solid ${c}cc`  }
+  if (pos === 'tr') return { ...base, top:'0',    right:'0', borderTop:`2px solid ${c}cc`,    borderRight:`2px solid ${c}cc` }
+  if (pos === 'bl') return { ...base, bottom:'0', left:'0',  borderBottom:`2px solid ${c}cc`, borderLeft:`2px solid ${c}cc`  }
+  return                   { ...base, bottom:'0', right:'0', borderBottom:`2px solid ${c}cc`, borderRight:`2px solid ${c}cc` }
 }
 
 const hudTextStyle = computed(() => ({
@@ -745,7 +760,7 @@ const cardDate      = computed(() => {
 
 // 雷达图
 const radarPointArr = computed(() => {
-  const gv = (o) => 30 + ((seed.value >> o) % 60)
+  const gv = (o: number) => 30 + ((seed.value >> o) % 60)
   return [
     { x:50,                    y:50-(gv(1)*0.4)   },
     { x:50+(gv(2)*0.38),       y:50-(gv(2)*0.12)  },
@@ -768,7 +783,9 @@ const talismanPaths = computed(() => {
   ].slice(0, 3 + (s % 2))
 })
 
-const circuitNodes = computed(() => {
+interface CircuitNode { x: number; y: number; filled: boolean }
+
+const circuitNodes = computed<[CircuitNode, CircuitNode, CircuitNode, CircuitNode, CircuitNode, CircuitNode]>(() => {
   const s = seed.value
   return [
     { x:16+(s%24), y:26+(s%24), filled:(s%3)===0 },
@@ -777,18 +794,18 @@ const circuitNodes = computed(() => {
     { x:26+(s%14), y:66+(s%14), filled:(s%2)===0  },
     { x:72+(s%14), y:60+(s%14), filled:(s%2)===1  },
     { x:38+(s%20), y:36+(s%20), filled:(s%4)===0  },
-  ]
+  ] as [CircuitNode, CircuitNode, CircuitNode, CircuitNode, CircuitNode, CircuitNode]
 })
 
 const circuitLines = computed(() => {
   const n = circuitNodes.value
   return [
-    {x1:n[0].x,y1:n[0].y,x2:n[2].x,y2:n[2].y},
-    {x1:n[1].x,y1:n[1].y,x2:n[2].x,y2:n[2].y},
-    {x1:n[2].x,y1:n[2].y,x2:n[3].x,y2:n[3].y},
-    {x1:n[2].x,y1:n[2].y,x2:n[4].x,y2:n[4].y},
-    {x1:n[5].x,y1:n[5].y,x2:n[1].x,y2:n[1].y},
-    {x1:n[0].x,y1:n[0].y,x2:n[5].x,y2:n[5].y},
+    {x1:n[0]!.x,y1:n[0]!.y,x2:n[2]!.x,y2:n[2]!.y},
+    {x1:n[1]!.x,y1:n[1]!.y,x2:n[2]!.x,y2:n[2]!.y},
+    {x1:n[2]!.x,y1:n[2]!.y,x2:n[3]!.x,y2:n[3]!.y},
+    {x1:n[2]!.x,y1:n[2]!.y,x2:n[4]!.x,y2:n[4]!.y},
+    {x1:n[5]!.x,y1:n[5]!.y,x2:n[1]!.x,y2:n[1]!.y},
+    {x1:n[0]!.x,y1:n[0]!.y,x2:n[5]!.x,y2:n[5]!.y},
   ]
 })
 
@@ -849,7 +866,7 @@ const generate = () => {
   setTimeout(triggerGodlike, 550)
 }
 
-const downloadImage = async (format) => {
+const downloadImage = async (format: string) => {
   const el = format === 'poster' ? posterRef.value : squareRef.value
   if (!el) return
   try {

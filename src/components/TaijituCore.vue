@@ -243,7 +243,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
 // 数据流字符（外圈）
@@ -267,7 +267,7 @@ const baguaSymbols = [
 
 // 同步率数字跳动
 const syncDisplay = ref('432.7')
-let syncInterval = null
+let syncInterval: ReturnType<typeof setInterval> | null = null
 const isActive = ref(false)
 
 const randomSync = () => {

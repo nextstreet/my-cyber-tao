@@ -90,17 +90,19 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 
 const emit = defineEmits(['complete'])
 
-const lines    = ref([])
-const rawSums  = ref([])
+const lines    = ref<number[]>([])
+const rawSums  = ref<number[]>([])
 const isTossing = ref(false)
 
+interface CoinState { v: number; restOffset: number; tiltZ: number; shadowScale: number; shadowOpacity: number }
+
 // 每枚硬币带独立的物理状态
-const coins = ref([
+const coins = ref<CoinState[]>([
   { v: 1, restOffset: 0, tiltZ: 0, shadowScale: 1, shadowOpacity: 0.5 },
   { v: 1, restOffset: 0, tiltZ: 0, shadowScale: 1, shadowOpacity: 0.5 },
   { v: 1, restOffset: 0, tiltZ: 0, shadowScale: 1, shadowOpacity: 0.5 },
@@ -123,7 +125,7 @@ const btnStyle = computed(() => {
 })
 
 // 落地后的随机静止姿态：每枚高度差异 ±6px，轻微倾斜 ±4°
-const getRestRotation = (coin) => {
+const getRestRotation = (coin: { v: number; tiltZ: number }) => {
   const base = coin.v === 0 ? 'rotateY(180deg)' : 'rotateY(0deg)'
   return { transform: `${base} rotateZ(${coin.tiltZ}deg)` }
 }
@@ -140,9 +142,9 @@ const applyLandingPhysics = () => {
 }
 
 // Web Audio
-const playAudio = (type) => {
+const playAudio = (type: string) => {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const ctx = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)()
     if (type === 'coin') {
       // 每枚错开时机，音调略有差异
       const pitchVariants = [700, 640, 760]

@@ -289,7 +289,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
@@ -297,20 +297,40 @@ import { supabase } from '../lib/supabase'
 const route  = useRoute()
 const router = useRouter()
 
+// ── 类型 ──
+interface CardData {
+  card_id: string
+  edition_number: number
+  verified_hash: string
+  name_zh: string
+  name_en: string
+  hexagram_code: string
+  interpretation: string
+  oracle: string
+  oracle_short_sentence?: string
+  classical_quote?: string
+  fortune_scores?: Record<string, number>
+  resonance?: Record<string, unknown>
+  rarity?: string
+  device_id: string
+  created_at: string
+  is_sealed: boolean
+}
+
 // ── 状态机 ──
-const phase       = ref('loading')
+const phase       = ref<'loading' | 'error' | 'seal' | 'converge' | 'card'>('loading')
 const errorMsg    = ref('')
-const card        = ref(null)
-const verifyState = ref('pending')
+const card        = ref<CardData | null>(null)
+const verifyState = ref<'pending' | 'verified' | 'failed'>('pending')
 const copied      = ref(false)
 
 // ── Canvas & 扫描线 ──
-const particleCanvas = ref(null)
-const beastVideo     = ref(null)
+const particleCanvas = ref<HTMLCanvasElement | null>(null)
+const beastVideo     = ref<HTMLVideoElement | null>(null)
 const scanY          = ref(5)
-let animRaf    = null
-let scanRaf    = null
-let phaseTimer = null
+let animRaf: number | null    = null
+let scanRaf: number | null    = null
+let phaseTimer: ReturnType<typeof setTimeout> | null = null
 
 // ── 粒子系统状态 ──
 const particleMode = ref('float')
@@ -319,7 +339,7 @@ const maskOpacity  = ref(1)
 
 // ── 加载卡片 ──
 const loadCard = async () => {
-  const cardId = decodeURIComponent(route.params.cardId)
+  const cardId = decodeURIComponent(route.params.cardId as string)
   if (!cardId) { phase.value = 'error'; errorMsg.value = 'Invalid card ID.'; return }
   try {
     const { data, error } = await supabase
@@ -381,7 +401,7 @@ const animateConverge = () => {
 }
 
 // ── 验证哈希 ──
-const verifyHash = async (data) => {
+const verifyHash = async (data: CardData) => {
   try {
     const raw = `${data.card_id}:${data.device_id}:${data.hexagram_code}:${data.created_at}`
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw))
@@ -427,13 +447,13 @@ const rarityTier = computed(() => {
 })
 
 const rarity = computed(() => {
-  const map = {
+  const map: Record<string, { label: string; accent: string }> = {
     godlike: { label: 'GODLIKE',    accent: '#ef4444' },
     ultra:   { label: 'ULTRA RARE', accent: '#c8aa6e' },
     rare:    { label: 'RARE',       accent: '#67e8f9' },
     common:  { label: 'COMMON',     accent: '#22d3ee' },
   }
-  return map[rarityTier.value]
+  return map[rarityTier.value] || { label: 'COMMON', accent: '#22d3ee' }
 })
 
 const rarityLabel  = computed(() => rarity.value.label)
@@ -555,13 +575,13 @@ const oracleTextStyle = computed(() => {
 })
 
 // ── SVG 辅助函数 ──
-const hexPoints = (cx, cy, r) =>
+const hexPoints = (cx: number, cy: number, r: number) =>
   Array.from({length:6}, (_,i) => {
     const a = (i*60 - 30) * Math.PI/180
     return `${cx + r*Math.cos(a)},${cy + r*Math.sin(a)}`
   }).join(' ')
 
-const spiralPath = (cx, cy, maxR, turns) => {
+const spiralPath = (cx: number, cy: number, maxR: number, turns: number) => {
   let d = `M ${cx} ${cy}`
   const steps = turns * 36
   for (let i = 1; i <= steps; i++) {
@@ -591,6 +611,7 @@ const initParticles = () => {
   const canvas = particleCanvas.value
   if (!canvas) return
   const ctx = canvas.getContext('2d')
+  if (!ctx) return
 
   const resize = () => {
     canvas.width  = window.innerWidth
@@ -604,23 +625,20 @@ const initParticles = () => {
   const CX = window.innerWidth / 2
   const CY = window.innerHeight / 2
 
-  // 按稀有度定义粒子字符集
   const baseChars = ['◈','⬡','☯','乾','坤','坎','离','震','巽','艮','兑', '0','1','A','F']
   const hexCode   = card.value?.hexagram_code || '000000'
   const nameChar  = card.value?.name_zh?.[0] || '命'
 
-  // GODLIKE: 加入古典卦辞字符；EPIC: 加入更多易学符号；RARE/COMMON: 基础集
-  const tierChars = {
+  const tierChars: Record<string, string[]> = {
     godlike: [...baseChars, nameChar, '元','亨','利','贞','吉','凶','悔','吝','无','咎','⚡','✦','✧'],
     ultra:   [...baseChars, nameChar, '⚡','✦','▲','◉','⊕', ...hexCode.split('').map(n=>n==='1'?'阳':'阴')],
     rare:    [...baseChars, nameChar, ...hexCode.split('').map(n=>n==='1'?'阳':'阴')],
     common:  [...baseChars, nameChar],
   }
-  const chars = tierChars[tier]
+  const chars = tierChars[tier] || baseChars
 
-  // 按稀有度定义粒子数量
-  const countMap = { godlike: 90, ultra: 65, rare: 40, common: 25 }
-  const COUNT = countMap[tier]
+  const countMap: Record<string, number> = { godlike: 90, ultra: 65, rare: 40, common: 25 }
+  const COUNT = countMap[tier] ?? 25
 
   const particles = Array.from({ length: COUNT }, () => ({
     x: Math.random() * canvas.width,
@@ -629,17 +647,15 @@ const initParticles = () => {
     vy: -(0.15 + Math.random() * 0.5),
     alpha: 0.2 + Math.random() * 0.5,
     size: 8 + Math.floor(Math.random() * 6),
-    char: chars[Math.floor(Math.random() * chars.length)],
-    // GODLIKE/EPIC 有更高概率出现金色粒子
+    char: chars[Math.floor(Math.random() * chars.length)] || '◈',
     gold: Math.random() > (tier === 'godlike' ? 0.75 : tier === 'ultra' ? 0.82 : 0.92),
     phase: Math.random() * Math.PI * 2,
     homeAngle: Math.random() * Math.PI * 2,
     homeDist: 20 + Math.random() * 80,
   }))
 
-  // 按稀有度定义背景叠加密度（GODLIKE最浓）
-  const bgAlphaMap = { godlike: 0.04, ultra: 0.05, rare: 0.055, common: 0.065 }
-  const bgAlpha = bgAlphaMap[tier]
+  const bgAlphaMap: Record<string, number> = { godlike: 0.04, ultra: 0.05, rare: 0.055, common: 0.065 }
+  const bgAlpha = bgAlphaMap[tier] ?? 0.065
 
   const draw = () => {
     ctx.fillStyle = `rgba(3,3,10,${bgAlpha})`
@@ -655,16 +671,14 @@ const initParticles = () => {
       if (mode === 'fade') a *= 0.3
 
       if (p.gold) {
-        // 金色粒子：GODLIKE 用红金，其他用标准金
         const goldColor = tier === 'godlike' ? '239,100,80' : '200,170,110'
         ctx.fillStyle = `rgba(${goldColor},${a * 0.9})`
         ctx.shadowColor = tier === 'godlike' ? '#ef4444' : '#c8aa6e'
         ctx.shadowBlur  = tier === 'godlike' ? 8 : 5
       } else {
-        const r = parseInt(accent.slice(1,3)||'22',16)
-        const g = parseInt(accent.slice(3,5)||'d3',16)
-        const b = parseInt(accent.slice(5,7)||'ee',16)
-        // GODLIKE/EPIC 粒子透明度更高，更显眼
+        const r = parseInt(accent.slice(1,3) || '22', 16)
+        const g = parseInt(accent.slice(3,5) || 'd3', 16)
+        const b = parseInt(accent.slice(5,7) || 'ee', 16)
         const alphaMulti = tier === 'godlike' ? 0.65 : tier === 'ultra' ? 0.55 : 0.42
         ctx.fillStyle = `rgba(${r},${g},${b},${a * alphaMulti})`
         ctx.shadowBlur = 0
@@ -682,7 +696,7 @@ const initParticles = () => {
           p.alpha = 0.3 + Math.random() * 0.4
           p.vy = -(0.15 + Math.random() * 0.5)
           p.vx = (Math.random() - 0.5) * 0.7
-          p.char = chars[Math.floor(Math.random() * chars.length)]
+          p.char = chars[Math.floor(Math.random() * chars.length)] || '◈'
           p.gold = Math.random() > (tier === 'godlike' ? 0.75 : tier === 'ultra' ? 0.82 : 0.92)
         }
       } else if (mode === 'converge') {
@@ -725,9 +739,9 @@ const copyLink = async () => {
 
 onMounted(() => loadCard())
 onUnmounted(() => {
-  if (animRaf)    cancelAnimationFrame(animRaf)
-  if (scanRaf)    cancelAnimationFrame(scanRaf)
-  if (phaseTimer) clearTimeout(phaseTimer)
+  if (animRaf !== null)    cancelAnimationFrame(animRaf)
+  if (scanRaf !== null)    cancelAnimationFrame(scanRaf)
+  if (phaseTimer !== null) clearTimeout(phaseTimer)
 })
 </script>
 

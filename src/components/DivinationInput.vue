@@ -191,7 +191,7 @@ const emit = defineEmits<{
 }>()
 
 // ─── i18n 极简实现 ────────────────────────────────────────────────────────────
-const STRINGS: Record<string, Record<string, string>> = {
+const STRINGS: Record<string, Record<string, string | ((n: number) => string)>> = {
   zh: {
     inputQuestion: '输入你的问题',
     inputDesc:     '将意图明确化，系统才能精准解析时空节点。',
@@ -239,9 +239,9 @@ const STRINGS: Record<string, Record<string, string>> = {
 }
 
 function t(key: string, ...args: unknown[]): string {
-  const dict = STRINGS[props.language] ?? STRINGS.en
+  const dict = (STRINGS[props.language] ?? STRINGS.en) as Record<string, string | ((...a: unknown[]) => string)>
   const val = dict[key]
-  if (typeof val === 'function') return (val as Function)(...args)
+  if (typeof val === 'function') return val(...args)
   return val ?? key
 }
 

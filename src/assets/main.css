@@ -3,6 +3,15 @@
 /* ── Web Fonts ── */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');
 
+@theme {
+  --color-tao-black: #050505;
+  --color-tao-gold: #C8AA6E;
+  --color-tao-gold-light: #F2Dba5;
+  --color-tao-red: #8A2A2A;
+  --color-bg-tao-white: #ffddfa;
+  --font-family-serif: 'Playfair Display', serif;
+}
+
 /* ── Global Reset (minimal) ── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -31,4 +40,25 @@ html, body {
 /* ── Textarea no-resize global ── */
 textarea {
   resize: none;
+}
+
+/* ── Global Decorative Grid ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(120, 80, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
