@@ -28,7 +28,7 @@
           :disabled="!question.trim()"
           @click="step = 2"
         >
-          {{ t('confirmIntent') }} →
+          {{ t('confirmInt') }} →
         </button>
       </div>
     </transition>
@@ -43,13 +43,14 @@
         <p class="step-desc">{{ t('castDesc') }}</p>
 
         <div class="coin-area">
-          <!-- 铜钱 -->
+          <!-- 铜钱：每枚有独立随机弹跳高度 -->
           <div class="coins-row">
             <div
               v-for="n in 3"
               :key="n"
               class="coin"
-              :class="{ spinning: isSpinning, landed: lastThrow !== null }"
+              :class="{ 'coin-toss': isSpinning, 'coin-landed': lastThrow !== null }"
+              :style="isSpinning ? getCoinStyle(n) : undefined"
               @click="!isSpinning && lines.length < 6 && throwCoins()"
             >
               <div class="coin-face front"><span>乾</span></div>
@@ -215,25 +216,25 @@ const STRINGS: Record<string, Record<string, string | ((n: number) => string)>> 
     decoding:      '正在解析...',
   },
   en: {
-    inputQuestion: 'Enter your question',
+    inputQuestion: 'ENTER YOUR QUESTION',
     inputDesc:     'Crystallize your intent — the system reads the nodes of space and time.',
     placeholder:   'What do you seek to know?\nE.g.: How should I approach my career this season?',
-    confirmIntent: 'Confirm Intent · CONFIRM',
-    castTitle:     'Cast Hexagram',
-    castDesc:      'Click the coins or press the throw button to generate the hexagram (6 times).',
-    throwCoins:    '⟳ Throw Coins',
+    confirmInt:    'Confirm Intent · CONFIRM',
+    castTitle:     'CAST HEXAGRAM',
+    castDesc:      'Click coins or press throw to generate the hexagram (6 throws).',
+    throwCoins:    '⟳ THROW COINS',
     casting:       'Casting...',
-    castComplete:  '✓ All 6 lines cast',
-    back:          'Back',
-    recast:        'Recast',
-    confirmTitle:  'Confirm Divination',
+    castComplete:  '✓ ALL 6 LINES CAST',
+    back:          '← Back',
+    recast:        '← Recast',
+    confirmTitle:  'CONFIRM DIVINATION',
     confirmCast:   'Confirm · CAST',
     labelQuestion: 'Question',
     labelHexagram: 'Hexagram',
-    hexReady:      'Hexagram generated',
+    hexReady:      'Hexagram Generated',
     changingLines: (n: number) => `${n} changing line${n > 1 ? 's' : ''} — fate in flux`,
     yao:           'lines',
-    decode:        'Decode · DECODE DESTINY',
+    decode:        'DECODE DESTINY',
     decoding:      'Decoding...',
   },
 }
@@ -248,9 +249,10 @@ function t(key: string, ...args: unknown[]): string {
 // ─── 状态 ────────────────────────────────────────────────────────────────────
 const step       = ref(1)
 const question   = ref('')
-const lines      = ref<number[]>([])    // 6=老阴, 7=少阳, 8=少阴, 9=老阳
+const lines      = ref<number[]>([])
 const isSpinning = ref(false)
 const lastThrow  = ref<number[] | null>(null)
+const coinHeights = ref<number[]>([0, 0, 0])
 
 // 爻符号
 const LINE_LABELS: Record<number, string> = {
@@ -272,14 +274,23 @@ function lineClass(line: number) {
 function throwCoins() {
   if (isSpinning.value || lines.value.length >= 6) return
   isSpinning.value = true
+  coinHeights.value = [0, 1, 2].map(() => 28 + Math.random() * 48)
   setTimeout(() => {
-    // 三枚铜钱：正面=3，背面=2，三枚之和 → 6/7/8/9
     const coins = [0, 1, 2].map(() => Math.random() < 0.5 ? 3 : 2)
     const sum   = coins.reduce((a, b) => a + b, 0)
     lines.value  = [...lines.value, sum]
     lastThrow.value = coins
     isSpinning.value = false
+    coinHeights.value = [0, 0, 0]
   }, 600)
+}
+
+function getCoinStyle(index: number) {
+  const h = coinHeights.value[index] ?? 0
+  return {
+    animation: `coinBounce 0.6s cubic-bezier(0.22,0.61,0.36,1) ${index * 0.06}s forwards`,
+    '--coin-jump': `-${h}px`,
+  }
 }
 
 function resetAndBack() {
@@ -324,113 +335,126 @@ function submit() {
 
 <style scoped>
 .divination-input {
-  color: rgba(200, 180, 255, 0.9);
-  font-family: 'Courier New', monospace;
+  color: rgba(215, 195, 250, 0.92);
+  font-family: 'Inter', 'Courier New', monospace;
   height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+.divination-input::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url('/sacred-mandala.svg');
+  background-size: 260px;
+  background-position: 50% 40%;
+  background-repeat: no-repeat;
+  z-index: 0;
 }
 
 .input-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(120, 80, 255, 0.3);
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(140, 100, 255, 0.25);
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
-.header-tag   { font-size: 0.75rem; color: rgba(120, 80, 255, 0.7); }
-.step-indicator { font-size: 0.7rem; color: rgba(160, 140, 200, 0.6); }
+.header-tag   { font-size: 0.78rem; color: rgba(150, 120, 220, 0.75); }
+.step-indicator { font-size: 0.75rem; color: rgba(170, 150, 210, 0.7); }
 
-/* ── step 公共 ── */
 .step-block {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .step-title {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   flex-shrink: 0;
 }
-.step-num { font-size: 2rem; color: rgba(120, 80, 255, 0.3); font-weight: bold; }
-.step-title > span:last-child { font-size: 1rem; color: rgba(220, 200, 255, 0.9); }
+.step-num { font-size: 2rem; color: rgba(140, 100, 255, 0.35); font-weight: bold; }
+.step-title > span:last-child { font-size: 1.05rem; color: rgba(238, 225, 255, 0.92); }
 .step-desc {
-  font-size: 0.75rem;
-  color: rgba(160, 140, 200, 0.6);
-  margin-bottom: 1.2rem;
-  line-height: 1.6;
+  font-size: 0.8rem;
+  color: rgba(170, 150, 210, 0.7);
+  margin-bottom: 1rem;
+  line-height: 1.5;
   flex-shrink: 0;
 }
 
-/* ── 文字输入 ── */
 .question-input {
   width: 100%;
-  background: rgba(8, 8, 28, 0.8);
-  border: 1px solid rgba(120, 80, 255, 0.25);
+  background: rgba(12, 10, 30, 0.7);
+  border: 1px solid rgba(140, 100, 255, 0.3);
   border-radius: 4px;
-  color: rgba(220, 200, 255, 0.9);
+  color: rgba(235, 220, 255, 0.92);
   font-family: inherit;
   font-size: 0.9rem;
   padding: 0.75rem;
   resize: none;
-  line-height: 1.7;
+  line-height: 1.6;
   outline: none;
   transition: border-color 0.2s;
   box-sizing: border-box;
   flex-shrink: 0;
 }
-.question-input:focus { border-color: rgba(120, 80, 255, 0.7); }
-.question-input::placeholder { color: rgba(120, 80, 255, 0.3); }
+.question-input:focus { border-color: rgba(140, 100, 255, 0.7); }
+.question-input::placeholder { color: rgba(140, 100, 255, 0.35); }
 .char-count {
-  font-size: 0.62rem;
-  color: rgba(120, 80, 255, 0.4);
+  font-size: 0.68rem;
+  color: rgba(140, 100, 255, 0.5);
   text-align: right;
   margin-top: 4px;
   flex-shrink: 0;
 }
 
-/* ── 按钮通用 ── */
 .next-btn, .submit-btn {
-  margin-top: 1.25rem;
-  padding: 0.85rem;
+  margin-top: 1rem;
+  padding: 0.8rem;
   background: transparent;
-  border: 1px solid rgba(120, 80, 255, 0.5);
-  color: rgba(200, 180, 255, 0.9);
+  border: 1px solid rgba(140, 100, 255, 0.5);
+  color: rgba(215, 195, 250, 0.9);
   font-family: inherit;
   font-size: 0.85rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   cursor: pointer;
   transition: all 0.3s;
-  border-radius: 2px;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 .next-btn { width: 100%; }
 .next-btn:hover:not(:disabled),
 .submit-btn:hover:not(:disabled) {
-  background: rgba(120, 80, 255, 0.15);
+  background: rgba(140, 100, 255, 0.15);
   border-color: rgba(180, 140, 255, 0.8);
-  box-shadow: 0 0 16px rgba(120, 80, 255, 0.25);
+  box-shadow: 0 0 18px rgba(140, 100, 255, 0.25);
 }
 .next-btn:disabled,
 .submit-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .submit-btn {
   flex: 1;
   border-color: rgba(160, 100, 255, 0.8);
-  background: rgba(120, 80, 255, 0.1);
+  background: rgba(140, 100, 255, 0.1);
 }
 
-/* ── 铜钱区 ── */
 .coin-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   flex: 1;
 }
 .coins-row { display: flex; gap: 1.5rem; margin-top: 0.25rem; }
@@ -447,17 +471,20 @@ function submit() {
   color: rgba(255, 220, 120, 0.9);
   box-shadow: 0 0 12px rgba(200,160,80,0.2), inset 0 0 8px rgba(0,0,0,0.3);
   user-select: none;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.3s;
 }
-.coin:hover { box-shadow: 0 0 20px rgba(200,160,80,0.5), inset 0 0 8px rgba(0,0,0,0.3); }
-.coin.spinning { animation: coinSpin 0.6s cubic-bezier(0.4,0,0.6,1) forwards; }
-@keyframes coinSpin {
-  0%   { transform: rotateY(0deg); }
-  50%  { transform: rotateY(180deg) scale(0.8); }
-  100% { transform: rotateY(360deg); }
+.coin:hover { box-shadow: 0 0 22px rgba(200,160,80,0.55), inset 0 0 8px rgba(0,0,0,0.3); }
+.coin-toss { animation: coinBounce var(--coin-dur, 0.6s) cubic-bezier(0.22,0.61,0.36,1) var(--coin-delay, 0s) forwards; }
+.coin-landed { transform: translateY(0); transition: transform 0.1s; }
+@keyframes coinBounce {
+  0%   { transform: translateY(0) rotateY(0deg) scale(1); }
+  20%  { transform: translateY(var(--coin-jump, -40px)) rotateY(120deg) scale(1.05); }
+  40%  { transform: translateY(calc(var(--coin-jump, -40px) * 0.6)) rotateY(240deg) scale(0.95); }
+  60%  { transform: translateY(calc(var(--coin-jump, -40px) * 0.2)) rotateY(340deg) scale(1); }
+  80%  { transform: translateY(0) rotateY(350deg) scale(0.98); }
+  100% { transform: translateY(0) rotateY(360deg) scale(1); }
 }
 
-/* ★ 独立投掷按钮 */
 .throw-btn {
   padding: 0.65rem 2rem;
   background: rgba(200, 160, 80, 0.12);
@@ -467,22 +494,21 @@ function submit() {
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   cursor: pointer;
-  border-radius: 2px;
+  border-radius: 4px;
   transition: all 0.25s;
   min-width: 200px;
 }
 .throw-btn:hover:not(:disabled) {
   background: rgba(200, 160, 80, 0.22);
   border-color: rgba(200, 160, 80, 0.8);
-  box-shadow: 0 0 12px rgba(200, 160, 80, 0.25);
+  box-shadow: 0 0 14px rgba(200, 160, 80, 0.25);
 }
 .throw-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ── 爻预览 ── */
 .lines-preview {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   align-items: center;
 }
 .preview-line {
@@ -492,85 +518,83 @@ function submit() {
   height: 12px;
 }
 .yang-line {
-  width: 80px; height: 4px;
-  background: rgba(220,200,255,0.9);
+  width: 80px; height: 5px;
+  background: rgba(225,210,255,0.9);
   border-radius: 2px;
 }
 .yin-left, .yin-right {
-  width: 34px; height: 4px;
-  background: rgba(220,200,255,0.9);
+  width: 34px; height: 5px;
+  background: rgba(225,210,255,0.9);
   border-radius: 2px;
 }
 .yin-gap { width: 12px; }
 .preview-line.changing .yang-line,
 .preview-line.changing .yin-left,
 .preview-line.changing .yin-right {
-  background: rgba(255, 180, 80, 0.9);
-  box-shadow: 0 0 4px rgba(255, 180, 80, 0.5);
+  background: rgba(255, 190, 90, 0.9);
+  box-shadow: 0 0 5px rgba(255, 180, 80, 0.5);
 }
 .empty-line {
-  width: 80px; height: 4px;
-  background: rgba(120, 80, 255, 0.15);
+  width: 80px; height: 5px;
+  background: rgba(140, 100, 255, 0.12);
   border-radius: 2px;
-  border: 1px dashed rgba(120, 80, 255, 0.2);
+  border: 1px dashed rgba(140, 100, 255, 0.15);
 }
 .line-value {
-  font-size: 0.55rem;
-  color: rgba(140, 120, 200, 0.5);
+  font-size: 0.6rem;
+  color: rgba(150, 130, 210, 0.6);
   margin-left: 6px;
   white-space: nowrap;
   min-width: 60px;
 }
 .throw-count {
-  font-size: 0.65rem;
-  color: rgba(120, 80, 255, 0.5);
+  font-size: 0.7rem;
+  color: rgba(140, 100, 255, 0.55);
   letter-spacing: 0.05em;
 }
 
-/* ── 确认摘要 ── */
-.confirm-summary { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 0.75rem; flex-shrink: 0; }
+.confirm-summary { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.75rem; flex-shrink: 0; }
 .summary-row {
   display: flex;
   gap: 1rem;
-  padding: 0.75rem;
-  background: rgba(120,80,255,0.06);
-  border: 1px solid rgba(120,80,255,0.15);
-  border-radius: 3px;
+  padding: 0.65rem;
+  background: rgba(140,100,255,0.08);
+  border: 1px solid rgba(140,100,255,0.2);
+  border-radius: 4px;
   align-items: center;
 }
-.srow-label { font-size: 0.65rem; color: rgba(120,80,255,0.6); min-width: 3rem; flex-shrink: 0; }
-.srow-value { font-size: 0.82rem; color: rgba(200,180,255,0.9); line-height: 1.5; display: flex; align-items: center; }
+.srow-label { font-size: 0.7rem; color: rgba(150,120,220,0.7); min-width: 3rem; flex-shrink: 0; }
+.srow-value { font-size: 0.85rem; color: rgba(215,195,250,0.9); line-height: 1.5; display: flex; align-items: center; }
 .changing-hint {
-  font-size: 0.65rem;
-  color: rgba(255, 180, 80, 0.7);
-  letter-spacing: 0.05em;
+  font-size: 0.7rem;
+  color: rgba(255, 190, 90, 0.75);
+  letter-spacing: 0.04em;
   padding: 0.4rem 0.75rem;
   border-left: 2px solid rgba(255, 180, 80, 0.4);
-  background: rgba(255, 180, 80, 0.05);
+  background: rgba(255, 180, 80, 0.06);
 }
 
 .step-actions {
   display: flex;
   gap: 0.75rem;
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 0.75rem;
   flex-shrink: 0;
 }
 .back-btn {
-  padding: 0.7rem 1rem;
+  padding: 0.65rem 1rem;
   background: transparent;
-  border: 1px solid rgba(120,80,255,0.2);
-  color: rgba(160,140,200,0.6);
+  border: 1px solid rgba(140,100,255,0.2);
+  color: rgba(170,150,210,0.7);
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   cursor: pointer;
-  border-radius: 2px;
+  border-radius: 4px;
   transition: all 0.2s;
   flex-shrink: 0;
 }
-.back-btn:hover { border-color: rgba(120,80,255,0.4); color: rgba(180,160,220,0.8); }
+.back-btn:hover { border-color: rgba(140,100,255,0.4); color: rgba(190,170,230,0.85); }
 
-/* ── 加载动画 ── */
 .loading-span {
   display: flex;
   align-items: center;
@@ -587,7 +611,6 @@ function submit() {
   100% { opacity: 1; }
 }
 
-/* ── Step 过渡 ── */
 .step-fade-enter-active,
 .step-fade-leave-active {
   transition: opacity 0.3s, transform 0.3s;

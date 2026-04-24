@@ -1,28 +1,34 @@
 <template>
   <div class="home-container" :class="{ mobile: isMobile }">
 
-    <!-- 背景装饰层：八卦阵暗纹 -->
+    <!-- 背景装饰：八卦阵暗纹 -->
     <div class="bg-bagua-array" aria-hidden="true"></div>
 
-    <!-- 背景装饰层：神圣曼陀罗 -->
+    <!-- 背景装饰：神圣曼陀罗 -->
     <div class="bg-mandala" aria-hidden="true"></div>
 
-    <!-- 背景装饰层：CSS 极光光晕 -->
+    <!-- 背景装饰：CSS极光 -->
     <div class="bg-aurora" aria-hidden="true"></div>
 
-    <!-- 神圣几何装饰：光环圆环 -->
-    <div class="sacred-ring" aria-hidden="true"></div>
-    <div class="sacred-ring sacred-ring-outer" aria-hidden="true"></div>
+    <!-- 页边神圣几何光环 -->
+    <div class="edge-ring edge-ring-inner" aria-hidden="true"></div>
+    <div class="edge-ring edge-ring-outer" aria-hidden="true"></div>
+
+    <!-- 四角八卦符文 -->
+    <div class="corner-rune corner-rune-tl" aria-hidden="true">☰</div>
+    <div class="corner-rune corner-rune-tr" aria-hidden="true">☷</div>
+    <div class="corner-rune corner-rune-bl" aria-hidden="true">☲</div>
+    <div class="corner-rune corner-rune-br" aria-hidden="true">☵</div>
 
     <!-- 桌面：书页双栏 -->
     <div v-if="!isMobile" class="book-spread">
       <div class="book-page left-page">
-        <div class="page-glyph" aria-hidden="true">☰</div>
+        <div class="page-glyph" aria-hidden="true">☰ HEAVEN</div>
         <TianjiPanel :data="tianjiData" :loading="tianjiLoading" />
       </div>
       <div class="book-spine"></div>
       <div class="book-page right-page">
-        <div class="page-glyph" aria-hidden="true">⚡</div>
+        <div class="page-glyph" aria-hidden="true">⚡ CAST</div>
         <DivinationInput
           :loading="divLoading"
           :language="lang"
@@ -53,20 +59,16 @@
           />
         </div>
       </div>
-      <!-- 翻页指示点 -->
       <div class="page-dots">
         <span :class="{ active: activePage === 0 }" @click="activePage = 0"></span>
         <span :class="{ active: activePage === 1 }" @click="activePage = 1"></span>
       </div>
     </div>
 
-    <!-- 底部系统日志 -->
-    <div class="home-syslog">
-      <SystemLog />
-    </div>
-
     <!-- 全局错误提示 -->
-    <div v-if="errorMsg" class="error-toast">{{ errorMsg }}</div>
+    <Transition name="toast">
+      <div v-if="errorMsg" class="error-toast">{{ errorMsg }}</div>
+    </Transition>
 
   </div>
 </template>
@@ -77,13 +79,10 @@ import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import TianjiPanel from '../components/TianjiPanel.vue'
 import DivinationInput from '../components/DivinationInput.vue'
-import SystemLog from '../components/SystemLog.vue'
 import { getTianjiData, type TianjiData } from '../utils/tianji'
 
-// ─── 常量 ────────────────────────────────────────────────────────────────────
 const EDGE_FN_URL = import.meta.env.VITE_EDGE_FN_URL || 'https://uojcjpffbmygsffaqcux.supabase.co/functions/v1/cyber-sage'
 
-// ─── 状态 ────────────────────────────────────────────────────────────────────
 const router       = useRouter()
 const isMobile     = ref(window.innerWidth < 768)
 const activePage   = ref(0)
@@ -92,17 +91,14 @@ const divLoading   = ref(false)
 const tianjiData   = ref<TianjiData | null>(null)
 const errorMsg     = ref('')
 
-// 语言检测：优先浏览器语言，中文用户用 zh，其余用 en
 const lang = ref<'zh' | 'en'>(
   navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en'
 )
 
-// ─── 响应式窗口 ───────────────────────────────────────────────────────────────
 const onResize = () => { isMobile.value = window.innerWidth < 768 }
 onMounted(() => window.addEventListener('resize', onResize))
 onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 
-// ─── 移动端滑动 ───────────────────────────────────────────────────────────────
 let touchStartX = 0
 function onTouchStart(e: TouchEvent) {
   const t = e.touches[0]; if (t) touchStartX = t.clientX
@@ -114,7 +110,6 @@ function onTouchEnd(e: TouchEvent) {
   else if (delta > 50 && activePage.value > 0) activePage.value = 0
 }
 
-// ─── 天机数据初始化 ────────────────────────────────────────────────────────────
 onMounted(async () => {
   let coords: { lat: number; lng: number } | undefined
   try {
@@ -125,13 +120,12 @@ onMounted(async () => {
         { timeout: 3000 }
       )
     })
-  } catch { /* 优雅降级，不显示坐标 */ }
+  } catch { /* no coords */ }
 
   tianjiData.value = getTianjiData(new Date(), coords)
   tianjiLoading.value = false
 })
 
-// ─── 占卜提交核心逻辑（恢复原始 cyber-sage 直连）────────────────────────────
 async function handleSubmit(question: string, hexagram: {
   lines: number[]
   changingLines: boolean[]
@@ -142,7 +136,6 @@ async function handleSubmit(question: string, hexagram: {
   errorMsg.value = ''
 
   try {
-    // 1. 调用 Supabase Edge Function: cyber-sage
     const res = await fetch(EDGE_FN_URL, {
       method: 'POST',
       headers: {
@@ -164,11 +157,9 @@ async function handleSubmit(question: string, hexagram: {
 
     const result = await res.json()
 
-    // 2. 生成唯一 card_id 和 device_id
     const cardId   = crypto.randomUUID()
     const deviceId = getDeviceId()
 
-    // 3. 计算哈希（与 DestinyView 验证逻辑一致）
     const now       = new Date().toISOString()
     const hexCode   = hexagram.lines.join('')
     const rawStr    = `${cardId}:${deviceId}:${hexCode}:${now}`
@@ -176,7 +167,6 @@ async function handleSubmit(question: string, hexagram: {
     const hashHex   = Array.from(new Uint8Array(hashBuf))
       .map(b => b.toString(16).padStart(2, '0')).join('')
 
-    // 4. 写入 Supabase divination_logs
     const { error: dbErr } = await supabase
       .from('divination_logs')
       .insert({
@@ -191,7 +181,6 @@ async function handleSubmit(question: string, hexagram: {
         verified_hash:  hashHex.slice(0, 16),
         is_sealed:      true,
         created_at:     now,
-        // 可选扩展字段
         geo_region:     result.geoRegion  ?? null,
         geo_beast:      result.geoBeast   ?? null,
         has_changing:   result.hasChangingLines ?? false,
@@ -199,7 +188,6 @@ async function handleSubmit(question: string, hexagram: {
 
     if (dbErr) throw new Error(dbErr.message)
 
-    // 5. 跳转到命运卡片页
     router.push(`/destiny/${cardId}`)
 
   } catch (e) {
@@ -214,7 +202,6 @@ async function handleSubmit(question: string, hexagram: {
   }
 }
 
-// ─── 工具：持久化 device_id ───────────────────────────────────────────────────
 function getDeviceId(): string {
   const KEY = 'ct_device_id'
   let id = localStorage.getItem(KEY)
@@ -228,130 +215,158 @@ function getDeviceId(): string {
 
 <style scoped>
 .home-container {
-  min-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #050510;
-  overflow: hidden;
   position: relative;
+  overflow: hidden;
 }
 
-/* ── 背景装饰：八卦阵暗纹 ── */
+/* ── 背景：八卦阵暗纹 ── */
 .bg-bagua-array {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.035;
+  opacity: 0.1;
   background-image: url('/bagua-array.svg');
   background-size: min(90vmin, 700px);
   background-position: center;
   background-repeat: no-repeat;
   animation: bg-rotate 120s linear infinite;
-  will-change: transform;
 }
 @keyframes bg-rotate {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
-/* ── 背景装饰：神圣曼陀罗 ── */
+/* ── 背景：神圣曼陀罗 ── */
 .bg-mandala {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.04;
+  opacity: 0.1;
   background-image: url('/sacred-mandala.svg');
   background-size: min(80vmin, 600px);
   background-position: center;
   background-repeat: no-repeat;
   animation: mandala-breathe 20s ease-in-out infinite;
-  will-change: transform, opacity;
 }
 @keyframes mandala-breathe {
-  0%, 100% { transform: scale(1); opacity: 0.04; }
-  50% { transform: scale(1.03); opacity: 0.07; }
+  0%, 100% { transform: scale(1); opacity: 0.1; }
+  50% { transform: scale(1.04); opacity: 0.16; }
 }
 
-/* ── 背景装饰：CSS 极光光晕 ── */
+/* ── 背景：CSS极光 ── */
 .bg-aurora {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 15% 80%, rgba(120, 80, 255, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 85% 20%, rgba(200, 170, 110, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.03) 0%, transparent 60%);
+    radial-gradient(ellipse at 15% 80%, rgba(140, 90, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 20%, rgba(200, 170, 110, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.08) 0%, transparent 60%);
 }
 
-/* ── 神圣几何：光环圆环 ── */
-.sacred-ring {
+/* ── 页面边缘：神圣光环 ── */
+.edge-ring {
   position: fixed;
   top: 50%;
   left: 50%;
-  width: min(80vmin, 600px);
-  height: min(80vmin, 600px);
   transform: translate(-50%, -50%);
   z-index: 0;
   pointer-events: none;
-  border: 1px solid rgba(120, 80, 255, 0.06);
   border-radius: 50%;
-  animation: sacred-pulse 8s ease-in-out infinite;
+  border: 1px solid;
 }
-.sacred-ring-outer {
-  width: min(100vmin, 800px);
-  height: min(100vmin, 800px);
-  border-color: rgba(200, 170, 110, 0.04);
-  border-width: 1px;
-  animation: sacred-pulse 12s ease-in-out infinite reverse;
+.edge-ring-inner {
+  width: min(85vmin, 650px);
+  height: min(85vmin, 650px);
+  border-color: rgba(140, 100, 255, 0.14);
+  animation: edge-pulse 8s ease-in-out infinite;
 }
-@keyframes sacred-pulse {
+.edge-ring-outer {
+  width: min(100vmin, 850px);
+  height: min(100vmin, 850px);
+  border-color: rgba(200, 170, 110, 0.1);
+  animation: edge-pulse 12s ease-in-out infinite reverse;
+}
+@keyframes edge-pulse {
   0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-  50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+  50% { transform: translate(-50%, -50%) scale(1.04); opacity: 1; }
 }
+
+/* ── 四角八卦符文 ── */
+.corner-rune {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  font-size: 1.8rem;
+  opacity: 0.08;
+  font-family: serif;
+}
+.corner-rune-tl { top: 2.5%; left: 3%; }
+.corner-rune-tr { top: 2.5%; right: 3%; }
+.corner-rune-bl { bottom: 2.5%; left: 3%; }
+.corner-rune-br { bottom: 2.5%; right: 3%; }
 
 /* ── 桌面书页 ── */
 .book-spread {
   display: flex;
-  width: min(1200px, 95vw);
-  height: min(760px, 90vh);
-  box-shadow: 0 0 80px rgba(100, 60, 220, 0.3);
+  width: min(1200px, 94vw);
+  height: min(700px, 92vh);
+  height: min(700px, 92dvh);
   position: relative;
   z-index: 1;
+  box-shadow: 0 0 60px rgba(100, 60, 220, 0.2);
 }
 .book-page {
   flex: 1;
-  background: rgba(8, 8, 24, 0.95);
-  border: 1px solid rgba(120, 80, 255, 0.2);
-  padding: 2.5rem;
+  background: rgba(8, 8, 28, 0.78);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(120, 80, 255, 0.15);
+  padding: 1.75rem;
   overflow-y: auto;
   position: relative;
 }
 .left-page {
   border-right: none;
-  border-radius: 4px 0 0 4px;
-  background: linear-gradient(135deg, rgba(8,8,24,0.98) 0%, rgba(15,8,35,0.95) 100%);
+  border-radius: 6px 0 0 6px;
+  background: linear-gradient(135deg, rgba(10, 8, 30, 0.8) 0%, rgba(18, 12, 38, 0.75) 100%);
 }
-
 .right-page {
   border-left: none;
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 6px 6px 0;
 }
 
-/* ── 书页顶部圣符 ── */
+/* ── 书页顶部标识 ── */
 .page-glyph {
   position: absolute;
-  top: 10px;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 11px;
+  font-size: 0.75rem;
+  font-family: 'Inter', monospace;
   pointer-events: none;
-  opacity: 0.12;
-  letter-spacing: 6px;
+  opacity: 0.15;
+  letter-spacing: 0.3em;
   z-index: 1;
+}
+
+.book-spine {
+  width: 10px;
+  background: linear-gradient(180deg,
+    rgba(140, 100, 255, 0.5) 0%,
+    rgba(80, 40, 180, 0.7) 50%,
+    rgba(140, 100, 255, 0.5) 100%
+  );
+  position: relative;
+  flex-shrink: 0;
 }
 
 /* ── 书页四角装饰 ── */
@@ -359,55 +374,39 @@ function getDeviceId(): string {
 .book-page::after {
   content: '';
   position: absolute;
-  width: 16px;
-  height: 16px;
-  border-color: rgba(120, 80, 255, 0.25);
+  width: 14px;
+  height: 14px;
+  border-color: rgba(140, 100, 255, 0.2);
   border-style: solid;
   pointer-events: none;
   transition: border-color 0.5s;
 }
 .book-page:hover::before,
 .book-page:hover::after {
-  border-color: rgba(120, 80, 255, 0.5);
+  border-color: rgba(140, 100, 255, 0.45);
 }
 .left-page::before {
-  top: 8px; left: 8px;
+  top: 6px; left: 6px;
   border-width: 1px 0 0 1px;
 }
 .left-page::after {
-  bottom: 8px; left: 8px;
+  bottom: 6px; left: 6px;
   border-width: 0 0 1px 1px;
 }
 .right-page::before {
-  top: 8px; right: 8px;
+  top: 6px; right: 6px;
   border-width: 1px 1px 0 0;
 }
 .right-page::after {
-  bottom: 8px; right: 8px;
+  bottom: 6px; right: 6px;
   border-width: 0 1px 1px 0;
-}
-
-.book-spine {
-  width: 12px;
-  background: linear-gradient(180deg,
-    rgba(120,80,255,0.6) 0%,
-    rgba(60,30,160,0.8) 50%,
-    rgba(120,80,255,0.6) 100%
-  );
-  position: relative;
-  flex-shrink: 0;
-}
-.book-spine::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(200,180,255,0.15), transparent);
 }
 
 /* ── 移动端翻页 ── */
 .mobile-pages {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   position: relative;
   z-index: 1;
@@ -422,12 +421,14 @@ function getDeviceId(): string {
   width: 100vw;
   height: 100%;
   overflow-y: auto;
-  padding: 1.5rem;
+  padding: 1.25rem;
   box-sizing: border-box;
+  background: rgba(8, 8, 28, 0.78);
+  backdrop-filter: blur(8px);
 }
 .page-dots {
   position: fixed;
-  bottom: 4rem;
+  bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -437,44 +438,39 @@ function getDeviceId(): string {
 .page-dots span {
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: rgba(120, 80, 255, 0.3);
-  border: 1px solid rgba(120, 80, 255, 0.6);
+  background: rgba(140, 100, 255, 0.3);
+  border: 1px solid rgba(140, 100, 255, 0.5);
   cursor: pointer;
   transition: all 0.3s;
 }
 .page-dots span.active {
-  background: rgba(120, 80, 255, 0.9);
-  box-shadow: 0 0 8px rgba(120, 80, 255, 0.8);
-}
-
-/* ── 底部系统日志 ── */
-.home-syslog {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 20;
-  background: rgba(5, 5, 16, 0.85);
-  backdrop-filter: blur(4px);
-  padding: 0 1rem;
+  background: rgba(140, 100, 255, 0.85);
+  box-shadow: 0 0 10px rgba(140, 100, 255, 0.7);
 }
 
 /* ── 错误提示 ── */
 .error-toast {
   position: fixed;
-  bottom: 3.5rem;
+  bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid rgba(239, 68, 68, 0.5);
   color: rgba(255, 160, 160, 0.9);
   padding: 0.75rem 1.5rem;
-  font-family: monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  border-radius: 2px;
+  font-family: 'Inter', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
   z-index: 100;
   max-width: 90vw;
   text-align: center;
+}
+.toast-enter-active { transition: all 0.3s ease-out; }
+.toast-leave-active { transition: all 0.3s ease-in; }
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
 }
 </style>

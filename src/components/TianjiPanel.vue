@@ -150,49 +150,49 @@ function getPillarWuxing(pillar: string | undefined): string {
   text-shadow: 0 0 8px rgba(100, 255, 160, 0.5);
 }
 
-.data-section { margin-bottom: 1.5rem; }
+.data-section { margin-bottom: 1.25rem; }
 .section-label {
-  font-size: 0.65rem;
-  color: rgba(120, 80, 255, 0.6);
-  letter-spacing: 0.1em;
-  margin-bottom: 0.6rem;
+  font-size: 0.7rem;
+  color: rgba(150, 120, 220, 0.75);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
   text-transform: uppercase;
 }
-.section-label.yi { color: rgba(100, 220, 160, 0.7); }
-.section-label.ji { color: rgba(255, 100, 120, 0.7); }
+.section-label.yi { color: rgba(120, 230, 170, 0.8); }
+.section-label.ji { color: rgba(255, 120, 130, 0.8); }
 
 .pillars-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
 }
 .pillar-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(120, 80, 255, 0.07);
-  border: 1px solid rgba(120, 80, 255, 0.15);
+  background: rgba(120, 80, 255, 0.08);
+  border: 1px solid rgba(120, 80, 255, 0.2);
   border-radius: 4px;
-  padding: 0.5rem 0.25rem;
+  padding: 0.4rem 0.2rem;
   gap: 2px;
 }
-.pillar-label { font-size: 0.6rem; color: rgba(160, 140, 220, 0.6); }
-.pillar-value { font-size: 1.1rem; color: rgba(220, 200, 255, 0.95); font-weight: bold; }
-.pillar-hint  { font-size: 0.6rem; color: rgba(120, 200, 160, 0.7); }
+.pillar-label { font-size: 0.62rem; color: rgba(170, 150, 230, 0.7); }
+.pillar-value { font-size: 1.05rem; color: rgba(235, 220, 255, 0.95); font-weight: bold; }
+.pillar-hint  { font-size: 0.62rem; color: rgba(140, 220, 170, 0.75); }
 .location-tag, .lunar-tag {
-  font-size: 0.65rem;
-  color: rgba(160, 140, 200, 0.6);
+  font-size: 0.68rem;
+  color: rgba(170, 150, 210, 0.65);
   margin-top: 0.3rem;
 }
 
-.wuxing-bars { display: flex; flex-direction: column; gap: 6px; }
+.wuxing-bars { display: flex; flex-direction: column; gap: 5px; }
 .wuxing-row  { display: flex; align-items: center; gap: 8px; }
-.wx-name     { width: 1.5rem; font-size: 0.8rem; color: rgba(200, 180, 255, 0.8); }
+.wx-name     { width: 1.25rem; font-size: 0.78rem; color: rgba(210, 190, 255, 0.85); }
 .wx-bar-track {
   flex: 1;
-  height: 6px;
-  background: rgba(120, 80, 255, 0.1);
+  height: 7px;
+  background: rgba(120, 80, 255, 0.12);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -200,49 +200,50 @@ function getPillarWuxing(pillar: string | undefined): string {
   height: 100%;
   border-radius: 3px;
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 6px currentColor;
 }
-.wx-bar-fill[data-element='木'] { background: linear-gradient(90deg, #22c55e, #4ade80); }
-.wx-bar-fill[data-element='火'] { background: linear-gradient(90deg, #ef4444, #f97316); }
-.wx-bar-fill[data-element='土'] { background: linear-gradient(90deg, #d97706, #fbbf24); }
-.wx-bar-fill[data-element='金'] { background: linear-gradient(90deg, #9ca3af, #e5e7eb); }
-.wx-bar-fill[data-element='水'] { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+.wx-bar-fill[data-element='木'] { background: linear-gradient(90deg, #22c55e, #4ade80); color: #4ade80; }
+.wx-bar-fill[data-element='火'] { background: linear-gradient(90deg, #ef4444, #f97316); color: #f97316; }
+.wx-bar-fill[data-element='土'] { background: linear-gradient(90deg, #d97706, #fbbf24); color: #fbbf24; }
+.wx-bar-fill[data-element='金'] { background: linear-gradient(90deg, #9ca3af, #e5e7eb); color: #e5e7eb; }
+.wx-bar-fill[data-element='水'] { background: linear-gradient(90deg, #3b82f6, #06b6d4); color: #06b6d4; }
 .wx-val {
   width: 2rem;
-  font-size: 0.65rem;
-  color: rgba(160, 140, 200, 0.6);
+  font-size: 0.68rem;
+  color: rgba(170, 150, 210, 0.7);
   text-align: right;
 }
 
 .mansion-display {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   padding: 0.5rem;
-  background: rgba(120, 80, 255, 0.07);
-  border-left: 2px solid rgba(120, 80, 255, 0.4);
+  background: rgba(120, 80, 255, 0.08);
+  border-left: 2px solid rgba(140, 100, 255, 0.5);
 }
-.mansion-name    { font-size: 1.2rem; color: rgba(220, 200, 255, 0.95); }
-.mansion-alias   { font-size: 0.75rem; color: rgba(160, 140, 200, 0.7); }
-.mansion-element { font-size: 0.65rem; color: rgba(120, 200, 160, 0.8); font-family: monospace; }
-.signal-tag      { font-size: 0.6rem; color: rgba(100, 200, 255, 0.6); letter-spacing: 0.1em; }
+.mansion-name    { font-size: 1.15rem; color: rgba(235, 220, 255, 0.95); }
+.mansion-alias   { font-size: 0.78rem; color: rgba(170, 150, 210, 0.75); }
+.mansion-element { font-size: 0.68rem; color: rgba(140, 220, 170, 0.85); }
+.signal-tag      { font-size: 0.65rem; color: rgba(110, 210, 255, 0.7); letter-spacing: 0.08em; }
 
 .yiji-section { display: flex; gap: 0.75rem; }
 .yiji-col     { flex: 1; }
 .yiji-divider { width: 1px; background: rgba(120, 80, 255, 0.2); }
-.yiji-item    { display: flex; flex-direction: column; gap: 1px; margin-bottom: 0.5rem; }
-.yiji-trad    { font-size: 0.75rem; color: rgba(200, 180, 255, 0.8); }
-.yiji-cyber   { font-size: 0.6rem; letter-spacing: 0.03em; }
-.yiji-item.yi .yiji-cyber { color: rgba(100, 220, 160, 0.7); }
-.yiji-item.ji .yiji-cyber { color: rgba(255, 120, 100, 0.7); }
+.yiji-item    { display: flex; flex-direction: column; gap: 1px; margin-bottom: 0.45rem; }
+.yiji-trad    { font-size: 0.78rem; color: rgba(215, 195, 255, 0.85); }
+.yiji-cyber   { font-size: 0.65rem; letter-spacing: 0.03em; }
+.yiji-item.yi .yiji-cyber { color: rgba(120, 230, 170, 0.75); }
+.yiji-item.ji .yiji-cyber { color: rgba(255, 130, 110, 0.75); }
 
 .loading-state {
-  height: 300px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   gap: 1rem;
-  color: rgba(120, 80, 255, 0.6);
-  font-size: 0.75rem;
+  color: rgba(140, 100, 220, 0.7);
+  font-size: 0.8rem;
 }
 </style>

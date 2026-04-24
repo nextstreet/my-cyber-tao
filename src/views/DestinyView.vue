@@ -762,13 +762,12 @@ onUnmounted(() => {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.03;
+  opacity: 0.06;
   background-image: url('/sacred-mandala.svg');
   background-size: min(70vmin, 500px);
   background-position: center;
   background-repeat: no-repeat;
   animation: mandala-breathe 20s ease-in-out infinite;
-  will-change: transform, opacity;
 }
 .bg-aurora {
   position: fixed;
@@ -776,12 +775,12 @@ onUnmounted(() => {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 20% 30%, rgba(120, 80, 255, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 70%, rgba(200, 170, 110, 0.03) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 30%, rgba(120, 80, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(200, 170, 110, 0.07) 0%, transparent 50%);
 }
 @keyframes mandala-breathe {
-  0%, 100% { transform: scale(1); opacity: 0.03; }
-  50% { transform: scale(1.03); opacity: 0.06; }
+  0%, 100% { transform: scale(1); opacity: 0.06; }
+  50% { transform: scale(1.03); opacity: 0.11; }
 }
 
 /* 粒子层 */

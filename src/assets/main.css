@@ -22,27 +22,30 @@
 html, body {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
-  height: auto;
-  overflow-x: hidden;
-  overflow-y: auto;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background: #020408;
-  color: rgba(230, 220, 255, 0.92);
+  color: rgba(240, 232, 255, 0.93);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
-  min-height: 100vh;
-  height: auto;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  position: relative;
 }
 
 /* ── Selection ── */
 ::selection {
-  background: rgba(200, 170, 110, 0.25);
+  background: rgba(200, 170, 110, 0.3);
   color: #fff;
 }
 
@@ -59,11 +62,11 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 15% 20%, rgba(80, 60, 200, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 85% 80%, rgba(200, 170, 110, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse at 20% 80%, rgba(120, 80, 255, 0.05) 0%, transparent 40%),
-    radial-gradient(ellipse at 80% 20%, rgba(200, 100, 200, 0.04) 0%, transparent 40%);
+    radial-gradient(ellipse at 15% 20%, rgba(100, 70, 220, 0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 80%, rgba(200, 170, 110, 0.14) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 80%, rgba(140, 90, 255, 0.12) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 20%, rgba(220, 120, 220, 0.09) 0%, transparent 40%);
 }
 
 /* ── Global Decorative Grid ── */
@@ -74,50 +77,50 @@ body::after {
   z-index: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(rgba(120, 80, 255, 0.035) 1px, transparent 1px);
+    radial-gradient(rgba(140, 100, 255, 0.07) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
 /* ── Scrollbar Styling ── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(8, 8, 24, 0.5);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(120, 80, 255, 0.3);
+  background: rgba(120, 80, 255, 0.25);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(120, 80, 255, 0.5);
+  background: rgba(120, 80, 255, 0.4);
 }
 
-/* ── Typography: 英文优先，提高对比度 ── */
+/* ── Typography: 英文优先，高对比度 ── */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', serif;
-  color: rgba(245, 235, 255, 0.95);
-  letter-spacing: 0.02em;
+  color: rgba(248, 240, 255, 0.95);
+  letter-spacing: 0.03em;
 }
 
-p, li, div, span, button, input, textarea {
-  color: rgba(220, 210, 245, 0.9);
+p, li, button, input, textarea {
+  color: rgba(232, 224, 250, 0.9);
 }
 
 /* ── Monospace for code/technical elements ── */
 code, pre, .mono, .font-mono {
   font-family: 'Courier New', 'Fira Code', monospace;
-  color: rgba(200, 190, 240, 0.85);
+  color: rgba(210, 200, 248, 0.88);
 }
 
 /* ── Links ── */
 a {
-  color: rgba(180, 160, 255, 0.85);
+  color: rgba(200, 180, 255, 0.9);
   transition: color 0.2s;
 }
 a:hover {
-  color: rgba(220, 200, 255, 1);
+  color: rgba(230, 215, 255, 1);
 }
 
 /* ── Reduced Motion ── */
