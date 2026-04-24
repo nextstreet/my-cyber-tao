@@ -3,6 +3,7 @@
 
     <!-- 背景装饰 -->
     <div class="bg-bagua" aria-hidden="true"></div>
+    <div class="bg-mandala" aria-hidden="true"></div>
     <div class="bg-aurora" aria-hidden="true"></div>
     <div class="bg-texture" aria-hidden="true"></div>
 
@@ -21,9 +22,9 @@
         <p class="about-subtitle">天行健 · 君子以自强不息</p>
       </div>
 
-      <!-- 祥云分割 -->
-      <div class="cloud-divider-wrap" aria-hidden="true">
-        <img src="/cloud-divider.svg" alt="" class="cloud-divider" />
+      <!-- 神圣分割 -->
+      <div class="sacred-divider-wrap" aria-hidden="true">
+        <img src="/sacred-divider.svg" alt="" class="sacred-divider" />
       </div>
 
       <!-- 项目介绍 -->
@@ -135,6 +136,23 @@ const flowSteps = [
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+.bg-mandala {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url('/sacred-mandala.svg');
+  background-size: min(70vmin, 500px);
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: mandala-breathe 20s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes mandala-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.03; }
+  50% { transform: scale(1.03); opacity: 0.06; }
+}
 .bg-aurora {
   position: fixed;
   inset: 0;
@@ -208,13 +226,13 @@ const flowSteps = [
 }
 
 /* ── 祥云分割 ── */
-.cloud-divider-wrap {
-  width: 80%;
-  margin: 0.5rem 0 1.5rem;
-  opacity: 0.12;
+.sacred-divider-wrap {
+  width: 100%;
+  margin: 1.5rem 0;
+  opacity: 0.18;
   pointer-events: none;
 }
-.cloud-divider {
+.sacred-divider {
   width: 100%;
   height: auto;
   display: block;

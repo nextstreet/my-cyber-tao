@@ -2,6 +2,7 @@
   <div class="result-view" :class="{ mobile: isMobile }">
 
     <!-- 背景装饰层 -->
+    <div class="bg-mandala" aria-hidden="true"></div>
     <div class="bg-aurora" aria-hidden="true"></div>
     <div class="bg-scanlines" aria-hidden="true"></div>
 
@@ -35,16 +36,16 @@
           </div>
           <div class="hex-statement">{{ result.hexagram.statement }}</div>
 
-          <!-- 祥云分割线 -->
-          <div class="cloud-divider-wrap" aria-hidden="true">
-            <img src="/cloud-divider.svg" alt="" class="cloud-divider" />
+          <!-- 神圣分割线 -->
+          <div class="sacred-divider-wrap" aria-hidden="true">
+            <img src="/sacred-divider.svg" alt="" class="sacred-divider" />
           </div>
 
           <div class="ai-analysis" v-html="formattedAnalysis"></div>
 
-          <!-- 祥云分割线 -->
-          <div class="cloud-divider-wrap" aria-hidden="true">
-            <img src="/cloud-divider.svg" alt="" class="cloud-divider" />
+          <!-- 神圣分割线 -->
+          <div class="sacred-divider-wrap" aria-hidden="true">
+            <img src="/sacred-divider.svg" alt="" class="sacred-divider" />
           </div>
 
           <div class="seal-area">
@@ -70,8 +71,8 @@
           <div class="hexagram-title">
             <span class="hex-name">{{ result.hexagram.name }}</span>
           </div>
-          <div class="cloud-divider-wrap" aria-hidden="true">
-            <img src="/cloud-divider.svg" alt="" class="cloud-divider" />
+          <div class="sacred-divider-wrap" aria-hidden="true">
+            <img src="/sacred-divider.svg" alt="" class="sacred-divider" />
           </div>
           <div class="ai-analysis" v-html="formattedAnalysis"></div>
           <button class="seal-btn" @click="goSeal">封印此卦 · SEAL DESTINY</button>
@@ -165,6 +166,24 @@ function goSeal() {
 }
 
 /* ── 背景装饰 ── */
+.bg-mandala {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url('/sacred-mandala.svg');
+  background-size: min(80vmin, 600px);
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: mandala-breathe 20s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes mandala-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.035; }
+  50% { transform: scale(1.03); opacity: 0.06; }
+}
+
 .bg-aurora {
   position: fixed;
   inset: 0;
@@ -268,14 +287,14 @@ function goSeal() {
   line-height: 1.8;
 }
 
-/* ── 祥云分割线 ── */
-.cloud-divider-wrap {
+/* ── 神圣分割线 ── */
+.sacred-divider-wrap {
   width: 100%;
   margin: 1.5rem 0;
-  opacity: 0.15;
+  opacity: 0.2;
   pointer-events: none;
 }
-.cloud-divider {
+.sacred-divider {
   width: 100%;
   height: auto;
   display: block;

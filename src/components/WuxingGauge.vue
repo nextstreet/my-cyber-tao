@@ -130,37 +130,55 @@ const dominantColor = computed(() =>
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: rgba(120, 80, 255, 0.04);
-  border: 1px solid rgba(120, 80, 255, 0.15);
-  border-radius: 4px;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem;
+  background: rgba(120, 80, 255, 0.06);
+  border: 1px solid rgba(120, 80, 255, 0.2);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.wuxing-gauge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(120, 80, 255, 0.08) 0%, transparent 60%);
+  pointer-events: none;
 }
 .gauge-label {
-  font-size: 0.6rem;
-  color: rgba(120, 80, 255, 0.6);
+  font-size: 0.65rem;
+  color: rgba(160, 140, 220, 0.7);
   font-family: monospace;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   align-self: flex-start;
+  position: relative;
+  z-index: 1;
 }
 .gauge-svg {
-  width: 140px;
-  height: 140px;
+  width: 150px;
+  height: 150px;
   overflow: visible;
+  filter: drop-shadow(0 0 6px rgba(120, 80, 255, 0.15));
+  position: relative;
+  z-index: 1;
 }
 .dominant-display {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  position: relative;
+  z-index: 1;
 }
 .dominant-label {
   font-size: 0.6rem;
-  color: rgba(160, 140, 200, 0.6);
+  color: rgba(160, 140, 200, 0.5);
   font-family: monospace;
+  letter-spacing: 0.05em;
 }
 .dominant-value {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: bold;
   font-family: monospace;
+  text-shadow: 0 0 12px currentColor;
 }
 </style>

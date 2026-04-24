@@ -1,6 +1,10 @@
 <template>
   <div class="destiny-root">
 
+    <!-- 背景装饰 -->
+    <div class="bg-mandala" aria-hidden="true"></div>
+    <div class="bg-aurora" aria-hidden="true"></div>
+
     <!-- Layer 0: 粒子 Canvas（全程存在）-->
     <canvas ref="particleCanvas" class="particle-canvas"></canvas>
 
@@ -750,6 +754,34 @@ onUnmounted(() => {
   position: fixed; inset: 0; background: #03030a;
   font-family: 'Share Tech Mono', monospace;
   overflow: hidden;
+}
+
+/* 背景装饰 */
+.bg-mandala {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url('/sacred-mandala.svg');
+  background-size: min(70vmin, 500px);
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: mandala-breathe 20s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.bg-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(120, 80, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(200, 170, 110, 0.03) 0%, transparent 50%);
+}
+@keyframes mandala-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.03; }
+  50% { transform: scale(1.03); opacity: 0.06; }
 }
 
 /* 粒子层 */

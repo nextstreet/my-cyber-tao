@@ -4,16 +4,25 @@
     <!-- 背景装饰层：八卦阵暗纹 -->
     <div class="bg-bagua-array" aria-hidden="true"></div>
 
+    <!-- 背景装饰层：神圣曼陀罗 -->
+    <div class="bg-mandala" aria-hidden="true"></div>
+
     <!-- 背景装饰层：CSS 极光光晕 -->
     <div class="bg-aurora" aria-hidden="true"></div>
+
+    <!-- 神圣几何装饰：光环圆环 -->
+    <div class="sacred-ring" aria-hidden="true"></div>
+    <div class="sacred-ring sacred-ring-outer" aria-hidden="true"></div>
 
     <!-- 桌面：书页双栏 -->
     <div v-if="!isMobile" class="book-spread">
       <div class="book-page left-page">
+        <div class="page-glyph" aria-hidden="true">☰</div>
         <TianjiPanel :data="tianjiData" :loading="tianjiLoading" />
       </div>
       <div class="book-spine"></div>
       <div class="book-page right-page">
+        <div class="page-glyph" aria-hidden="true">⚡</div>
         <DivinationInput
           :loading="divLoading"
           :language="lang"
@@ -136,7 +145,10 @@ async function handleSubmit(question: string, hexagram: {
     // 1. 调用 Supabase Edge Function: cyber-sage
     const res = await fetch(EDGE_FN_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
       body: JSON.stringify({
         lines: hexagram.lines,
         changingLines: hexagram.changingLines,
@@ -244,6 +256,25 @@ function getDeviceId(): string {
   to   { transform: rotate(360deg); }
 }
 
+/* ── 背景装饰：神圣曼陀罗 ── */
+.bg-mandala {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url('/sacred-mandala.svg');
+  background-size: min(80vmin, 600px);
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: mandala-breathe 20s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes mandala-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.04; }
+  50% { transform: scale(1.03); opacity: 0.07; }
+}
+
 /* ── 背景装饰：CSS 极光光晕 ── */
 .bg-aurora {
   position: fixed;
@@ -254,6 +285,32 @@ function getDeviceId(): string {
     radial-gradient(ellipse at 15% 80%, rgba(120, 80, 255, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 85% 20%, rgba(200, 170, 110, 0.05) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.03) 0%, transparent 60%);
+}
+
+/* ── 神圣几何：光环圆环 ── */
+.sacred-ring {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: min(80vmin, 600px);
+  height: min(80vmin, 600px);
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+  border: 1px solid rgba(120, 80, 255, 0.06);
+  border-radius: 50%;
+  animation: sacred-pulse 8s ease-in-out infinite;
+}
+.sacred-ring-outer {
+  width: min(100vmin, 800px);
+  height: min(100vmin, 800px);
+  border-color: rgba(200, 170, 110, 0.04);
+  border-width: 1px;
+  animation: sacred-pulse 12s ease-in-out infinite reverse;
+}
+@keyframes sacred-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
 }
 
 /* ── 桌面书页 ── */
@@ -278,9 +335,23 @@ function getDeviceId(): string {
   border-radius: 4px 0 0 4px;
   background: linear-gradient(135deg, rgba(8,8,24,0.98) 0%, rgba(15,8,35,0.95) 100%);
 }
+
 .right-page {
   border-left: none;
   border-radius: 0 4px 4px 0;
+}
+
+/* ── 书页顶部圣符 ── */
+.page-glyph {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  pointer-events: none;
+  opacity: 0.12;
+  letter-spacing: 6px;
+  z-index: 1;
 }
 
 /* ── 书页四角装饰 ── */
