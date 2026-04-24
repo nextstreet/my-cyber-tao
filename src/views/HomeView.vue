@@ -183,7 +183,6 @@ async function handleSubmit(question: string, hexagram: {
         created_at:     now,
         geo_region:     result.geoRegion  ?? null,
         geo_beast:      result.geoBeast   ?? null,
-        has_changing:   result.hasChangingLines ?? false,
       })
 
     if (dbErr) throw new Error(dbErr.message)
