@@ -1,16 +1,24 @@
 <template>
   <div class="fixed inset-0 bg-[#06090f] text-tao-gold flex items-center justify-center p-3 md:p-6 overflow-hidden font-sans">
 
-    <canvas ref="matrixCanvas" class="absolute inset-0 z-0 pointer-events-none opacity-70"></canvas>
-    <div class="absolute inset-0 z-[1] pointer-events-none"
-         style="background:radial-gradient(ellipse 72% 72% at 50% 50%,transparent 52%,rgba(6,9,15,0.88) 100%)"></div>
+    <!-- 背景装饰 -->
+    <div class="fixed inset-0 z-0 pointer-events-none" style="opacity:.1;background:url('/sacred-mandala.svg') center/ min(80vmin,600px) no-repeat; animation:mandala-breathe 20s ease-in-out infinite"></div>
+    <div class="fixed inset-0 z-0 pointer-events-none" style="background:radial-gradient(ellipse at 20% 30%,rgba(140,90,255,.12),transparent 50%),radial-gradient(ellipse at 80% 70%,rgba(200,170,110,.08),transparent 50%)"></div>
+    <div class="fixed top-1/2 left-1/2 z-0 pointer-events-none rounded-full border border-solid" style="width:min(85vmin,650px);height:min(85vmin,650px);transform:translate(-50%,-50%);border-color:rgba(140,100,255,.12);animation:edge-pulse 8s ease-in-out infinite"></div>
+    <div class="fixed top-1/2 left-1/2 z-0 pointer-events-none rounded-full border border-solid" style="width:min(100vmin,850px);height:min(100vmin,850px);transform:translate(-50%,-50%);border-color:rgba(200,170,110,.08);animation:edge-pulse 12s ease-in-out infinite reverse"></div>
+    <div class="fixed z-0 pointer-events-none" style="top:2.5%;left:3%;font-size:1.8rem;font-family:serif;opacity:.08">☰</div>
+    <div class="fixed z-0 pointer-events-none" style="top:2.5%;right:3%;font-size:1.8rem;font-family:serif;opacity:.08">☷</div>
+    <div class="fixed z-0 pointer-events-none" style="bottom:2.5%;left:3%;font-size:1.8rem;font-family:serif;opacity:.08">☲</div>
+    <div class="fixed z-0 pointer-events-none" style="bottom:2.5%;right:3%;font-size:1.8rem;font-family:serif;opacity:.08">☵</div>
+
+    <canvas ref="matrixCanvas" class="absolute inset-0 z-[2] pointer-events-none opacity-60"></canvas>
 
     <main class="relative z-10 w-full max-w-lg h-[95vh] md:h-[88vh]
-                  bg-[#0c1018]/82 backdrop-blur-md flex flex-col overflow-hidden panel-frame">
+                  bg-[#0c1018]/65 backdrop-blur-lg flex flex-col overflow-hidden panel-frame">
 
       <!-- TOP CHROME -->
       <div class="shrink-0 flex items-center justify-between px-4 py-2 border-b border-tao-gold/25 bg-black/50">
-        <span class="font-mono text-tao-gold/65" style="font-size:9px;letter-spacing:0.4em">CYBER·TAO v2.0</span>
+        <span class="font-mono text-tao-gold/65" style="font-size:11px;letter-spacing:0.4em">CYBER·TAO v2.0</span>
         <div class="flex gap-1.5">
           <span class="w-2 h-2 rounded-full" style="background:#8a2a2a;box-shadow:0 0 5px #8a2a2a,0 0 10px #8a2a2a88"></span>
           <span class="w-2 h-2 rounded-full" style="background:#c8aa6e;box-shadow:0 0 5px #c8aa6e,0 0 10px #c8aa6e88"></span>
@@ -19,11 +27,11 @@
         <div class="flex items-center gap-2">
           <button v-if="fateHistory.length > 0" @click="showTimeline=!showTimeline"
             class="font-mono transition-all px-2 py-0.5 border border-transparent hover:border-tao-gold/30"
-            style="font-size:9px;letter-spacing:0.3em"
+            style="font-size:11px;letter-spacing:0.3em"
             :style="showTimeline ? 'color:#c8aa6e;border-color:rgba(200,170,110,0.4)' : 'color:rgba(200,170,110,0.45)'">
             ◈ {{ fateHistory.length }}
           </button>
-          <span class="font-mono text-tao-gold/50" style="font-size:9px;letter-spacing:0.2em">{{ currentTime }}</span>
+          <span class="font-mono text-tao-gold/50" style="font-size:11px;letter-spacing:0.2em">{{ currentTime }}</span>
         </div>
       </div>
 
@@ -43,26 +51,26 @@
                  :class="{'border-tao-gold/35': i===0}">
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
-                  <span class="font-mono text-tao-gold/35" style="font-size:9px">#{{ String(fateHistory.length-i).padStart(3,'0') }}</span>
+                  <span class="font-mono text-tao-gold/35" style="font-size:11px">#{{ String(fateHistory.length-i).padStart(3,'0') }}</span>
                   <span class="font-mono" style="font-size:10px" :style="{color:getSyncColor(rec.syncRate)}">SYNC {{ rec.syncRate }}%</span>
                 </div>
-                <span class="font-mono text-white/30" style="font-size:9px">{{ formatTime(rec.timestamp) }}</span>
+                <span class="font-mono text-white/30" style="font-size:11px">{{ formatTime(rec.timestamp) }}</span>
               </div>
               <div class="flex items-center gap-3 mb-2">
                 <span class="font-serif text-white/90" style="font-size:28px;line-height:1;text-shadow:0 0 12px rgba(200,170,110,0.4)">{{ rec.nameZh }}</span>
                 <div>
                   <div class="font-mono text-tao-gold/60" style="font-size:10px">{{ rec.nameEn }}</div>
-                  <div class="font-mono text-white/30" style="font-size:9px">{{ rec.hexCode }}</div>
+                  <div class="font-mono text-white/30" style="font-size:11px">{{ rec.hexCode }}</div>
                 </div>
               </div>
               <p class="font-mono text-white/45 leading-relaxed line-clamp-2 border-l-2 border-tao-gold/20 pl-2"
                  style="font-size:10px">{{ rec.question }}</p>
               <div v-if="i===0" class="absolute top-2 right-2 font-mono px-1.5 py-0.5"
-                   style="font-size:8px;color:#22d3ee;border:1px solid rgba(34,211,238,0.3);background:rgba(34,211,238,0.05)">LATEST</div>
+                   style="font-size:10px;color:#22d3ee;border:1px solid rgba(34,211,238,0.3);background:rgba(34,211,238,0.05)">LATEST</div>
             </div>
             <button @click="clearHistory"
                     class="w-full py-2 font-mono text-white/20 hover:text-red-400/60 transition-colors border border-white/5 hover:border-red-500/20"
-                    style="font-size:9px;letter-spacing:0.3em">CLEAR ARCHIVE</button>
+                    style="font-size:11px;letter-spacing:0.3em">CLEAR ARCHIVE</button>
           </div>
         </div>
       </transition>
@@ -111,8 +119,6 @@
             : 'border-color:rgba(200,170,110,0.8);color:#c8aa6e;background:rgba(200,170,110,0.12);box-shadow:0 0 28px rgba(200,170,110,0.22),inset 0 0 24px rgba(200,170,110,0.06)'">
           INITIATE PROTOCOL
         </button>
-
-        <div class="shrink-0 w-full mt-2"><SystemLog /></div>
       </section>
 
       <!-- ─── RITUAL ─── -->
@@ -139,7 +145,7 @@
           </div>
           <div class="text-center">
             <p class="font-mono text-tao-gold/70 animate-pulse uppercase" style="font-size:11px;letter-spacing:0.5em">Consulting the Void...</p>
-            <p class="font-mono text-white/25 mt-1" style="font-size:9px;letter-spacing:0.3em">DEEPSEEK · NEURAL BRIDGE ACTIVE</p>
+            <p class="font-mono text-white/25 mt-1" style="font-size:11px;letter-spacing:0.3em">DEEPSEEK · NEURAL BRIDGE ACTIVE</p>
           </div>
         </div>
 
@@ -152,7 +158,7 @@
             <span style="color:rgba(239,68,68,0.85);text-shadow:0 0 8px rgba(239,68,68,0.5);font-size:16px">◈</span>
             <div>
               <p class="font-mono text-red-400/80 uppercase" style="font-size:10px;letter-spacing:0.35em">CHANGING LINES · FATE IN FLUX</p>
-              <p class="font-mono text-white/35 mt-0.5" style="font-size:9px">变爻第 {{ changingLineNumbers }} 爻 · 命运正在转变</p>
+              <p class="font-mono text-white/35 mt-0.5" style="font-size:11px">变爻第 {{ changingLineNumbers }} 爻 · 命运正在转变</p>
             </div>
           </div>
 
@@ -182,7 +188,7 @@
           <!-- ★ ORACLE TRANSMISSION：短句，独立box，无blur，无付费 -->
           <div v-if="aiOracle" class="relative cyber-terminal-box shrink-0">
             <div class="absolute -top-2.5 left-3 px-2 bg-[#0c1018] font-mono uppercase z-10"
-                 style="font-size:9px;letter-spacing:0.35em;color:rgba(200,170,110,0.7)">
+                 style="font-size:11px;letter-spacing:0.35em;color:rgba(200,170,110,0.7)">
               ORACLE TRANSMISSION
             </div>
             <div class="p-4 text-center">
@@ -206,7 +212,7 @@
           <!-- ★ NEURAL ANALYSIS：独立box，全文blur，8点灵力解锁 -->
           <div class="relative cyber-terminal-box shrink-0">
             <div class="absolute -top-2.5 left-3 px-2 bg-[#0c1018] font-mono text-tao-gold/75 uppercase z-10"
-                 style="font-size:9px;letter-spacing:0.35em">
+                 style="font-size:11px;letter-spacing:0.35em">
               NEURAL ANALYSIS // CLASSIFIED
             </div>
             <div class="p-4">
@@ -222,12 +228,12 @@
                   <div class="absolute inset-0 cyber-grid-visible"></div>
                 </div>
                 <div class="flex flex-col items-center mt-3 gap-2">
-                  <div class="flex items-center gap-2 font-mono uppercase" style="font-size:8px;letter-spacing:0.3em;color:rgba(200,170,110,0.5)">
+                  <div class="flex items-center gap-2 font-mono uppercase" style="font-size:10px;letter-spacing:0.3em;color:rgba(200,170,110,0.5)">
                     <span class="w-5 h-px bg-tao-gold/25"></span>
                     <span>REQUIRES 8 ⚡ SPIRIT</span>
                     <span class="w-5 h-px bg-tao-gold/25"></span>
                   </div>
-                  <div class="font-mono" style="font-size:9px;letter-spacing:0.2em"
+                  <div class="font-mono" style="font-size:11px;letter-spacing:0.2em"
                        :style="(spiritPoints >= 8 || isAdmin) ? 'color:rgba(34,211,238,0.7)' : 'color:rgba(239,68,68,0.65)'">
                     YOUR SPIRIT: {{ isAdmin ? '∞' : spiritPoints }} / 24 ⚡
                   </div>
@@ -246,7 +252,7 @@
                     ⚡ INSUFFICIENT SPIRIT
                   </button>
                   <div v-if="showRechargeHint" class="text-center">
-                    <p class="font-mono" style="font-size:9px;color:rgba(255,255,255,0.35);line-height:1.7">
+                    <p class="font-mono" style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.7">
                       SEAL A DESTINY CARD → SHARE → +8 SP<br>
                       <span style="color:rgba(200,170,110,0.4)">PURCHASE SPIRIT · COMING SOON</span>
                     </p>
@@ -258,7 +264,7 @@
               <div v-else class="animate-fade-in">
                 <div class="flex items-center gap-2 mb-3">
                   <span style="color:rgba(34,211,238,0.7);font-size:10px">✓</span>
-                  <span class="font-mono uppercase" style="font-size:8px;letter-spacing:0.3em;color:rgba(34,211,238,0.5)">
+                  <span class="font-mono uppercase" style="font-size:10px;letter-spacing:0.3em;color:rgba(34,211,238,0.5)">
                     DECRYPTED · {{ isAdmin ? 'ADMIN' : '8 SPIRIT CONSUMED' }}
                   </span>
                 </div>
@@ -266,9 +272,9 @@
                   {{ aiResult }}
                 </p>
                 <div class="mt-3 pt-3 border-t border-tao-gold/15 space-y-1">
-                  <div class="font-mono text-tao-gold/50 uppercase" style="font-size:8px;letter-spacing:0.3em">// Extended Hexagram Matrix</div>
+                  <div class="font-mono text-tao-gold/50 uppercase" style="font-size:10px;letter-spacing:0.3em">// Extended Hexagram Matrix</div>
                   <div class="font-mono" style="font-size:10px;color:rgba(34,211,238,0.7)">{{ hexagramData.nameEn }} · {{ hexagramData.nameZh }}</div>
-                  <div v-if="hasChangingLine" class="font-mono text-red-400/60" style="font-size:9px">
+                  <div v-if="hasChangingLine" class="font-mono text-red-400/60" style="font-size:11px">
                     ◈ CHANGING: 第 {{ changingLineNumbers }} 爻在动
                   </div>
                 </div>
@@ -295,7 +301,6 @@
             RETURN
           </button>
         </div>
-        <div class="shrink-0 px-4 pb-2"><SystemLog /></div>
       </section>
     </main>
 
@@ -312,7 +317,6 @@ import { supabase } from '../lib/supabase'
 import SpiritBottle from '../components/SpiritBottle.vue'
 import CoinToss from '../components/CoinToss.vue'
 import TalismanCard from '../components/TalismanCard.vue'
-import SystemLog from '../components/SystemLog.vue'
 import TaijituCore from '../components/TaijituCore.vue'
 
 // ── 灵力系统常量 ──
@@ -668,4 +672,6 @@ const reset = () => {
 .custom-scrollbar::-webkit-scrollbar       { width:2px; }
 .custom-scrollbar::-webkit-scrollbar-track { background:transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background:rgba(200,170,110,0.35); border-radius:4px; }
+@keyframes mandala-breathe { 0%,100%{transform:scale(1);opacity:.1} 50%{transform:scale(1.04);opacity:.17} }
+@keyframes edge-pulse { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.5} 50%{transform:translate(-50%,-50%) scale(1.05);opacity:1} }
 </style>

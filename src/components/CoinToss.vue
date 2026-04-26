@@ -7,7 +7,7 @@
         <div v-for="(line, i) in lines" :key="i" class="flex flex-col items-center gap-1">
           <span v-if="changingLines[i]"
             class="font-mono uppercase"
-            style="font-size:9px;letter-spacing:0.3em;color:rgba(239,68,68,0.9);text-shadow:0 0 8px rgba(239,68,68,0.6)">
+            style="font-size:11px;letter-spacing:0.3em;color:rgba(239,68,68,0.9);text-shadow:0 0 8px rgba(239,68,68,0.6)">
             ◈ CHANGING
           </span>
           <div v-if="line === 1" class="yang-line relative overflow-hidden"
@@ -25,7 +25,7 @@
         </div>
       </transition-group>
       <div v-if="lines.length === 0" class="font-mono absolute text-center"
-           style="font-size:11px;letter-spacing:0.3em;line-height:1.8;color:rgba(200,170,110,0.22)">
+           style="font-size:11px;letter-spacing:0.3em;line-height:1.8;color:rgba(200,170,110,0.55)">
         PROBABILITY FIELD OSCILLATING<br>ALIGN INTENTION · CAST
       </div>
     </div>
@@ -83,7 +83,7 @@
 
     <div v-if="hasChangingLine" class="w-full px-3 py-2 text-center border"
          style="border-color:rgba(239,68,68,0.3);background:rgba(100,0,0,0.08)">
-      <p class="font-mono uppercase" style="font-size:10px;letter-spacing:0.3em;color:rgba(239,68,68,0.8)">
+      <p class="font-mono uppercase" style="font-size:12px;letter-spacing:0.3em;color:rgba(239,68,68,0.8)">
         ◈ CHANGING LINE DETECTED · FATE IN FLUX
       </p>
     </div>

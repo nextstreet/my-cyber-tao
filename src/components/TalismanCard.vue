@@ -61,8 +61,8 @@
 
           <!-- HUD 顶边 -->
           <div class="absolute top-0 inset-x-0 flex justify-between px-3 pt-2 z-30 pointer-events-none">
-            <span class="font-mono" style="font-size:6px;letter-spacing:0.25em" :style="hudTextStyle">SYNC·{{ syncRate }}%</span>
-            <span class="font-mono" style="font-size:6px;letter-spacing:0.25em" :style="hudTextStyle">ENTROPY·{{ entropyLabel }}</span>
+            <span class="font-mono" style="font-size:10px;letter-spacing:0.25em" :style="hudTextStyle">SYNC·{{ syncRate }}%</span>
+            <span class="font-mono" style="font-size:10px;letter-spacing:0.25em" :style="hudTextStyle">ENTROPY·{{ entropyLabel }}</span>
           </div>
 
           <!-- 身份栏 -->
@@ -70,16 +70,16 @@
                :style="{ borderColor: rarityAccent+'20' }">
             <div class="flex items-center gap-2">
               <div class="flex items-center justify-center rounded" style="width:28px;height:28px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15)">
-                <span class="font-mono" style="font-size:7px;color:rgba(255,255,255,0.3)">ID</span>
+                <span class="font-mono" style="font-size:11px;color:rgba(255,255,255,0.3)">ID</span>
               </div>
               <div>
-                <div class="font-mono uppercase" style="font-size:8px;letter-spacing:0.35em;color:rgba(255,255,255,0.4)">TEMPORAL LINK</div>
-                <div class="font-mono" style="font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:0.2em">{{ userHash }}</div>
+                <div class="font-mono uppercase" style="font-size:10px;letter-spacing:0.35em;color:rgba(255,255,255,0.4)">TEMPORAL LINK</div>
+                <div class="font-mono" style="font-size:11px;color:rgba(255,255,255,0.2);letter-spacing:0.2em">{{ userHash }}</div>
               </div>
             </div>
-            <div class="text-right font-mono" style="font-size:7px" :style="hudTextStyle">
+            <div class="text-right font-mono" style="font-size:11px" :style="hudTextStyle">
               <div>{{ lunarDateStamp }}</div>
-              <div style="color:rgba(255,255,255,0.18);margin-top:2px">{{ cardDate }}</div>
+              <div style="color:rgba(255,255,255,0.4);margin-top:2px">{{ cardDate }}</div>
             </div>
           </div>
 
@@ -126,30 +126,30 @@
           <div class="relative z-10 px-4 py-3 flex flex-col gap-2 shrink-0">
             <div class="w-6 h-px mb-1" :style="{ background: rarityAccent+'60' }"></div>
             <p class="font-mono italic leading-relaxed line-clamp-3"
-               style="font-size:9px;color:rgba(255,255,255,0.62)">{{ shortAiText }}</p>
+               style="font-size:11px;color:rgba(255,255,255,0.62)">{{ shortAiText }}</p>
             <div class="flex justify-between items-end mt-1">
               <span class="font-serif"
-                    style="font-size:8px;color:rgba(255,255,255,0.25);writing-mode:vertical-rl;letter-spacing:0.4em;border-left:1px solid rgba(255,255,255,0.1);padding-left:4px">
+                    style="font-size:10px;color:rgba(255,255,255,0.25);writing-mode:vertical-rl;letter-spacing:0.4em;border-left:1px solid rgba(255,255,255,0.1);padding-left:4px">
                 {{ lunarDateStamp }}
               </span>
-              <span class="font-mono" style="font-size:6px;color:rgba(255,255,255,0.14);letter-spacing:0.25em">SYS V2.0 // DECODED</span>
+              <span class="font-mono" style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.25em">SYS V2.0 // DECODED</span>
             </div>
           </div>
 
           <!-- HUD 侧边 -->
           <div class="absolute right-0 top-16 bottom-16 z-20 flex flex-col justify-between items-end pr-1.5 pointer-events-none">
-            <span class="font-mono" style="font-size:5px;writing-mode:vertical-rl;letter-spacing:0.3em" :style="hudTextStyle">KARMA·{{ karmaIndex }}</span>
-            <span class="font-mono" style="font-size:5px;writing-mode:vertical-rl;letter-spacing:0.3em" :style="hudTextStyle">FLUX·{{ fluxRate }}</span>
+            <span class="font-mono" style="font-size:11px;writing-mode:vertical-rl;letter-spacing:0.3em" :style="hudTextStyle">KARMA·{{ karmaIndex }}</span>
+            <span class="font-mono" style="font-size:11px;writing-mode:vertical-rl;letter-spacing:0.3em" :style="hudTextStyle">FLUX·{{ fluxRate }}</span>
           </div>
           <div class="absolute left-0 top-16 bottom-16 z-20 flex flex-col justify-between items-start pl-1.5 pointer-events-none">
-            <span class="font-mono" style="font-size:5px;writing-mode:vertical-rl;letter-spacing:0.3em;transform:rotate(180deg)" :style="hudTextStyle">NODE·{{ nodeId }}</span>
-            <span class="font-mono" style="font-size:5px;writing-mode:vertical-rl;letter-spacing:0.3em;transform:rotate(180deg)" :style="hudTextStyle">VER·2.0.{{ versionSuffix }}</span>
+            <span class="font-mono" style="font-size:11px;writing-mode:vertical-rl;letter-spacing:0.3em;transform:rotate(180deg)" :style="hudTextStyle">NODE·{{ nodeId }}</span>
+            <span class="font-mono" style="font-size:11px;writing-mode:vertical-rl;letter-spacing:0.3em;transform:rotate(180deg)" :style="hudTextStyle">VER·2.0.{{ versionSuffix }}</span>
           </div>
 
           <!-- HUD 底边 -->
           <div class="absolute bottom-0 inset-x-0 flex justify-between px-3 pb-2 z-30 pointer-events-none">
-            <span class="font-mono" style="font-size:6px;letter-spacing:0.22em" :style="hudTextStyle">ARCHIVE·#CT-{{ archiveId }}</span>
-            <span class="font-mono" style="font-size:6px;letter-spacing:0.22em" :style="hudTextStyle">{{ rarityLabel }}</span>
+            <span class="font-mono" style="font-size:10px;letter-spacing:0.22em" :style="hudTextStyle">ARCHIVE·#CT-{{ archiveId }}</span>
+            <span class="font-mono" style="font-size:10px;letter-spacing:0.22em" :style="hudTextStyle">{{ rarityLabel }}</span>
           </div>
         </div>
 
@@ -231,12 +231,12 @@
 
             <!-- 标签 -->
             <div class="absolute top-3 left-3 font-serif uppercase"
-                 style="font-size:7px;letter-spacing:0.5em;z-index:10"
+                 style="font-size:11px;letter-spacing:0.5em;z-index:10"
                  :style="{ color: rarityAccent+'66' }">Sacred Entity</div>
 
             <!-- 神兽类型标签 -->
             <div class="absolute top-3 right-3 font-mono uppercase"
-                 style="font-size:7px;letter-spacing:0.3em;z-index:10;padding:2px 6px;background:rgba(0,0,0,0.6)"
+                 style="font-size:11px;letter-spacing:0.3em;z-index:10;padding:2px 6px;background:rgba(0,0,0,0.6)"
                  :style="{ color: rarityAccent+'88', border: `1px solid ${rarityAccent}30` }">
               {{ beastLabel }}
             </div>
@@ -244,7 +244,7 @@
             <!-- GODLIKE 标记 -->
             <div v-if="isGodlike" class="absolute bottom-14 right-3 z-10">
               <span class="font-mono animate-pulse"
-                    style="font-size:8px;letter-spacing:0.3em;color:#f87171;border:1px solid rgba(239,68,68,0.45);padding:3px 8px;background:rgba(0,0,0,0.7);box-shadow:0 0 14px rgba(239,68,68,0.45)">
+                    style="font-size:10px;letter-spacing:0.3em;color:#f87171;border:1px solid rgba(239,68,68,0.45);padding:3px 8px;background:rgba(0,0,0,0.7);box-shadow:0 0 14px rgba(239,68,68,0.45)">
                 ⚡ GODLIKE
               </span>
             </div>
@@ -262,12 +262,12 @@
             <!-- HUD 数据条 -->
             <div class="shrink-0 flex items-center gap-3 px-4 py-2 border-b"
                  :style="{ borderColor: rarityAccent+'18' }">
-              <span class="font-mono text-white/20" style="font-size:7px;letter-spacing:0.2em">◈</span>
-              <span class="font-mono" style="font-size:7px;letter-spacing:0.2em" :style="hudTextStyle">SYNC {{ syncRate }}%</span>
-              <span class="font-mono text-white/15" style="font-size:7px">|</span>
-              <span class="font-mono" style="font-size:7px;letter-spacing:0.2em" :style="hudTextStyle">ENTROPY {{ entropyLabel }}</span>
-              <span class="font-mono text-white/15" style="font-size:7px">|</span>
-              <span class="font-mono" style="font-size:7px;letter-spacing:0.2em" :style="hudTextStyle">#CT-{{ archiveId }}</span>
+              <span class="font-mono text-white/20" style="font-size:11px;letter-spacing:0.2em">◈</span>
+              <span class="font-mono" style="font-size:11px;letter-spacing:0.2em" :style="hudTextStyle">SYNC {{ syncRate }}%</span>
+              <span class="font-mono text-white/15" style="font-size:11px">|</span>
+              <span class="font-mono" style="font-size:11px;letter-spacing:0.2em" :style="hudTextStyle">ENTROPY {{ entropyLabel }}</span>
+              <span class="font-mono text-white/15" style="font-size:11px">|</span>
+              <span class="font-mono" style="font-size:11px;letter-spacing:0.2em" :style="hudTextStyle">#CT-{{ archiveId }}</span>
             </div>
 
             <!-- 主内容区：卦名 + 卦辞 + 数据 -->
@@ -288,7 +288,7 @@
 
                 <!-- 英文名 -->
                 <div>
-                  <div class="font-mono uppercase mb-1" style="font-size:9px;letter-spacing:0.3em;color:rgba(255,255,255,0.5)">
+                  <div class="font-mono uppercase mb-1" style="font-size:11px;letter-spacing:0.3em;color:rgba(255,255,255,0.5)">
                     {{ hexagramData.name }}
                   </div>
                   <!-- 卦辞竖排 -->
@@ -322,11 +322,11 @@
               <!-- 右侧竖排数据 + QR -->
               <div class="flex flex-col items-end justify-between h-full shrink-0">
                 <div class="font-serif uppercase"
-                     style="font-size:7px;letter-spacing:0.6em;writing-mode:vertical-rl"
+                     style="font-size:11px;letter-spacing:0.6em;writing-mode:vertical-rl"
                      :style="{ color: rarityAccent+'30' }">Divine Archive</div>
                 <div class="flex flex-col items-end gap-1.5">
-                  <div class="font-mono" style="font-size:6px;letter-spacing:0.2em" :style="hudTextStyle">{{ rarityLabel }}</div>
-                  <div class="font-mono" style="font-size:6px;letter-spacing:0.2em" :style="hudTextStyle">{{ lunarDateStamp }}</div>
+                  <div class="font-mono" style="font-size:10px;letter-spacing:0.2em" :style="hudTextStyle">{{ rarityLabel }}</div>
+                  <div class="font-mono" style="font-size:10px;letter-spacing:0.2em" :style="hudTextStyle">{{ lunarDateStamp }}</div>
                 </div>
                 <div class="p-1.5 border" :style="{ borderColor: rarityAccent+'28', background:'rgba(0,0,0,0.75)' }">
                   <img src="/qr-code.png" class="w-8 h-8" style="filter:grayscale(1) brightness(1.4) contrast(1.1)"/>
@@ -337,7 +337,7 @@
             <!-- 底部 AI 摘要 -->
             <div class="shrink-0 px-4 py-2 border-t" :style="{ borderColor: rarityAccent+'15' }">
               <p class="font-mono italic leading-relaxed line-clamp-2"
-                 style="font-size:8px;color:rgba(255,255,255,0.45)">
+                 style="font-size:10px;color:rgba(255,255,255,0.45)">
                 {{ shortAiText }}
               </p>
             </div>
@@ -349,7 +349,7 @@
 
     <!-- 翻转提示 -->
     <p class="font-mono mt-2 animate-pulse shrink-0"
-       style="font-size:9px;letter-spacing:0.35em;color:rgba(200,170,110,0.3)">
+       style="font-size:11px;letter-spacing:0.35em;color:rgba(200,170,110,0.3)">
       TAP TO FLIP
     </p>
 
@@ -358,7 +358,7 @@
       <div class="flex gap-3 w-full">
         <button @click="downloadImage('poster')"
                 class="flex-1 border font-mono uppercase transition-all hover:bg-white/5"
-                style="padding:10px 0;font-size:10px;letter-spacing:0.3em;border-color:rgba(255,255,255,0.18);color:rgba(255,255,255,0.55)">
+                style="padding:10px 0;font-size:10px;letter-spacing:0.3em;border-color:rgba(255,255,255,0.4);color:rgba(255,255,255,0.55)">
           9:16 POSTER
         </button>
         <button @click="downloadImage('square')"
@@ -369,7 +369,7 @@
         </button>
       </div>
       <button @click="close" class="font-mono uppercase transition-colors hover:text-white/60"
-              style="font-size:9px;letter-spacing:0.4em;color:rgba(255,255,255,0.2)">Dismiss</button>
+              style="font-size:11px;letter-spacing:0.4em;color:rgba(255,255,255,0.2)">Dismiss</button>
     </div>
   </div>
 
