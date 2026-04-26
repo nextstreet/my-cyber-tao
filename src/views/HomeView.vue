@@ -342,6 +342,7 @@ const fullAnalysisUnlocked = ref(false)
 const unlockLoading        = ref(false)
 const showRechargeHint     = ref(false)
 const sealLoading          = ref(false)
+const rowCreatedAt         = ref('')
 
 // ── 用户身份 ──
 const deviceId    = ref('')
@@ -549,7 +550,7 @@ const onRitualComplete = async (payload) => {
       ip_address: aiData.ipHash    || '',
     }).eq('device_id', deviceId.value)
 
-    supabase.from('divination_logs').insert([{
+    const { data: insertedRow } = await supabase.from('divination_logs').insert([{
       device_id: deviceId.value,
       question: question.value,
       hexagram_code: hexCode,
@@ -560,7 +561,8 @@ const onRitualComplete = async (payload) => {
       ip_hash: aiData.ipHash || '',
       geo_region: aiData.geoRegion || '',
       geo_beast: aiData.geoBeast || '',
-    }]).then()
+    }]).select('created_at').single()
+    if (insertedRow) rowCreatedAt.value = insertedRow.created_at
 
     saveHistory({
       id: Date.now(), timestamp: now, question: question.value, hexCode,
@@ -601,7 +603,6 @@ const sealDestiny = async () => {
   sealLoading.value = true
   try {
     const hexCode = hexagramResult.value.join('')
-    const now = new Date().toISOString()
     const rawId = `${deviceId.value}-${Date.now()}-${hexCode}`
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawId))
     const fullHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
@@ -609,7 +610,7 @@ const sealDestiny = async () => {
     const { count } = await supabase.from('divination_logs').select('*', { count:'exact', head:true }).eq('is_sealed', true)
     const editionNumber = (count || 0) + 1
     const cardId = `CT-${String(editionNumber).padStart(4,'0')}-${hexagramData.value.nameZh}-${hash8}`
-    const hashRaw = `${cardId}:${deviceId.value}:${hexCode}:${now}`
+    const hashRaw = `${cardId}:${deviceId.value}:${hexCode}:${rowCreatedAt.value}`
     const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(hashRaw))
     const verifiedHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('').slice(0, 16)
     const { error } = await supabase.from('divination_logs').update({
