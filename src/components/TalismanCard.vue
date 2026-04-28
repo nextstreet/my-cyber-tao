@@ -630,6 +630,7 @@
 
 
 <script setup>
+import { useGuardians, type GuardianKey } from '@/composables/useGuardians'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { toPng } from 'html-to-image'
 
@@ -642,7 +643,8 @@ const posterRef      = ref(null)
 const squareRef      = ref(null)
 const generateTime   = ref(Date.now())
 const scanY          = ref(10)
-
+const { getUrl } = useGuardians()
+  
 // 扫描线动画
 let scanRaf = null
 const animScan = () => {
@@ -829,7 +831,10 @@ const beastKey = computed(() => {
   if (n.match(/water|rain|moon|north|abyss/)) return 'turtle'
   return 'qilin'
 })
-const beastImageUrl = computed(() => `/guardian-${beastKey.value}.png`)
+//const beastImageUrl = computed(() => `/guardian-${beastKey.value}.png`)
+  const guardianUrl = computed(() =>
+  R.value ? getUrl(R.value as GuardianKey) : ''
+)
 const beastLabel = computed(() => ({
   dragon:'AZURE DRAGON', phoenix:'VERMILION PHOENIX', tiger:'WHITE TIGER',
   turtle:'BLACK TORTOISE', qilin:'SACRED QILIN'
