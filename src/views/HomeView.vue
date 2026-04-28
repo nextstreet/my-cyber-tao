@@ -311,6 +311,7 @@
 </template>
 
 <script setup>
+  import { useGuardians, type GuardianKey } from '@/composables/useGuardians'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
@@ -362,7 +363,7 @@ const showTimeline = ref(false)
 
 // ── 路由 ──
 const router = useRouter()
-
+const { getUrl, preload } = useGuardians()
 // ── 命运时间轴 ──
 const fateHistory = ref([])
 const loadHistory = () => {
@@ -607,6 +608,7 @@ const sealDestiny = async () => {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawId))
     const fullHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
     const hash8 = fullHash.slice(0, 8).toUpperCase()
+    const guardianImageUrl = computed(() =>geoBeast.value ? getUrl(geoBeast.value as GuardianKey) : '')
     const { count } = await supabase.from('divination_logs').select('*', { count:'exact', head:true }).eq('is_sealed', true)
     const editionNumber = (count || 0) + 1
     const cardId = `CT-${String(editionNumber).padStart(4,'0')}-${hexagramData.value.nameZh}-${hash8}`
