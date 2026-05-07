@@ -310,7 +310,7 @@
   </div>
 </template>
 
-<script setup lang="ts"
+<script setup lang="ts">
 import { useGuardians, type GuardianKey } from '@/composables/useGuardians'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
