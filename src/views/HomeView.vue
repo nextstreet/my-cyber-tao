@@ -310,8 +310,8 @@
   </div>
 </template>
 
-<script setup>
-  import { useGuardians, type GuardianKey } from '@/composables/useGuardians'
+<script setup lang="ts"
+import { useGuardians, type GuardianKey } from '@/composables/useGuardians'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
