@@ -1,14 +1,8 @@
 <template>
   <div class="fixed inset-0 bg-[#06090f] text-tao-gold flex items-center justify-center p-3 md:p-6 overflow-hidden font-sans">
 
-    <div class="fixed inset-0 z-0 pointer-events-none"
-         style="opacity:.08;background:url('/sacred-mandala.svg') center/ min(70vmin,500px) no-repeat; animation:mandala-breathe 20s ease-in-out infinite"></div>
-    <div class="fixed inset-0 z-0 pointer-events-none"
-         style="background:radial-gradient(ellipse at 30% 20%,rgba(140,90,255,.12),transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(200,170,110,.08),transparent 50%)"></div>
-    <div class="fixed top-1/2 left-1/2 z-0 pointer-events-none rounded-full border border-solid"
-         style="width:min(80vmin,550px);height:min(80vmin,550px);transform:translate(-50%,-50%);border-color:rgba(140,100,255,.1);animation:edge-pulse 8s ease-in-out infinite"></div>
-    <div class="fixed top-1/2 left-1/2 z-0 pointer-events-none rounded-full border border-solid"
-         style="width:min(100vmin,750px);height:min(100vmin,750px);transform:translate(-50%,-50%);border-color:rgba(200,170,110,.07);animation:edge-pulse 12s ease-in-out infinite reverse"></div>
+    <div class="fixed inset-0 z-0 pointer-events-none" style="opacity:.08;background:url('/sacred-mandala.svg') center/ min(70vmin,500px) no-repeat; animation:mandala-breathe 20s ease-in-out infinite"></div>
+    <div class="fixed inset-0 z-0 pointer-events-none" style="background:radial-gradient(ellipse at 30% 20%,rgba(140,90,255,.12),transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(200,170,110,.08),transparent 50%)"></div>
 
     <main class="relative z-10 w-full max-w-lg h-[95vh] md:h-[88vh]
                   bg-[#0c1018]/65 backdrop-blur-lg flex flex-col overflow-hidden panel-frame">
@@ -62,18 +56,14 @@
 
 <script setup lang="ts">
 const techs = ['Vue 3','TypeScript','Vite','Tailwind CSS','Supabase','DeepSeek AI','Vercel']
-const steps = ['Cast Coins · 投掷铜钱起卦','AI Interprets · 人工智能解卦','Generate Card · 生成命运卡片','Seal on Chain · 封印于区块链','Share Forever · 永久分享']
+const steps = ['Cast Coins · 投掷铜钱起卦','AI Interprets · 人工智能解卦','Generate Card · 生成命运卡片','Seal on Chain · 封印于链','Share Forever · 永久分享']
 </script>
 
 <style scoped>
-.panel-frame {
-  box-shadow:0 0 0 1px rgba(200,170,110,.38),0 0 40px rgba(200,170,110,.1);
-  border-radius:2px; position:relative;
-}
-.panel-frame::before { content:'';position:absolute;top:0;left:0;width:18px;height:18px;z-index:20;pointer-events:none;border-top:2px solid rgba(200,170,110,.88);border-left:2px solid rgba(200,170,110,.88);box-shadow:-2px -2px 10px rgba(200,170,110,.45) }
-.panel-frame::after { content:'';position:absolute;bottom:0;right:0;width:18px;height:18px;z-index:20;pointer-events:none;border-bottom:2px solid rgba(200,170,110,.88);border-right:2px solid rgba(200,170,110,.88);box-shadow:2px 2px 10px rgba(200,170,110,.45) }
+.panel-frame { box-shadow:0 0 0 1px rgba(200,170,110,.38),0 0 40px rgba(200,170,110,.1); border-radius:2px; position:relative }
+.panel-frame::before { content:'';position:absolute;top:0;left:0;width:18px;height:18px;z-index:10;pointer-events:none;border-top:2px solid rgba(200,170,110,.88);border-left:2px solid rgba(200,170,110,.88);box-shadow:-2px -2px 10px rgba(200,170,110,.45) }
+.panel-frame::after { content:'';position:absolute;bottom:0;right:0;width:18px;height:18px;z-index:10;pointer-events:none;border-bottom:2px solid rgba(200,170,110,.88);border-right:2px solid rgba(200,170,110,.88);box-shadow:2px 2px 10px rgba(200,170,110,.45) }
 @keyframes mandala-breathe { 0%,100%{transform:scale(1);opacity:.08} 50%{transform:scale(1.04);opacity:.14} }
-@keyframes edge-pulse { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.5} 50%{transform:translate(-50%,-50%) scale(1.05);opacity:1} }
 .custom-scrollbar::-webkit-scrollbar { width:2px }
 .custom-scrollbar::-webkit-scrollbar-track { background:transparent }
 .custom-scrollbar::-webkit-scrollbar-thumb { background:rgba(200,170,110,.35);border-radius:4px }

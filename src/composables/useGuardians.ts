@@ -68,7 +68,7 @@ export function useGuardians() {
 
   /** 随机返回一个守护神 key */
   function randomKey(): GuardianKey {
-    return GUARDIAN_KEYS[Math.floor(Math.random() * GUARDIAN_KEYS.length)]
+    return GUARDIAN_KEYS[Math.floor(Math.random() * GUARDIAN_KEYS.length)]!
   }
 
   /** 预热指定图片（让浏览器开始下载，放入缓存）*/

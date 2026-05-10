@@ -208,7 +208,7 @@ function loadAmbientGuardian() {
 function startTypewriter() {
   clearTimeout(typeTimer!); clearTimeout(cycleTimer!)
   displayText.value = ''; atRest.value = false
-  const text = QUESTIONS[qIdx.value]; let i = 0
+  const text = QUESTIONS[qIdx.value]!; let i = 0
   const tick = () => {
     if (i <= text.length) {
       displayText.value = text.slice(0, i++)
@@ -236,11 +236,12 @@ function finish() {
 }
 
 function awakeCoin(i: number) {
-  if (coins.value[i].lit) return
-  coins.value[i].shake = true
-  setTimeout(() => { coins.value[i].shake = false }, 420)
+  const coin = coins.value[i]!
+  if (coin.lit) return
+  coin.shake = true
+  setTimeout(() => { coin.shake = false }, 420)
   setTimeout(() => {
-    coins.value[i].lit = true
+    coin.lit = true
     if (awakened.value === 3)
       setTimeout(() => { phase.value = 'open'; setTimeout(finish, 1900) }, 550)
   }, 210)

@@ -2,14 +2,14 @@
   <div class="fixed inset-0 bg-[#06090f] text-tao-gold flex items-center justify-center p-3 md:p-6 overflow-hidden font-sans">
 
     <!-- 背景装饰 -->
-    <div class="fixed inset-0 z-0 pointer-events-none" style="opacity:.1;background:url('/sacred-mandala.svg') center/ min(80vmin,600px) no-repeat; animation:mandala-breathe 20s ease-in-out infinite"></div>
+    <div class="fixed inset-0 z-0 pointer-events-none" style="opacity:.15;background:url('/sacred-mandala.svg') center/ min(80vmin,600px) no-repeat; animation:mandala-breathe 20s ease-in-out infinite"></div>
     <div class="fixed inset-0 z-0 pointer-events-none" style="background:radial-gradient(ellipse at 20% 30%,rgba(140,90,255,.12),transparent 50%),radial-gradient(ellipse at 80% 70%,rgba(200,170,110,.08),transparent 50%)"></div>
     <div class="fixed top-1/2 left-1/2 z-0 pointer-events-none rounded-full border border-solid" style="width:min(85vmin,650px);height:min(85vmin,650px);transform:translate(-50%,-50%);border-color:rgba(140,100,255,.12);animation:edge-pulse 8s ease-in-out infinite"></div>
     <div class="fixed top-1/2 left-1/2 z-0 pointer-events-none rounded-full border border-solid" style="width:min(100vmin,850px);height:min(100vmin,850px);transform:translate(-50%,-50%);border-color:rgba(200,170,110,.08);animation:edge-pulse 12s ease-in-out infinite reverse"></div>
-    <div class="fixed z-0 pointer-events-none" style="top:2.5%;left:3%;font-size:1.8rem;font-family:serif;opacity:.08">☰</div>
-    <div class="fixed z-0 pointer-events-none" style="top:2.5%;right:3%;font-size:1.8rem;font-family:serif;opacity:.08">☷</div>
-    <div class="fixed z-0 pointer-events-none" style="bottom:2.5%;left:3%;font-size:1.8rem;font-family:serif;opacity:.08">☲</div>
-    <div class="fixed z-0 pointer-events-none" style="bottom:2.5%;right:3%;font-size:1.8rem;font-family:serif;opacity:.08">☵</div>
+    <div class="fixed z-0 pointer-events-none" style="top:2.5%;left:3%;font-size:1.8rem;font-family:serif;opacity:.12">☰</div>
+    <div class="fixed z-0 pointer-events-none" style="top:2.5%;right:3%;font-size:1.8rem;font-family:serif;opacity:.12">☷</div>
+    <div class="fixed z-0 pointer-events-none" style="bottom:2.5%;left:3%;font-size:1.8rem;font-family:serif;opacity:.12">☲</div>
+    <div class="fixed z-0 pointer-events-none" style="bottom:2.5%;right:3%;font-size:1.8rem;font-family:serif;opacity:.12">☵</div>
 
     <canvas ref="matrixCanvas" class="absolute inset-0 z-[2] pointer-events-none opacity-60"></canvas>
 
@@ -310,7 +310,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
   import { useGuardians, type GuardianKey } from '@/composables/useGuardians'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -319,6 +319,22 @@ import SpiritBottle from '../components/SpiritBottle.vue'
 import CoinToss from '../components/CoinToss.vue'
 import TalismanCard from '../components/TalismanCard.vue'
 import TaijituCore from '../components/TaijituCore.vue'
+
+interface HistoryRecord {
+  id: number
+  nameZh: string
+  nameEn: string
+  question: string
+  hexCode: string
+  syncRate: number
+  timestamp: string
+  hasChangingLine: boolean
+}
+
+interface QuestionTemplate {
+  label: string
+  text: string
+}
 
 // ── 灵力系统常量 ──
 const MAX_SPIRIT        = 24
@@ -329,13 +345,13 @@ const SPIRIT_PER_SHARE  = 8
 // ── 核心状态 ──
 const step             = ref('intro')
 const question         = ref('')
-const hexagramResult   = ref([])
-const changingLinesArr = ref([])
+const hexagramResult   = ref<number[]>([])
+const changingLinesArr = ref<boolean[]>([])
 const hexagramData     = ref({ nameZh:'', nameEn:'', poemZh:'' })
-const aiOracle         = ref('')    // 短句，直接展示
-const aiResult         = ref('')    // 完整分析，需解锁
+const aiOracle         = ref('')
+const aiResult         = ref('')
 const loading          = ref(false)
-const talismanRef      = ref(null)
+const talismanRef      = ref<InstanceType<typeof TalismanCard> | null>(null)
 
 // ── 灵力 & 解锁 ──
 const spiritPoints         = ref(MAX_SPIRIT)
@@ -357,7 +373,7 @@ const geoRegion = ref('VOID')
 const geoBeast  = ref('qilin')
 
 // ── Canvas & 时钟 ──
-const matrixCanvas = ref(null)
+const matrixCanvas = ref<HTMLCanvasElement | null>(null)
 const currentTime  = ref('')
 const showTimeline = ref(false)
 
@@ -365,12 +381,12 @@ const showTimeline = ref(false)
 const router = useRouter()
 const { getUrl, preload } = useGuardians()
 // ── 命运时间轴 ──
-const fateHistory = ref([])
+const fateHistory = ref<HistoryRecord[]>([])
 const loadHistory = () => {
   try { fateHistory.value = JSON.parse(localStorage.getItem('cyber_tao_history') || '[]') }
   catch { fateHistory.value = [] }
 }
-const saveHistory = (r) => {
+const saveHistory = (r: HistoryRecord) => {
   const h = [...fateHistory.value, r].slice(-10)
   fateHistory.value = h
   localStorage.setItem('cyber_tao_history', JSON.stringify(h))
@@ -380,43 +396,42 @@ const clearHistory = () => {
   localStorage.removeItem('cyber_tao_history')
 }
 const fateHistoryReversed = computed(() => [...fateHistory.value].reverse())
-const formatTime = (ts) => {
+const formatTime = (ts: string) => {
   const d = new Date(ts)
   return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
 }
-const getSyncColor = (r) => {
-  const v = parseFloat(r)
-  if (v >= 99) return '#ef4444'
-  if (v >= 95) return '#c8aa6e'
-  if (v >= 90) return '#22d3ee'
+const getSyncColor = (r: number) => {
+  if (r >= 99) return '#ef4444'
+  if (r >= 95) return '#c8aa6e'
+  if (r >= 90) return '#22d3ee'
   return 'rgba(255,255,255,0.4)'
 }
-const calcSyncRate = (id, code, geo = '') => {
+const calcSyncRate = (id: string, code: string, geo = ''): number => {
   const s = `${id}-${Date.now()}-${code}-${geo}`
   let h = 0
   for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0 }
   const r = 80 + (Math.abs(h) % 200) / 10
-  return (r > 99.9 ? 99.9 : r).toFixed(1)
+  return Math.min(r, 99.9)
 }
 
 // ── 问题模板 ──
-const questionTemplates = [
+const questionTemplates: QuestionTemplate[] = [
   { label: 'CAREER',  text: 'What is the outlook for my career path right now?' },
   { label: 'LOVE',    text: 'What guidance does the oracle offer about my love life?' },
   { label: 'WEALTH',  text: 'How is my financial fortune? Is this a good time to invest?' },
   { label: 'CHOICE',  text: 'I face an important decision. What path should I take?' },
   { label: 'TODAY',   text: 'What should I be mindful of today?' },
 ]
-const applyTemplate = (tpl) => { question.value = tpl.text }
+const applyTemplate = (tpl: QuestionTemplate) => { question.value = tpl.text }
 
 // ── 变爻 ──
 const hasChangingLine = computed(() => changingLinesArr.value.some(Boolean))
 const changingLineNumbers = computed(() => {
-  const n = []
+  const n: number[] = []
   changingLinesArr.value.forEach((c, i) => { if (c) n.push(i + 1) })
   return n.join('、')
 })
-const getLineStyle = (i) => {
+const getLineStyle = (i: number) => {
   if (changingLinesArr.value[i]) {
     return { background:'linear-gradient(90deg,#c8aa6e,#ef4444,#c8aa6e)', boxShadow:'0 0 10px rgba(239,68,68,0.6)' }
   }
@@ -427,11 +442,11 @@ const getLineStyle = (i) => {
 const hasSpirit = computed(() => isAdmin.value || spiritPoints.value >= SPIRIT_PER_READ)
 
 // ── Canvas Matrix Rain ──
-let animFrameId = null
+let animFrameId: number | null = null
 const initMatrix = () => {
   const canvas = matrixCanvas.value
   if (!canvas) return
-  const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')!
   const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
   resize()
   window.addEventListener('resize', resize)
@@ -441,7 +456,7 @@ const initMatrix = () => {
     ctx.fillStyle = 'rgba(6,9,15,0.05)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     for (let i = 0; i < drops.length; i++) {
-      const ch = chars[Math.floor(Math.random() * chars.length)], b = Math.random()
+      const ch = chars[Math.floor(Math.random() * chars.length)]!, b = Math.random()
       if      (b > 0.96) { ctx.fillStyle='#e8f4ff'; ctx.shadowColor='#fff'; ctx.shadowBlur=12 }
       else if (b > 0.82) { ctx.fillStyle='#c8aa6e'; ctx.shadowColor='#c8aa6e'; ctx.shadowBlur=8 }
       else if (b > 0.5)  { ctx.fillStyle=`rgba(34,197,111,${0.4+b*0.4})`; ctx.shadowBlur=5 }
@@ -457,7 +472,7 @@ const initMatrix = () => {
   draw()
 }
 
-let clockInterval = null
+let clockInterval: ReturnType<typeof setInterval> | null = null
 const updateClock = () => { currentTime.value = new Date().toTimeString().slice(0, 8) }
 
 // ── 初始化用户身份 ──
@@ -509,7 +524,7 @@ const unlockFullAnalysis = async () => {
 }
 
 // ── 仪式完成，调用 AI ──
-const onRitualComplete = async (payload) => {
+const onRitualComplete = async (payload: { lines: number[]; changingLines?: boolean[] }) => {
   const lines = Array.isArray(payload) ? payload : payload.lines
   const changingLines = Array.isArray(payload) ? [] : (payload.changingLines || [])
 
@@ -608,7 +623,6 @@ const sealDestiny = async () => {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawId))
     const fullHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
     const hash8 = fullHash.slice(0, 8).toUpperCase()
-    const guardianImageUrl = computed(() =>geoBeast.value ? getUrl(geoBeast.value as GuardianKey) : '')
     const { count } = await supabase.from('divination_logs').select('*', { count:'exact', head:true }).eq('is_sealed', true)
     const editionNumber = (count || 0) + 1
     const cardId = `CT-${String(editionNumber).padStart(4,'0')}-${hexagramData.value.nameZh}-${hash8}`
@@ -623,8 +637,9 @@ const sealDestiny = async () => {
     if (error) throw error
     router.push(`/destiny/${encodeURIComponent(cardId)}`)
   } catch (err) {
-    console.error('Seal error:', err)
-    alert('SEAL FAILED: ' + err.message)
+    const e = err as Error
+    console.error('Seal error:', e)
+    alert('SEAL FAILED: ' + e.message)
   } finally {
     sealLoading.value = false
   }

@@ -189,7 +189,7 @@
             <!-- 神兽视频区（卡片上半约40%） -->
             <div class="card-video-wrap">
               <video ref="beastVideo"
-                :src="`/beast-${beastKey}.mp4`"
+                :src="getUrl(beastKey)"
                 autoplay loop muted playsinline
                 class="beast-video"
                 :style="{ opacity: videoOpacity }">
@@ -270,29 +270,44 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
+import { useGuardians } from '../composables/useGuardians'
 
 const route  = useRoute()
 const router = useRouter()
+const { getUrl } = useGuardians()
+
+interface CardData {
+  card_id: string
+  edition_number: number
+  verified_hash: string
+  name_zh: string
+  name_en: string
+  hexagram_code: string
+  interpretation: string
+  oracle: string
+  device_id: string
+  created_at: string
+  is_sealed: boolean
+}
 
 // ── 状态机 ──
-// loading → seal（SVG动画，3.5s）→ converge（粒子聚合，2s）→ card（展示）
 const phase      = ref('loading')
 const errorMsg   = ref('')
-const card       = ref(null)
+const card       = ref<CardData | null>(null)
 const verifyState = ref('pending')
 const copied     = ref(false)
 
 // ── Canvas & 扫描线 ──
-const particleCanvas = ref(null)
-const beastVideo     = ref(null)
+const particleCanvas = ref<HTMLCanvasElement | null>(null)
+const beastVideo     = ref<HTMLVideoElement | null>(null)
 const scanY          = ref(5)
-let animRaf  = null
-let scanRaf  = null
-let phaseTimer = null
+let animRaf: number | null  = null
+let scanRaf: number | null  = null
+let phaseTimer: ReturnType<typeof setTimeout> | null = null
 
 // ── 粒子系统状态 ──
 // mode: 'float' | 'converge' | 'fade'
@@ -302,7 +317,7 @@ const maskOpacity  = ref(1)   // 遮罩从1淡出
 
 // ── 加载卡片 ──
 const loadCard = async () => {
-  const cardId = decodeURIComponent(route.params.cardId)
+  const cardId = decodeURIComponent(String(route.params.cardId))
   if (!cardId) { phase.value = 'error'; errorMsg.value = 'Invalid card ID.'; return }
   try {
     const { data, error } = await supabase
@@ -359,7 +374,7 @@ const animateConverge = () => {
 }
 
 // ── 验证哈希 ──
-const verifyHash = async (data) => {
+const verifyHash = async (data: CardData) => {
   try {
     const raw = `${data.card_id}:${data.device_id}:${data.hexagram_code}:${data.created_at}`
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw))
@@ -411,7 +426,7 @@ const oracleShort = computed(() => {
 })
 
 // ── 神兽key ──
-const beastKey = computed(() => {
+const beastKey = computed<'dragon'|'phoenix'|'tiger'|'turtle'|'qilin'>(() => {
   const n = (card.value?.name_en || '').toLowerCase()
   if (n.match(/heaven|thunder|wind|wood/)) return 'dragon'
   if (n.match(/fire|sun|bright|clinging/)) return 'phoenix'
@@ -457,14 +472,14 @@ const sealStageStyle = computed(() => ({
 }))
 
 // ── SVG 辅助函数 ──
-const hexPoints = (cx, cy, r) => {
+const hexPoints = (cx: number, cy: number, r: number) => {
   return Array.from({length:6}, (_,i) => {
     const a = (i*60 - 30) * Math.PI/180
     return `${cx + r*Math.cos(a)},${cy + r*Math.sin(a)}`
   }).join(' ')
 }
 
-const spiralPath = (cx, cy, maxR, turns) => {
+const spiralPath = (cx: number, cy: number, maxR: number, turns: number) => {
   let d = `M ${cx} ${cy}`
   const steps = turns * 36
   for (let i = 1; i <= steps; i++) {
@@ -493,7 +508,7 @@ const animateScan = () => {
 const initParticles = () => {
   const canvas = particleCanvas.value
   if (!canvas) return
-  const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')!
 
   const resize = () => {
     canvas.width  = window.innerWidth
@@ -510,7 +525,7 @@ const initParticles = () => {
   const hexCode = card.value?.hexagram_code || '000000'
   const chars = [
     card.value?.name_zh || '命',
-    ...hexCode.split('').map(n => n === '1' ? '阳' : '阴'),
+    ...hexCode.split('').map((n: string) => n === '1' ? '阳' : '阴'),
     '◈','⬡','☯','⚡','乾','坤','坎','离','震','巽','艮','兑',
     ...'0123456789ABCDEF'.split('').slice(0,6),
   ]
@@ -523,7 +538,7 @@ const initParticles = () => {
     vy: -(0.15 + Math.random() * 0.5),
     alpha: 0.2 + Math.random() * 0.5,
     size: 8 + Math.floor(Math.random() * 6),
-    char: chars[Math.floor(Math.random() * chars.length)],
+    char: chars[Math.floor(Math.random() * chars.length)]!,
     gold: Math.random() > 0.88,
     phase: Math.random() * Math.PI * 2,
     // for converge mode
@@ -569,7 +584,7 @@ const initParticles = () => {
           p.alpha = 0.3 + Math.random() * 0.4
           p.vy = -(0.15 + Math.random() * 0.5)
           p.vx = (Math.random() - 0.5) * 0.7
-          p.char = chars[Math.floor(Math.random() * chars.length)]
+          p.char = chars[Math.floor(Math.random() * chars.length)]!
           p.gold = Math.random() > 0.88
         }
       } else if (mode === 'converge') {

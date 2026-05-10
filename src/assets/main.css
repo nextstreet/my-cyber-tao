@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /* ── Fonts ── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;700;900&family=Playfair+Display:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
 @theme {
   --color-tao-black: #050505;
@@ -72,3 +72,19 @@ a:hover { color: rgba(230, 215, 255, 1); }
     transition-duration: .01ms !important;
   }
 }
+
+/* ── Utility classes ── */
+.font-mono-cyber { font-family: 'Share Tech Mono', 'Courier New', monospace; }
+.rice-paper-overlay { background-image:url('/texture-rice-paper.png'); mix-blend-mode:multiply; opacity:.12; pointer-events:none; }
+.cyber-grid-bg { background-image:linear-gradient(rgba(200,170,110,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(200,170,110,.08) 1px,transparent 1px); background-size:50px 50px; background-position:center center; transform:perspective(500px) rotateX(60deg) scale(2.5); transform-origin:top; }
+.scanlines { background:repeating-linear-gradient(to bottom,transparent 0px,transparent 3px,rgba(0,0,0,.18) 3px,rgba(0,0,0,.18) 4px); position:absolute; inset:0; pointer-events:none; z-index:50; opacity:.25; }
+
+/* ── Animations ── */
+@keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.animate-spin-slow { animation:spin-slow 60s linear infinite; }
+@keyframes pulse-glow { 0%,100%{box-shadow:0 0 10px rgba(200,170,110,.2)} 50%{box-shadow:0 0 28px rgba(200,170,110,.6);border-color:rgba(200,170,110,.8)} }
+.animate-pulse-glow { animation:pulse-glow 3s ease-in-out infinite; }
+
+/* ── Image fix ── */
+img { max-width:none; user-select:none; }
+main { flex-shrink:0; }

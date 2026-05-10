@@ -161,7 +161,7 @@
           <div class="relative overflow-hidden shrink-0" style="height:58%">
 
             <!-- 神兽主图 - 正常显示 -->
-            <img :src="beastImageUrl"
+            <img :src="guardianUrl"
                  class="absolute inset-0 w-full h-full object-cover scale-110"
                  style="opacity:0.88; mix-blend-mode:normal; object-position:center 20%"/>
 
@@ -396,7 +396,7 @@
 
       <!-- 神兽图（上半 55%）-->
       <div style="position:relative;height:55%;width:100%;flex-shrink:0;overflow:hidden">
-        <img :src="beastImageUrl"
+        <img :src="guardianUrl"
              style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 15%;opacity:0.88"/>
         <!-- 底部渐变收口 -->
         <div style="position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(to bottom,transparent,rgba(4,4,8,0.98))"></div>
@@ -420,9 +420,9 @@
           </g>
           <!-- 能量节点 -->
           <g :stroke="rarityAccent" :fill="rarityAccent" opacity="0.6">
-            <circle :cx="circuitNodes[0].x" :cy="circuitNodes[0].y" r="1.2"/>
-            <circle :cx="circuitNodes[2].x" :cy="circuitNodes[2].y" r="1.6"/>
-            <circle :cx="circuitNodes[4].x" :cy="circuitNodes[4].y" r="1.2"/>
+            <circle v-if="circuitNodes[0]" :cx="circuitNodes[0].x" :cy="circuitNodes[0].y" r="1.2"/>
+            <circle v-if="circuitNodes[2]" :cx="circuitNodes[2].x" :cy="circuitNodes[2].y" r="1.6"/>
+            <circle v-if="circuitNodes[4]" :cx="circuitNodes[4].x" :cy="circuitNodes[4].y" r="1.2"/>
           </g>
           <!-- 神兽名水印 -->
           <text x="50" y="52" text-anchor="middle" dominant-baseline="central"
@@ -518,7 +518,7 @@
          }">
 
       <!-- 神兽作为全卡背景 -->
-      <img :src="beastImageUrl"
+      <img :src="guardianUrl"
            style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 15%;opacity:0.78"/>
 
       <!-- 渐变叠层（左上深、右下浅，让文字区域可读）-->
@@ -539,9 +539,9 @@
           <path :d="talismanPaths[0]" stroke-dasharray="6 4"/>
         </g>
         <g :stroke="rarityAccent" :fill="rarityAccent" opacity="0.55">
-          <circle :cx="circuitNodes[0].x" :cy="circuitNodes[0].y" r="1.0"/>
-          <circle :cx="circuitNodes[2].x" :cy="circuitNodes[2].y" r="1.4"/>
-          <circle :cx="circuitNodes[3].x" :cy="circuitNodes[3].y" r="1.0"/>
+          <circle v-if="circuitNodes[0]" :cx="circuitNodes[0].x" :cy="circuitNodes[0].y" r="1.0"/>
+          <circle v-if="circuitNodes[2]" :cx="circuitNodes[2].x" :cy="circuitNodes[2].y" r="1.4"/>
+          <circle v-if="circuitNodes[3]" :cx="circuitNodes[3].x" :cy="circuitNodes[3].y" r="1.0"/>
         </g>
       </svg>
 
@@ -629,7 +629,7 @@
 </template>
 
 
-<script setup>
+<script setup lang="ts">
 import { useGuardians, type GuardianKey } from '@/composables/useGuardians'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { toPng } from 'html-to-image'
@@ -646,7 +646,7 @@ const scanY          = ref(10)
 const { getUrl } = useGuardians()
   
 // 扫描线动画
-let scanRaf = null
+let scanRaf: number | null = null
 const animScan = () => {
   scanY.value = (scanY.value + 0.25) % 100
   scanRaf = requestAnimationFrame(animScan)
@@ -713,9 +713,9 @@ const gridOffsetStyle = computed(() => ({
 }))
 
 // 四角装饰
-const cornerDecor = (pos) => {
+const cornerDecor = (pos: string) => {
   const c = rarityAccent.value, s = '16px'
-  const base = { position:'absolute', width:s, height:s }
+  const base = { position:'absolute' as const, width:s, height:s }
   if (pos === 'tl') return { ...base, top:0,    left:0,  borderTop:`2px solid ${c}cc`,    borderLeft:`2px solid ${c}cc`  }
   if (pos === 'tr') return { ...base, top:0,    right:0, borderTop:`2px solid ${c}cc`,    borderRight:`2px solid ${c}cc` }
   if (pos === 'bl') return { ...base, bottom:0, left:0,  borderBottom:`2px solid ${c}cc`, borderLeft:`2px solid ${c}cc`  }
@@ -747,7 +747,7 @@ const cardDate      = computed(() => {
 
 // 雷达图
 const radarPointArr = computed(() => {
-  const gv = (o) => 30 + ((seed.value >> o) % 60)
+  const gv = (o: number) => 30 + ((seed.value >> o) % 60)
   return [
     { x:50,                    y:50-(gv(1)*0.4)   },
     { x:50+(gv(2)*0.38),       y:50-(gv(2)*0.12)  },
@@ -785,12 +785,12 @@ const circuitNodes = computed(() => {
 const circuitLines = computed(() => {
   const n = circuitNodes.value
   return [
-    {x1:n[0].x,y1:n[0].y,x2:n[2].x,y2:n[2].y},
-    {x1:n[1].x,y1:n[1].y,x2:n[2].x,y2:n[2].y},
-    {x1:n[2].x,y1:n[2].y,x2:n[3].x,y2:n[3].y},
-    {x1:n[2].x,y1:n[2].y,x2:n[4].x,y2:n[4].y},
-    {x1:n[5].x,y1:n[5].y,x2:n[1].x,y2:n[1].y},
-    {x1:n[0].x,y1:n[0].y,x2:n[5].x,y2:n[5].y},
+    {x1:n[0]!.x,y1:n[0]!.y,x2:n[2]!.x,y2:n[2]!.y},
+    {x1:n[1]!.x,y1:n[1]!.y,x2:n[2]!.x,y2:n[2]!.y},
+    {x1:n[2]!.x,y1:n[2]!.y,x2:n[3]!.x,y2:n[3]!.y},
+    {x1:n[2]!.x,y1:n[2]!.y,x2:n[4]!.x,y2:n[4]!.y},
+    {x1:n[5]!.x,y1:n[5]!.y,x2:n[1]!.x,y2:n[1]!.y},
+    {x1:n[0]!.x,y1:n[0]!.y,x2:n[5]!.x,y2:n[5]!.y},
   ]
 })
 
@@ -833,8 +833,8 @@ const beastKey = computed(() => {
 })
 //const beastImageUrl = computed(() => `/guardian-${beastKey.value}.png`)
   const guardianUrl = computed(() =>
-  R.value ? getUrl(R.value as GuardianKey) : ''
-)
+    getUrl(beastKey.value)
+  )
 const beastLabel = computed(() => ({
   dragon:'AZURE DRAGON', phoenix:'VERMILION PHOENIX', tiger:'WHITE TIGER',
   turtle:'BLACK TORTOISE', qilin:'SACRED QILIN'
@@ -854,7 +854,7 @@ const generate = () => {
   setTimeout(triggerGodlike, 550)
 }
 
-const downloadImage = async (format) => {
+const downloadImage = async (format: string) => {
   const el = format === 'poster' ? posterRef.value : squareRef.value
   if (!el) return
   try {
