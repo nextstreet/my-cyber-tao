@@ -1,8 +1,22 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { CSSProperties } from 'vue'
-import { GUARDIANS, cornerStyles, type GuardianKey } from '@/composables/useGuardians'
-import type { Hexagram } from '@/types'
+import { GUARDIANS } from '@/lib/guardians'
+import type { Hexagram, GuardianKey } from '@/types'
+
+function cornerStyles(size: string) {
+  const runes = ['乾', '坤', '離', '坎']
+  const offsets: Array<Record<string, string>> = [
+    { top: '-0.5rem', left: '-0.5rem' },
+    { top: '-0.5rem', right: '-0.5rem' },
+    { bottom: '-0.5rem', left: '-0.5rem' },
+    { bottom: '-0.5rem', right: '-0.5rem' },
+  ]
+  return runes.map((label, i) => ({
+    label,
+    style: { position: 'absolute' as const, fontSize: size, color: 'rgba(200,170,110,0.6)', ...offsets[i] },
+  }))
+}
 
 const props = defineProps<{
   hexagram: Hexagram
