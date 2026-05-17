@@ -3,9 +3,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import CoinToss from '@/components/CoinToss.vue'
 import GuardianDisplay from '@/components/GuardianDisplay.vue'
-import { linesToHexagram, lineIsYang, lineIsChanging, computeHash } from '@/lib/iching'
+import { linesToHexagram, lineIsYang, lineIsChanging } from '@/lib/iching'
 import { useSound } from '@/composables/useSound'
-import { supabase } from '@/lib/supabase'
+import { supabaseUrl, supabaseAnonKey } from '@/lib/supabase'
 import type { LineValue, GuardianKey, DivinationLog } from '@/types'
 
 const router = useRouter()
@@ -61,19 +61,20 @@ async function onToss(val: LineValue) {
   }
 }
 
-// ─── Seal: write to Supabase, compute hash, navigate to result ──────────
+// ─── Seal: call Edge Function, get verified hash, navigate to result ─────
 async function sealAndNavigate() {
   isSealing.value = true
   sealError.value = null
   try {
     const hex = linesToHexagram(lines.value)
-    const createdAt = new Date().toISOString()
-    const hash = await computeHash(createdAt, ctx.value.question, lines.value)
 
-    const { data, error: insertErr } = await supabase
-      .from('divination_logs')
-      .insert({
-        created_at: createdAt,
+    const resp = await fetch(`${supabaseUrl}/functions/v1/divination`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({
         question: ctx.value.question,
         guardian_key: ctx.value.guardianKey,
         hexagram_index: hex.index,
@@ -82,16 +83,15 @@ async function sealAndNavigate() {
         ganzhi: ctx.value.ganzhiDay,
         fortune_zh: hex.judgment,
         fortune_en: hex.judgmentEn,
-        verified_hash: hash,
-      })
-      .select('*')
-      .single()
+      }),
+    })
 
-    if (insertErr || !data) throw new Error(insertErr?.message ?? 'Insert failed')
+    if (!resp.ok) throw new Error(`Edge function error: ${resp.status}`)
+    const row: DivinationLog = await resp.json()
 
     sealChime()
-    sessionStorage.setItem('cyber-tao-result', JSON.stringify(data))
-    router.push({ name: 'result', params: { id: data.id } })
+    sessionStorage.setItem('cyber-tao-result', JSON.stringify(row))
+    router.push({ name: 'result', params: { id: row.id } })
   } catch (e) {
     sealError.value = String(e)
     isSealing.value = false
