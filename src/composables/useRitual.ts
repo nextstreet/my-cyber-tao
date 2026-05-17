@@ -1,9 +1,6 @@
-/**
- * @deprecated This composable is not used by any view. Views use sessionStorage
- * and lib/iching.ts directly. Kept for reference only.
- */
 import { ref, computed } from 'vue'
-import type { GuardianKey, LineValue } from '../types'
+import type { GuardianKey } from './useGuardians'
+import type { LineValue } from './tianji'
 
 export type RitualStage = 'idle' | 'summon' | 'cast' | 'reveal' | 'sealed'
 

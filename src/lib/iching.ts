@@ -135,8 +135,8 @@ export function linesToHexagram(lines: LineValue[]): Hexagram {
   const lower = linesToTrigram([lines[0], lines[1], lines[2]] as [LineValue,LineValue,LineValue])
   const upper = linesToTrigram([lines[3], lines[4], lines[5]] as [LineValue,LineValue,LineValue])
 
-  const kwIdx = KW_MAP[upper * 8 + lower] ?? 1
-  const clampedIdx = Math.max(0, Math.min(kwIdx - 1, HEX_TABLE.length - 1))
+  const kwIdx = KW_MAP[upper * 8 + lower] ?? 0
+  const clampedIdx = Math.min(kwIdx, HEX_TABLE.length - 1)
   const [nameZh, nameEn, judgment, judgmentEn] = HEX_TABLE[clampedIdx]!
 
   const upperT = TRIGRAMS[upper]!
