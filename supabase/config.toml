@@ -27,4 +27,4 @@ jwt_expiry = 3600
 enable_signup = true
 
 [functions]
-verify_jwt = false
+enabled = true
