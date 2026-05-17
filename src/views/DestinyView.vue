@@ -143,11 +143,11 @@ function goResult() { router.push({ name: 'result', params: { id: log.value?.id 
         <div class="pc-hex-lines" aria-label="Hexagram lines">
           <div v-for="(line, i) in [...log.lines].reverse()" :key="i" class="pc-hex-row"
             :style="{ animationDelay: i * 0.1 + 's' }">
-            <div v-if="line === 7 || line === 9" class="pc-yang" :class="{ pc-changing: line === 9 }" />
+            <div v-if="line === 7 || line === 9" class="pc-yang" :class="{ 'pc-changing': line === 9 }" />
             <template v-else>
-              <div class="pc-yin-l" :class="{ pc-changing: line === 6 }" />
+              <div class="pc-yin-l" :class="{ 'pc-changing': line === 6 }" />
               <div class="pc-gap" />
-              <div class="pc-yin-r" :class="{ pc-changing: line === 6 }" />
+              <div class="pc-yin-r" :class="{ 'pc-changing': line === 6 }" />
             </template>
           </div>
         </div>
