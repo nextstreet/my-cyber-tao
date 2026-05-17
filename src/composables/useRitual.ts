@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import type { GuardianKey } from './useGuardians'
+import type { GuardianKey } from '../types'
 import type { LineValue } from './tianji'
 
 export type RitualStage = 'idle' | 'summon' | 'cast' | 'reveal' | 'sealed'
