@@ -1,0 +1,98 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   animations.css  —  all keyframes for the Cyber Tao project
+   imported once in main.css; no scoped duplication needed
+───────────────────────────────────────────────────────────────────────────── */
+
+/* Guardian: continuous slow rotation of the outer bagua ring */
+@keyframes guardianSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Guardian: inner aura pulse */
+@keyframes guardianAura {
+  0%,100% { opacity: .45; transform: scale(1);    }
+  50%      { opacity: .85; transform: scale(1.09); }
+}
+
+/* Guardian: full-body breath animation */
+@keyframes guardianBreathe {
+  0%,100% { transform: scale(1)    rotate(0deg);   opacity: .88; }
+  50%      { transform: scale(1.05) rotate(1.5deg); opacity: 1;   }
+}
+
+/* Coin: 3D perspective flip (5 full rotations → natural landing) */
+@keyframes coinFlip {
+  0%   { transform: rotateX(0deg); }
+  35%  { transform: rotateX(720deg); }
+  65%  { transform: rotateX(1440deg); }
+  100% { transform: rotateX(1800deg); }
+}
+
+/* Hexagram: line draw-on (stroke-dashoffset path animation) */
+@keyframes hexLineDraw {
+  from { stroke-dashoffset: 120; opacity: 0; }
+  to   { stroke-dashoffset: 0;   opacity: 1; }
+}
+
+/* Step transition: slide in from right */
+@keyframes slideInRight {
+  from { transform: translateX(28px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* Step transition: slide in from left */
+@keyframes slideInLeft {
+  from { transform: translateX(-28px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+/* Fade up — used for fortune text and seals */
+@keyframes fadeUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Scan line across the talisman card */
+@keyframes scanDown {
+  0%   { top: -2%; opacity: .7; }
+  100% { top: 102%; opacity: .2; }
+}
+
+/* Ripple — seal stamp press effect */
+@keyframes ripple {
+  0%   { transform: scale(.8);  opacity: .9; }
+  100% { transform: scale(2.4); opacity: 0;  }
+}
+
+/* Aurora background shift — very slow, body::before */
+@keyframes auroraShift {
+  0%   { background-position: 0% 50%;   }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%;   }
+}
+
+/* Ink brush vertical reveal — question input focus */
+@keyframes inkReveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0% 0 0);   }
+}
+
+/* Float for decorative particles */
+@keyframes floatUp {
+  0%   { transform: translateY(0)   scale(1);   opacity: .6; }
+  100% { transform: translateY(-60px) scale(.4); opacity: 0;  }
+}
+
+/* Pulse ring — used around the coin toss area prompt */
+@keyframes pulseRing {
+  0%   { transform: scale(.95); box-shadow: 0 0 0 0 rgba(201,168,76,.4); }
+  70%  { transform: scale(1);   box-shadow: 0 0 0 10px rgba(201,168,76,0); }
+  100% { transform: scale(.95); box-shadow: 0 0 0 0 rgba(201,168,76,0); }
+}
+
+/* Verified hash typewriter */
+@keyframes typewriter {
+  from { width: 0; }
+  to   { width: 100%; }
+}
