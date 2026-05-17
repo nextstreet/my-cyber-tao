@@ -68,15 +68,8 @@ async function sealAndNavigate() {
   try {
     const hex = linesToHexagram(lines.value)
 
-    // Insert the divination log — Supabase Edge Function computes the hash
-    const edgeFnUrl = import.meta.env.VITE_EDGE_FN_URL
-    const resp = await fetch(edgeFnUrl + '/divination', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({
+    const { data, error: fnError } = await supabase.functions.invoke<DivinationLog>('divination', {
+      body: {
         question: ctx.value.question,
         guardian_key: ctx.value.guardianKey,
         hexagram_index: hex.index,
@@ -85,15 +78,14 @@ async function sealAndNavigate() {
         ganzhi: ctx.value.ganzhiDay,
         fortune_zh: hex.judgment,
         fortune_en: hex.judgmentEn,
-      }),
+      },
     })
 
-    if (!resp.ok) throw new Error(`Edge function error: ${resp.status}`)
-    const row: DivinationLog = await resp.json()
+    if (fnError || !data) throw new Error(fnError?.message ?? 'Edge function error')
 
     sealChime()
-    sessionStorage.setItem('cyber-tao-result', JSON.stringify(row))
-    router.push({ name: 'result', params: { id: row.id } })
+    sessionStorage.setItem('cyber-tao-result', JSON.stringify(data))
+    router.push({ name: 'result', params: { id: data.id } })
   } catch (e) {
     sealError.value = String(e)
     isSealing.value = false
