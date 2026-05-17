@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "./animations.css";
+@import "../assets/animations.css";
 
 @theme {
   --color-ink-deep: #07041a;
