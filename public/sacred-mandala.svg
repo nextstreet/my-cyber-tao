@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-soft">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C8AA6E" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#F2DBA5" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#C8AA6E" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="purple-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7850FF" stop-opacity="0.25"/>
+      <stop offset="50%" stop-color="#A78BFA" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#7850FF" stop-opacity="0.25"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 最外圈：八卦符号环 -->
+  <g fill="none" stroke="url(#gold-grad)" stroke-width="0.5" opacity="0.4">
+    <circle cx="400" cy="400" r="360"/>
+    <circle cx="400" cy="400" r="350" stroke-dasharray="4 8" opacity="0.3"/>
+    <circle cx="400" cy="400" r="340" stroke-dasharray="2 6" opacity="0.2"/>
+  </g>
+
+  <!-- 八卦符号（八个方位） -->
+  <g font-family="serif" font-size="14" fill="none" stroke="url(#gold-grad)" stroke-width="0.5" opacity="0.35" text-anchor="middle" dominant-baseline="central">
+    <text x="400" y="50">乾</text>
+    <text x="400" y="750">坤</text>
+    <text x="750" y="400">离</text>
+    <text x="50" y="400">坎</text>
+    <text x="647" y="153">兑</text>
+    <text x="153" y="153">巽</text>
+    <text x="647" y="647">震</text>
+    <text x="153" y="647">艮</text>
+  </g>
+
+  <!-- 第二圈：射线环 -->
+  <g stroke="url(#purple-grad)" stroke-width="0.3" opacity="0.3">
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(0 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(15 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(30 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(45 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(60 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(75 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(90 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(105 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(120 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(135 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(150 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(165 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(180 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(195 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(210 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(225 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(240 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(255 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(270 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(285 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(300 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(315 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(330 400 400)"/>
+    <line x1="400" y1="60" x2="400" y2="120" transform="rotate(345 400 400)"/>
+  </g>
+
+  <!-- 第三圈：莲花花瓣 -->
+  <g fill="none" stroke="url(#gold-grad)" stroke-width="0.4" opacity="0.25">
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(0 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(30 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(60 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(90 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(120 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(150 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(180 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(210 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(240 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(270 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(300 400 400)"/>
+    <path d="M 400,100 C 430,160 460,200 400,260 C 340,200 370,160 400,100Z" transform="rotate(330 400 400)"/>
+  </g>
+
+  <!-- 第四圈：同心圆 -->
+  <g fill="none" opacity="0.15">
+    <circle cx="400" cy="400" r="200" stroke="url(#purple-grad)" stroke-width="0.5"/>
+    <circle cx="400" cy="400" r="180" stroke="url(#gold-grad)" stroke-width="0.3" stroke-dasharray="3 5"/>
+    <circle cx="400" cy="400" r="160" stroke="url(#purple-grad)" stroke-width="0.5"/>
+  </g>
+
+  <!-- 第五圈：内层莲花 -->
+  <g fill="none" stroke="url(#purple-grad)" stroke-width="0.4" opacity="0.2">
+    <path d="M 400,220 C 420,260 440,280 400,320 C 360,280 380,260 400,220Z" transform="rotate(0 400 400)"/>
+    <path d="M 400,220 C 420,260 440,280 400,320 C 360,280 380,260 400,220Z" transform="rotate(45 400 400)"/>
+    <path d="M 400,220 C 420,260 440,280 400,320 C 360,280 380,260 400,220Z" transform="rotate(90 400 400)"/>
+    <path d="M 400,220 C 420,260 440,280 400,320 C 360,280 380,260 400,220Z" transform="rotate(135 400 400)"/>
+    <path d="M 400,220 C 420,260 440,280 400,320 C 360,280 380,260 400,220Z" transform="rotate(180 400 400)"/>
+    <path d="M 400,220 C 420,260 440,280 400,320 C 360,280 380,260 400,220Z" transform="rotate(225 400 400)"/>
+    <path d="M 400,220 C 420,260 440,280 400,320 C 360,280 380,260 400,220Z" transform="rotate(270 400 400)"/>
+    <path d="M 400,220 C 420,260 440,280 400,320 C 360,280 380,260 400,220Z" transform="rotate(315 400 400)"/>
+  </g>
+
+  <!-- 中心：太极阴阳 -->
+  <g filter="url(#glow-soft)">
+    <!-- 外圆 -->
+    <circle cx="400" cy="400" r="80" fill="none" stroke="url(#gold-grad)" stroke-width="0.8" opacity="0.4"/>
+    <!-- 阴阳鱼 -->
+    <path d="M 400,320 A 40,40 0 0,1 400,400 A 40,40 0 0,0 400,480 A 80,80 0 0,1 400,320Z"
+      fill="none" stroke="url(#gold-grad)" stroke-width="0.6" opacity="0.3"/>
+    <path d="M 400,320 A 40,40 0 0,0 400,400 A 40,40 0 0,1 400,480 A 80,80 0 0,0 400,320Z"
+      fill="none" stroke="url(#purple-grad)" stroke-width="0.6" opacity="0.3"/>
+    <!-- 中心点 -->
+    <circle cx="400" cy="360" r="4" fill="none" stroke="url(#gold-grad)" stroke-width="0.5" opacity="0.4"/>
+    <circle cx="400" cy="440" r="4" fill="none" stroke="url(#purple-grad)" stroke-width="0.5" opacity="0.4"/>
+  </g>
+
+  <!-- 最内圈：能量光环 -->
+  <g filter="url(#glow)">
+    <circle cx="400" cy="400" r="100" fill="none" stroke="url(#gold-grad)" stroke-width="0.3" opacity="0.2" stroke-dasharray="6 4"/>
+    <circle cx="400" cy="400" r="120" fill="none" stroke="url(#purple-grad)" stroke-width="0.3" opacity="0.15" stroke-dasharray="2 8"/>
+  </g>
+</svg>

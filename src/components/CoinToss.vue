@@ -1,243 +1,116 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import type { LineValue } from '@/composables/tianji'
+
+const emit = defineEmits<{ (e: 'toss', value: LineValue): void }>()
+const props = defineProps<{ disabled?: boolean }>()
+
+const flipping = ref([false, false, false])
+const lastResult = ref<LineValue | null>(null)
+const coinFaces = ref([0, 0, 0])
+
+const LABELS: Record<LineValue, string> = {
+  6: '⚋ 老阴  Old Yin  →',
+  7: '⚊ 阳  Yang',
+  8: '⚋ 阴  Yin',
+  9: '⚊ 老阳  Old Yang  →',
+}
+
+function playCoinSound() {
+  try {
+    const ac = new (window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+    ;[0, 0.09, 0.18].forEach(d => setTimeout(() => {
+      const o = ac.createOscillator()
+      const g = ac.createGain()
+      o.type = 'triangle'
+      o.frequency.value = 880 + Math.random() * 220
+      g.gain.setValueAtTime(0.22, ac.currentTime)
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.2)
+      o.connect(g); g.connect(ac.destination)
+      o.start(); o.stop(ac.currentTime + 0.2)
+    }, d * 1000))
+  } catch { /* ignore */ }
+}
+
+function toss() {
+  if (props.disabled) return
+  playCoinSound()
+  if (navigator.vibrate) navigator.vibrate([20, 50, 20])
+
+  flipping.value = [true, true, true]
+  setTimeout(() => {
+    const vals = [
+      Math.random() > 0.5 ? 3 : 2,
+      Math.random() > 0.5 ? 3 : 2,
+      Math.random() > 0.5 ? 3 : 2,
+    ] as const
+    coinFaces.value = [...vals]
+    const sum = (vals[0] + vals[1] + vals[2]) as LineValue
+    lastResult.value = sum
+    flipping.value = [false, false, false]
+    emit('toss', sum)
+  }, 700)
+}
+</script>
+
 <template>
-  <div class="flex flex-col items-center w-full justify-between py-2 gap-4">
-    <!-- 爻象显示区 -->
-    <div class="flex flex-col-reverse gap-3 h-36 justify-end w-full items-center">
-      <div v-for="(line, i) in lines" :key="i" class="animate-in">
-        <!-- 阳爻 (实线) -->
-        <div
-          v-if="line === 1"
-          class="w-40 h-2.5 rounded-sm relative overflow-hidden"
-          style="
-            background: #22d3ee;
-            box-shadow:
-              0 0 16px rgba(34, 211, 238, 0.7),
-              0 0 32px rgba(34, 211, 238, 0.3);
-          "
-        >
-          <div class="absolute inset-0 line-shine"></div>
-        </div>
-        <!-- 阴爻 (断线) -->
-        <div v-else class="w-40 h-2.5 flex justify-between">
-          <div
-            class="w-[43%] h-full rounded-sm relative overflow-hidden"
-            style="
-              background: #22d3ee;
-              box-shadow:
-                0 0 16px rgba(34, 211, 238, 0.7),
-                0 0 32px rgba(34, 211, 238, 0.3);
-            "
-          >
-            <div class="absolute inset-0 line-shine"></div>
-          </div>
-          <div
-            class="w-[43%] h-full rounded-sm relative overflow-hidden"
-            style="
-              background: #22d3ee;
-              box-shadow:
-                0 0 16px rgba(34, 211, 238, 0.7),
-                0 0 32px rgba(34, 211, 238, 0.3);
-            "
-          >
-            <div class="absolute inset-0 line-shine"></div>
-          </div>
-        </div>
-      </div>
-
+  <div class="coin-area">
+    <div class="coins-row">
       <div
-        v-if="lines.length === 0"
-        class="text-center opacity-20 italic text-[9px] tracking-[0.5em] px-8 leading-relaxed font-mono"
+        v-for="(_, i) in 3"
+        :key="i"
+        :class="['coin', { flipping: flipping[i], yang: coinFaces[i] === 3, yin: coinFaces[i] === 2 }]"
+        @click="toss"
       >
-        OSCILLATING PROBABILITY FIELD...<br />RESONATE WITH THE VOID.
+        <span class="coin-inner">{{ coinFaces[i] === 3 ? '陽' : coinFaces[i] === 2 ? '陰' : '☯' }}</span>
       </div>
     </div>
 
-    <!-- 铜钱区 -->
-    <div class="flex gap-8 my-4">
-      <div v-for="(coin, index) in coins" :key="index" class="coin-container w-14 h-14">
-        <div class="coin-body" :class="{ 'is-tossing': isTossing }" :style="getRotation(coin.v)">
-          <div
-            class="coin-face front flex items-center justify-center relative"
-            style="
-              background: #0d1117;
-              border: 2px solid rgba(200, 170, 110, 0.55);
-              box-shadow:
-                0 0 10px rgba(200, 170, 110, 0.2),
-                inset 0 0 6px rgba(200, 170, 110, 0.05);
-            "
-          >
-            <span
-              class="text-tao-gold font-serif text-xl"
-              style="text-shadow: 0 0 8px rgba(200, 170, 110, 0.6)"
-              >乾</span
-            >
-            <div class="absolute inset-1.5 border border-tao-gold/10 rounded-full"></div>
-          </div>
-          <div
-            class="coin-face back flex items-center justify-center relative"
-            style="
-              background: #0d1117;
-              border: 2px solid rgba(200, 170, 110, 0.55);
-              box-shadow:
-                0 0 10px rgba(200, 170, 110, 0.2),
-                inset 0 0 6px rgba(200, 170, 110, 0.05);
-            "
-          >
-            <span class="font-serif text-xl" style="color: rgba(200, 170, 110, 0.7)">坤</span>
-            <div class="absolute inset-1.5 border border-tao-gold/10 rounded-full"></div>
-          </div>
-          <div class="coin-side"></div>
-        </div>
-      </div>
+    <div class="toss-result" v-if="lastResult">
+      {{ LABELS[lastResult] }}
     </div>
 
-    <!-- 投掷按钮 -->
-    <button
-      @click="toss"
-      :disabled="isTossing || lines.length >= 6"
-      class="group relative w-full py-4 overflow-hidden border border-tao-gold/30 bg-black/50 transition-all hover:border-tao-gold/60 disabled:opacity-10 disabled:cursor-not-allowed cyber-btn-toss"
-    >
-      <div
-        class="absolute inset-0 bg-tao-gold/5 opacity-0 group-hover:opacity-100 transition-opacity"
-      ></div>
-      <span
-        class="relative z-10 text-[10px] font-black tracking-[0.7em] text-tao-gold group-hover:text-white transition-colors"
-      >
-        {{
-          isTossing
-            ? 'CALCULATING...'
-            : lines.length >= 6
-              ? 'ARRAY LOCKED'
-              : `ITERATE ${lines.length + 1} / 6`
-        }}
-      </span>
+    <button class="toss-btn" :disabled="disabled" @click="toss">
+      投币起爻 · Cast
     </button>
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
-const emit = defineEmits(['complete'])
-const lines = ref([])
-const isTossing = ref(false)
-const coins = ref([{ v: 1 }, { v: 1 }, { v: 1 }])
-
-const getRotation = (v) => {
-  if (isTossing.value) return ''
-  const randomOffset = (Math.random() - 0.5) * 10
-  return v === 0
-    ? `transform: rotateY(180deg) rotateZ(${randomOffset}deg)`
-    : `transform: rotateY(0deg) rotateZ(${randomOffset}deg)`
-}
-
-const toss = () => {
-  if (isTossing.value || lines.value.length >= 6) return
-  isTossing.value = true
-  setTimeout(() => {
-    let sum = 0
-    coins.value = coins.value.map(() => {
-      const v = Math.random() > 0.5 ? 1 : 0
-      sum += v === 1 ? 3 : 2
-      return { v }
-    })
-    lines.value.push(sum === 7 || sum === 9 ? 1 : 0)
-    isTossing.value = false
-    if (lines.value.length === 6) {
-      setTimeout(() => emit('complete', lines.value), 800)
-    }
-  }, 1200)
-}
-</script>
-
 <style scoped>
-.coin-container {
-  perspective: 1000px;
+.coin-area { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.coins-row { display: flex; gap: 18px; perspective: 400px; }
+.coin {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e8d060, #b89030 55%, #7a5810);
+  border: 1.5px solid rgba(201,168,76,0.8);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transform-style: preserve-3d;
+  transition: transform .1s;
 }
-.coin-body {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.coin-face {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  border-radius: 50%;
-}
-.coin-face.back {
-  transform: rotateY(180deg);
-}
-.coin-side {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 4px;
-  background: #c8aa6e;
-  transform: translate(-50%, -50%) rotateX(90deg);
-  border-radius: 50%;
-  opacity: 0.25;
-}
+.coin:active { transform: scale(0.9); }
+.coin-inner { font-size: 14px; color: rgba(100,60,0,0.9); font-weight: 700; pointer-events: none; }
+.coin.flipping { animation: coinflip .7s ease-out forwards; }
+.coin.yang { background: radial-gradient(circle at 35% 35%, #f0e070, #c8a030 55%, #906010); }
+.coin.yin  { background: radial-gradient(circle at 35% 35%, #d0c060, #a08020 55%, #604010); }
 
-.is-tossing {
-  animation: toss-physics 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+.toss-result {
+  font-size: 13px; color: rgba(201,168,76,0.85);
+  letter-spacing: .04em; height: 20px; text-align: center;
 }
-@keyframes toss-physics {
-  0% {
-    transform: translateY(0) rotateY(0) scale(1);
-  }
-  30% {
-    transform: translateY(-90px) rotateY(720deg) scale(1.15);
-  }
-  60% {
-    transform: translateY(-110px) rotateY(1440deg) scale(1.08);
-  }
-  100% {
-    transform: translateY(0) rotateY(2160deg) scale(1);
-  }
+.toss-btn {
+  padding: 9px 32px; border-radius: 18px;
+  background: rgba(139,26,26,0.35);
+  border: 0.5px solid rgba(201,168,76,0.4);
+  color: #c9a84c; font-size: 13px; letter-spacing: .08em;
+  cursor: pointer; transition: background .15s;
 }
+.toss-btn:disabled { opacity: .4; cursor: default; }
+.toss-btn:not(:disabled):active { background: rgba(139,26,26,0.65); }
 
-.animate-in {
-  animation: slideIn 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-}
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: scaleX(0.4);
-    filter: blur(8px);
-  }
-  to {
-    opacity: 1;
-    transform: scaleX(1);
-    filter: blur(0);
-  }
-}
-
-/* 爻线光泽流动 */
-@keyframes shine {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-.line-shine {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
-  animation: shine 2s ease-in-out infinite;
-}
-
-.cyber-btn-toss {
-  clip-path: polygon(
-    6px 0,
-    calc(100% - 6px) 0,
-    100% 6px,
-    100% calc(100% - 6px),
-    calc(100% - 6px) 100%,
-    6px 100%,
-    0 calc(100% - 6px),
-    0 6px
-  );
+@keyframes coinflip {
+  0%   { transform: rotateX(0deg); }
+  35%  { transform: rotateX(720deg); }
+  65%  { transform: rotateX(1440deg); }
+  100% { transform: rotateX(1800deg); }
 }
 </style>
